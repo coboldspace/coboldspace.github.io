@@ -3,43 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Cobold Space</title>
+    <title>Cobold Space | Digital Hub</title>
     <style>
+        :root {
+            --primary: #2563eb;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --text: #334155;
+        }
+
+        /* Dark Mode Otomatis */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3b82f6;
+                --dark: #f8fafc;
+                --light: #0f172a;
+                --text: #cbd5e1;
+            }
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: 'Inter', -apple-system, sans-serif;
             margin: 0;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
         }
-        .container {
+
+        nav {
+            padding: 1.5rem 10%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.01);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .hero {
+            padding: 100px 10%;
             text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            clip-path: ellipse(150% 100% at 50% 0%);
         }
-        h1 { color: #2c3e50; }
-        p { font-size: 1.2rem; }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .container {
+            padding: 50px 10%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: -50px;
+        }
+
+        .card {
+            background: var(--light);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+
         .btn {
             display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
+            padding: 12px 30px;
+            background: var(--primary);
             color: white;
             text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        footer {
+            text-align: center;
+            padding: 50px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Halo dari Cobold Space! 🚀</h1>
-        <p>Website statis pertama saya berhasil dijalankan di GitHub Pages.</p>
-        <a href="#" class="btn">Pelajari Lebih Lanjut</a>
+
+    <nav>
+        <a href="#" class="logo">COBOLD.SPACE</a>
+    </nav>
+
+    <section class="hero">
+        <h1>Inovasi Tanpa Batas</h1>
+        <p>Membangun masa depan digital yang lebih cerdas dan aman.</p>
+        <br>
+        <a href="#about" class="btn">Mulai Eksplorasi</a>
+    </section>
+
+    <div class="container" id="about">
+        <div class="card">
+            <h3>🚀 Pengembangan Cepat</h3>
+            <p>Solusi teknologi yang tangkas dan adaptif untuk kebutuhan bisnis modern Anda.</p>
+        </div>
+        <div class="card">
+            <h3>🛡️ Keamanan Berlapis</h3>
+            <p>Prioritas utama kami adalah menjaga integritas data dan privasi pengguna di setiap baris kode.</p>
+        </div>
+        <div class="card">
+            <h3>🌐 Skalabilitas</h3>
+            <p>Arsitektur yang dirancang untuk tumbuh bersama visi dan impian besar Anda.</p>
+        </div>
     </div>
+
+    <footer>
+        &copy; 2026 Cobold Space. Powered by GitHub Pages.
+    </footer>
+
 </body>
 </html>
