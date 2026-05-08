@@ -184,8 +184,8 @@
         try {
             await signInWithEmailAndPassword(auth, email, password);
             // Jika sukses, lempar ke dashboard (kita buat nanti)
-            alert("Login Berhasil! Selamat bekerja.");
-            // window.location.href = "dashboard.html"; 
+            // alert("Login Berhasil! Selamat bekerja.");
+             window.location.href = "dashboard.html"; 
         } catch (error) {
             console.error(error);
             errorMsg.style.display = 'block';
