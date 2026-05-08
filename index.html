@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>co.bold space — Where Bold Meets Brew</title>
+  <meta name="description" content="co.bold space — kedai kopi dengan karakter. Nikmati kopi bold, suasana intim, dan ruang untuk berkreasi." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════ CURSOR ═══════════════════════════════ -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-trail" id="cursorTrail"></div>
+
+  <!-- ═══════════════════════════════ NAV ══════════════════════════════════ -->
+  <nav class="nav" id="navbar">
+    <a href="#" class="nav-logo">co<span class="dot">.</span>bold</a>
+    <ul class="nav-links">
+      <li><a href="#menu">Menu</a></li>
+      <li><a href="#gallery">Space</a></li>
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+    <a href="#visit" class="nav-cta">Find Us</a>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <ul>
+      <li><a href="#menu" class="mobile-link">Menu</a></li>
+      <li><a href="#gallery" class="mobile-link">Space</a></li>
+      <li><a href="#visit" class="mobile-link">Visit</a></li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════ HERO ═════════════════════════════════ -->
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <div class="grain"></div>
+      <div class="hero-circle c1"></div>
+      <div class="hero-circle c2"></div>
+      <div class="hero-circle c3"></div>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow reveal">— est. 2024 —</p>
+      <h1 class="hero-title reveal">
+        <span class="line">Brew</span>
+        <span class="line italic">Bold.</span>
+        <span class="line">Live Louder.</span>
+      </h1>
+      <p class="hero-sub reveal">
+        Bukan sekadar kopi. Ini adalah ruang untuk pikiran yang berani,<br />
+        percakapan yang jujur, dan espresso yang tidak minta maaf.
+      </p>
+      <div class="hero-actions reveal">
+        <a href="#menu" class="btn btn-primary">Lihat Menu</a>
+        <a href="#visit" class="btn btn-ghost">Temukan Kami</a>
+      </div>
+    </div>
+
+    <div class="hero-scroll">
+      <span>scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+
+    <!-- Big background text -->
+    <div class="hero-bg-text">BOLD</div>
+  </section>
+
+  <!-- ═══════════════════════════════ MARQUEE ═══════════════════════════════ -->
+  <div class="marquee-strip">
+    <div class="marquee-track">
+      <span>ESPRESSO</span><span class="dot-sep">✦</span>
+      <span>SPECIALTY COFFEE</span><span class="dot-sep">✦</span>
+      <span>CO.BOLD SPACE</span><span class="dot-sep">✦</span>
+      <span>DARK ROAST</span><span class="dot-sep">✦</span>
+      <span>WORK & CHILL</span><span class="dot-sep">✦</span>
+      <span>BOLD FLAVORS</span><span class="dot-sep">✦</span>
+      <span>ESPRESSO</span><span class="dot-sep">✦</span>
+      <span>SPECIALTY COFFEE</span><span class="dot-sep">✦</span>
+      <span>CO.BOLD SPACE</span><span class="dot-sep">✦</span>
+      <span>DARK ROAST</span><span class="dot-sep">✦</span>
+      <span>WORK & CHILL</span><span class="dot-sep">✦</span>
+      <span>BOLD FLAVORS</span><span class="dot-sep">✦</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ ABOUT ════════════════════════════════ -->
+  <section class="about">
+    <div class="about-inner container">
+      <div class="about-text reveal">
+        <p class="label">About Us</p>
+        <h2>Ruang untuk<br /><em>yang berani beda.</em></h2>
+        <p class="body-text">
+          co.bold space lahir dari satu keyakinan: kopi yang baik butuh ruang yang baik.
+          Kami bukan coffee shop biasa — kami adalah tempat di mana barista kami
+          memperlakukan setiap shot espresso seperti karya seni, dan setiap tamu
+          seperti teman lama.
+        </p>
+        <p class="body-text">
+          Datang untuk bekerja, untuk melamun, atau hanya untuk menikmati cangkir
+          yang benar-benar bold.
+        </p>
+      </div>
+      <div class="about-visual reveal">
+        <div class="about-img-frame">
+          <div class="about-img-placeholder">
+            <div class="coffee-icon">
+              <div class="cup"></div>
+              <div class="steam s1"></div>
+              <div class="steam s2"></div>
+              <div class="steam s3"></div>
+            </div>
+          </div>
+          <div class="about-badge">Since<br /><strong>2024</strong></div>
+        </div>
+        <div class="about-stats">
+          <div class="stat">
+            <span class="stat-num" data-target="24">0</span><span>+</span>
+            <p>Signature Drinks</p>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-target="3">0</span><span>K+</span>
+            <p>Happy Guests</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ MENU ═════════════════════════════════ -->
+  <section class="menu" id="menu">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">Our Offerings</p>
+        <h2>The Menu</h2>
+        <p class="section-sub">Setiap item diciptakan dengan intensi. Tidak ada yang setengah-setengah.</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="menu-tabs reveal">
+        <button class="tab-btn active" data-tab="espresso">Espresso</button>
+        <button class="tab-btn" data-tab="manual">Manual Brew</button>
+        <button class="tab-btn" data-tab="signature">Signature</button>
+        <button class="tab-btn" data-tab="food">Bites</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="menu-grid" id="menuGrid">
+
+        <!-- Espresso -->
+        <div class="menu-tab-content active" data-content="espresso">
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Espresso</h3>
+              <p>Single origin, dark roast. Intens, berani, tanpa kompromi.</p>
+            </div>
+            <span class="menu-price">25K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Americano</h3>
+              <p>Espresso diperpanjang dengan air panas. Bold tapi breathing room.</p>
+            </div>
+            <span class="menu-price">28K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cappuccino</h3>
+              <p>Espresso, steamed milk, foam sempurna. Klasik yang tidak pernah salah.</p>
+            </div>
+            <span class="menu-price">32K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Flat White</h3>
+              <p>Double ristretto, microfoam sutra. Kecil, padat, luar biasa.</p>
+            </div>
+            <span class="menu-price">35K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cortado</h3>
+              <p>Equal parts espresso dan warm milk. Balance yang elegan.</p>
+            </div>
+            <span class="menu-price">30K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Long Black</h3>
+              <p>Crema di atas hot water. Aroma maksimal, rasa penuh.</p>
+            </div>
+            <span class="menu-price">28K</span>
+          </div>
+        </div>
+
+        <!-- Manual Brew -->
+        <div class="menu-tab-content" data-content="manual">
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>V60 Pour Over</h3>
+              <p>Proses lambat, hasil presisi. Cocok untuk jiwa yang sabar.</p>
+            </div>
+            <span class="menu-price">38K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Chemex</h3>
+              <p>Clean cup dengan clarity penuh. Seperti pikiran jernih di pagi hari.</p>
+            </div>
+            <span class="menu-price">40K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>AeroPress</h3>
+              <p>Versatile, intense, dan sedikit punk. Favorit para petualang.</p>
+            </div>
+            <span class="menu-price">35K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cold Brew</h3>
+              <p>Diseduh 18 jam dalam dingin. Hasilnya? Smooth, dark, addictive.</p>
+            </div>
+            <span class="menu-price">40K</span>
+          </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="menu-tab-content" data-content="signature">
+          <div class="menu-item reveal featured">
+            <div class="menu-badge">Best Seller</div>
+            <div class="menu-item-info">
+              <h3>co.bold Black</h3>
+              <p>Espresso, dark chocolate, sedikit garam laut. Ini identitas kami dalam sebuah gelas.</p>
+            </div>
+            <span class="menu-price">45K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Midnight Latte</h3>
+              <p>Espresso, activated charcoal oat milk, vanilla syrup. Gelap tapi manis.</p>
+            </div>
+            <span class="menu-price">48K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Golden Hour</h3>
+              <p>Espresso, turmeric, coconut milk, madu raw. Warm dan powerful.</p>
+            </div>
+            <span class="menu-price">45K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>The Ristretto Tonic</h3>
+              <p>Double ristretto di atas tonic water es. Segar. Surprising. Bold.</p>
+            </div>
+            <span class="menu-price">42K</span>
+          </div>
+        </div>
+
+        <!-- Food -->
+        <div class="menu-tab-content" data-content="food">
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Butter Croissant</h3>
+              <p>Renyah di luar, lembut di dalam. Dipanggang segar setiap pagi.</p>
+            </div>
+            <span class="menu-price">28K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Dark Choco Banana Cake</h3>
+              <p>Dense, moist, dan intense. Pair sempurna untuk Americano.</p>
+            </div>
+            <span class="menu-price">35K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Avocado Toast</h3>
+              <p>Sourdough, smashed avo, chili flakes, lemon zest. Simple done right.</p>
+            </div>
+            <span class="menu-price">45K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cheese Scone</h3>
+              <p>Gurih, flaky, dan comforting. Cocok untuk sesi pagi yang panjang.</p>
+            </div>
+            <span class="menu-price">30K</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ GALLERY ═══════════════════════════════ -->
+  <section class="gallery" id="gallery">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">The Space</p>
+        <h2>Feel the Vibe</h2>
+      </div>
+    </div>
+    <div class="gallery-grid reveal">
+      <div class="gallery-item g1">
+        <div class="gallery-placeholder">
+          <span>Interior</span>
+        </div>
+        <div class="gallery-overlay"><p>Main Hall</p></div>
+      </div>
+      <div class="gallery-item g2">
+        <div class="gallery-placeholder">
+          <span>Bar</span>
+        </div>
+        <div class="gallery-overlay"><p>The Bar</p></div>
+      </div>
+      <div class="gallery-item g3">
+        <div class="gallery-placeholder">
+          <span>Coffee</span>
+        </div>
+        <div class="gallery-overlay"><p>Craft Brew</p></div>
+      </div>
+      <div class="gallery-item g4">
+        <div class="gallery-placeholder">
+          <span>Corner</span>
+        </div>
+        <div class="gallery-overlay"><p>The Corner</p></div>
+      </div>
+      <div class="gallery-item g5">
+        <div class="gallery-placeholder">
+          <span>Night</span>
+        </div>
+        <div class="gallery-overlay"><p>After Hours</p></div>
+      </div>
+    </div>
+    <p class="gallery-note reveal">Ganti placeholder dengan foto nyata untuk hasil terbaik</p>
+  </section>
+
+  <!-- ═══════════════════════════════ VISIT ════════════════════════════════ -->
+  <section class="visit" id="visit">
+    <div class="container">
+      <div class="visit-grid">
+        <div class="visit-info reveal">
+          <p class="label">Come Visit</p>
+          <h2>Find Us<br /><em>Here.</em></h2>
+          <div class="visit-details">
+            <div class="visit-block">
+              <p class="visit-label">📍 Lokasi</p>
+              <p class="visit-val">Jl. [Nama Jalan], No. XX<br />Kota, Provinsi</p>
+            </div>
+            <div class="visit-block">
+              <p class="visit-label">🕐 Jam Buka</p>
+              <div class="hours-grid">
+                <span>Senin – Jumat</span><span>07.00 – 22.00</span>
+                <span>Sabtu</span><span>08.00 – 23.00</span>
+                <span>Minggu</span><span>08.00 – 21.00</span>
+              </div>
+            </div>
+            <div class="visit-block">
+              <p class="visit-label">📞 Kontak</p>
+              <p class="visit-val">+62 8XX XXXX XXXX</p>
+            </div>
+            <div class="visit-block">
+              <p class="visit-label">📸 Instagram</p>
+              <p class="visit-val">@coboldspace</p>
+            </div>
+          </div>
+          <div class="visit-socials">
+            <a href="#" class="social-pill">Instagram</a>
+            <a href="#" class="social-pill">WhatsApp</a>
+            <a href="#" class="social-pill">Google Maps</a>
+          </div>
+        </div>
+        <div class="visit-map reveal">
+          <div class="map-placeholder">
+            <div class="map-pin">
+              <div class="pin-head"></div>
+              <div class="pin-body"></div>
+              <div class="pin-pulse"></div>
+            </div>
+            <p>Embed Google Maps di sini</p>
+            <small>Ganti div ini dengan &lt;iframe&gt; Google Maps</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo">co<span class="dot">.</span>bold</a>
+          <p>Where Bold Meets Brew.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#menu">Menu</a>
+          <a href="#gallery">Space</a>
+          <a href="#visit">Visit</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2024 co.bold space. All rights reserved.</p>
+        <p class="footer-craft">Crafted with ☕ & obsession.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
