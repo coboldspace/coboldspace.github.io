@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cobold POS — Inventori</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0d0d0d;
+      --card-bg: #161616;
+      --accent:  #b08968;
+      --accent-dim: #7a5c3f;
+      --text:    #e0e0e0;
+      --dim:     #888;
+      --border:  #222;
+      --red:     #ff5f5f;
+      --green:   #22c55e;
+      --yellow:  #f59e0b;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 240px;
+      background: var(--card-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 30px 20px;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-weight: 600;
+      font-size: 20px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    .nav-menu { flex-grow: 1; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      color: var(--dim);
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: .2s;
+      font-size: 14px;
+    }
+    .nav-item i { margin-right: 12px; width: 18px; }
+    .nav-item:hover, .nav-item.active { background: #222; color: var(--accent); }
+    .btn-logout {
+      background: none;
+      border: 1px solid #444;
+      color: var(--red);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: .2s;
+      width: 100%;
+    }
+    .btn-logout:hover { background: var(--red); color: #fff; }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+    .page-header p  { font-size: 13px; color: var(--dim); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover { background: #c49a7a; }
+
+    /* ── ALERT BANNER ── */
+    .alert-banner {
+      background: rgba(255,95,95,.08);
+      border: 1px solid rgba(255,95,95,.25);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: none;
+    }
+    .alert-banner.show { display: flex; align-items: flex-start; gap: 12px; }
+    .alert-banner i { color: var(--red); margin-top: 2px; flex-shrink: 0; }
+    .alert-title { font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 6px; }
+    .alert-items { font-size: 12px; color: #cc8888; line-height: 1.8; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 8px 20px;
+      border-radius: 7px;
+      border: none;
+      background: none;
+      color: var(--dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .tab-btn.active { background: #222; color: var(--accent); font-weight: 600; }
+
+    /* ── SEARCH ── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .search-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px 9px 36px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+      width: 240px;
+      position: relative;
+    }
+    .search-wrap { position: relative; }
+    .search-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--dim);
+      font-size: 12px;
+    }
+    .search-box:focus { border-color: var(--accent-dim); }
+
+    /* ── TABLE ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      color: var(--dim);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid #1a1a1a; transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.02); }
+    tbody td { padding: 14px 16px; font-size: 13px; vertical-align: middle; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+    .badge-kritis { background: rgba(255,95,95,.15); color: var(--red); }
+    .badge-rendah { background: rgba(245,158,11,.15); color: var(--yellow); }
+    .badge-aman   { background: rgba(34,197,94,.15);  color: var(--green); }
+
+    .unit-tag {
+      font-size: 11px;
+      color: var(--dim);
+      margin-left: 4px;
+    }
+
+    .stock-bar-wrap { display: flex; align-items: center; gap: 10px; }
+    .stock-bar {
+      flex: 1;
+      height: 4px;
+      background: #2a2a2a;
+      border-radius: 4px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .stock-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width .3s;
+    }
+    .fill-kritis { background: var(--red); }
+    .fill-rendah { background: var(--yellow); }
+    .fill-aman   { background: var(--green); }
+
+    .action-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      color: var(--dim);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: .2s;
+      margin-right: 4px;
+    }
+    .action-btn:hover { border-color: var(--accent-dim); color: var(--text); }
+    .action-btn.danger:hover { border-color: var(--red); color: var(--red); }
+    .action-btn.restock { border-color: rgba(34,197,94,.3); color: var(--green); }
+    .action-btn.restock:hover { background: rgba(34,197,94,.08); }
+
+    .empty-row td { text-align: center; padding: 48px; color: var(--dim); font-size: 13px; }
+
+    /* ── RECIPE TAB ── */
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+    .recipe-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .recipe-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .recipe-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .recipe-cat  { font-size: 11px; color: var(--accent); }
+    .recipe-actions { display: flex; gap: 6px; }
+    .recipe-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 12px;
+    }
+    .recipe-item:last-child { border-bottom: none; }
+    .recipe-item-name { color: var(--dim); }
+    .recipe-item-amount { color: var(--text); font-weight: 600; }
+    .recipe-empty { font-size: 12px; color: var(--dim); font-style: italic; text-align: center; padding: 12px 0; }
+
+    .no-recipe {
+      text-align: center;
+      padding: 48px;
+      color: var(--dim);
+      font-size: 13px;
+      grid-column: 1/-1;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 480px;
+      transform: scale(.95);
+      transition: transform .2s;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-overlay.show .modal { transform: scale(1); }
+    .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 22px; }
+
+    .form-row { margin-bottom: 16px; }
+    .form-row label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 7px;
+    }
+    .form-row input, .form-row select {
+      width: 100%;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .form-row input:focus, .form-row select:focus { border-color: var(--accent-dim); }
+    .form-row select option { background: #161616; }
+    .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .form-foot { display: flex; gap: 10px; margin-top: 22px; }
+    .btn-cancel {
+      flex: 1; padding: 10px;
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--dim);
+      font-family: 'Inter', sans-serif; font-size: 13px; cursor: pointer;
+      transition: .2s;
+    }
+    .btn-cancel:hover { border-color: var(--dim); color: var(--text); }
+    .btn-save {
+      flex: 2; padding: 10px;
+      background: var(--accent); border: none;
+      border-radius: 8px; color: #fff;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: #c49a7a; }
+    .btn-save:disabled { opacity: .4; cursor: default; }
+
+    /* Recipe editor inside modal */
+    .recipe-editor { margin-top: 6px; }
+    .recipe-editor-item {
+      display: flex; gap: 8px; align-items: center;
+      margin-bottom: 8px;
+    }
+    .recipe-editor-item select { flex: 2; }
+    .recipe-editor-item input  { flex: 1; }
+    .recipe-editor-item select,
+    .recipe-editor-item input  {
+      background: #111; border: 1px solid var(--border);
+      border-radius: 7px; padding: 8px 10px;
+      color: var(--text); font-family: 'Inter', sans-serif; font-size: 12px; outline: none;
+    }
+    .recipe-editor-item select:focus,
+    .recipe-editor-item input:focus { border-color: var(--accent-dim); }
+    .recipe-editor-item .unit-label { font-size: 11px; color: var(--dim); min-width: 30px; }
+    .btn-remove-recipe {
+      background: none; border: none; color: var(--red);
+      cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;
+      transition: opacity .2s;
+    }
+    .btn-remove-recipe:hover { opacity: .7; }
+    .btn-add-ingredient {
+      background: none; border: 1px dashed var(--border);
+      border-radius: 7px; color: var(--dim);
+      font-family: 'Inter', sans-serif; font-size: 12px;
+      padding: 7px; width: 100%; cursor: pointer; transition: .2s; margin-top: 4px;
+    }
+    .btn-add-ingredient:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+    /* Restock modal */
+    .restock-info {
+      background: #111; border-radius: 9px; padding: 14px;
+      font-size: 13px; margin-bottom: 18px;
+    }
+    .restock-info .ri-name { font-weight: 600; margin-bottom: 4px; }
+    .restock-info .ri-stock { color: var(--dim); font-size: 12px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 9px; padding: 11px 22px;
+      font-size: 13px; z-index: 200;
+      transition: transform .3s ease; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(34,197,94,.4); color: var(--green); }
+    .toast.error   { border-color: rgba(255,95,95,.4);  color: var(--red); }
+
+    #loadingOverlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; font-size: 20px; font-weight: 600;
+      color: var(--accent); letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay">COBOLD POS</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">Cobold POS</div>
+  <nav class="nav-menu">
+    <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="kasir.html"     class="nav-item"><i class="fa-solid fa-cash-register"></i> Kasir</a>
+    <a href="admin.html"     class="nav-item"><i class="fa-solid fa-mug-hot"></i> Menu</a>
+    <a href="inventory.html" class="nav-item active"><i class="fa-solid fa-box"></i> Inventori</a>
+  </nav>
+  <button class="btn-logout" onclick="doLogout()">LOGOUT</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Alert stok rendah -->
+  <div class="alert-banner" id="alertBanner">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <div>
+      <div class="alert-title">Perhatian — Stok Rendah!</div>
+      <div class="alert-items" id="alertItems"></div>
+    </div>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>Inventori Bahan Baku</h1>
+      <p>Kelola stok bahan baku dan resep menu.</p>
+    </div>
+    <button class="btn-primary" onclick="openIngredientModal()">
+      <i class="fa-solid fa-plus"></i> Tambah Bahan
+    </button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('stok', this)">📦 Stok Bahan</button>
+    <button class="tab-btn"       onclick="switchTab('resep', this)">📋 Resep Menu</button>
+    <button class="tab-btn"       onclick="switchTab('log', this)">📜 Riwayat</button>
+  </div>
+
+  <!-- TAB: STOK -->
+  <div id="tab-stok">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="search-box" type="text" id="searchIngredient" placeholder="Cari bahan..." oninput="renderIngredients()"/>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Bahan Baku</th>
+            <th>Kategori</th>
+            <th>Stok Saat Ini</th>
+            <th>Min. Stok</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="ingredientTbody">
+          <tr class="empty-row"><td colspan="7">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: RESEP -->
+  <div id="tab-resep" style="display:none">
+    <div class="toolbar">
+      <p style="font-size:13px;color:var(--dim)">Klik <strong style="color:var(--text)">Edit Resep</strong> pada tiap menu untuk mengatur bahan baku yang digunakan.</p>
+      <button class="btn-primary" onclick="switchTab('stok', document.querySelector('.tab-btn'))">
+        <i class="fa-solid fa-arrow-left"></i> Ke Stok Bahan
+      </button>
+    </div>
+    <div class="recipe-grid" id="recipeGrid">
+      <div class="no-recipe">Memuat resep...</div>
+    </div>
+  </div>
+
+  <!-- TAB: LOG -->
+  <div id="tab-log" style="display:none">
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Waktu</th><th>Bahan</th><th>Perubahan</th><th>Keterangan</th><th>Oleh</th></tr>
+        </thead>
+        <tbody id="logTbody">
+          <tr class="empty-row"><td colspan="5">Memuat log...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL: TAMBAH/EDIT BAHAN -->
+<div class="modal-overlay" id="ingredientModal">
+  <div class="modal">
+    <div class="modal-title" id="ingredientModalTitle">Tambah Bahan Baku</div>
+    <input type="hidden" id="editIngId"/>
+    <div class="form-row">
+      <label>Nama Bahan</label>
+      <input type="text" id="ingName" placeholder="cth: House Blend Espresso"/>
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <label>Kategori</label>
+        <select id="ingCategory">
+          <option value="Kopi">Kopi</option>
+          <option value="Susu">Susu</option>
+          <option value="Sirup">Sirup</option>
+          <option value="Topping">Topping</option>
+          <option value="Gula">Gula</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Satuan</label>
+        <select id="ingUnit">
+          <option value="g">Gram (g)</option>
+          <option value="Kg">Kilogram (Kg)</option>
+          <option value="ml">Mililiter (ml)</option>
+          <option value="L">Liter (L)</option>
+          <option value="pcs">Pieces (pcs)</option>
+          <option value="btl">Botol (btl)</option>
+          <option value="ktg">Kantong (ktg)</option>
+          <option value="karton">Karton</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <label>Stok Saat Ini</label>
+        <input type="number" id="ingStock" placeholder="0" min="0" step="0.01"/>
+      </div>
+      <div class="form-row">
+        <label>Stok Minimum</label>
+        <input type="number" id="ingMinStock" placeholder="0" min="0" step="0.01"/>
+      </div>
+    </div>
+    <div class="form-foot">
+      <button class="btn-cancel" onclick="closeIngredientModal()">Batal</button>
+      <button class="btn-save" id="ingSaveBtn" onclick="submitIngredient()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RESTOCK -->
+<div class="modal-overlay" id="restockModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">Tambah Stok</div>
+    <input type="hidden" id="restockId"/>
+    <div class="restock-info">
+      <div class="ri-name" id="restockName">—</div>
+      <div class="ri-stock" id="restockCurrent">Stok saat ini: —</div>
+    </div>
+    <div class="form-row">
+      <label>Jumlah Penambahan</label>
+      <input type="number" id="restockAmount" placeholder="0" min="0.01" step="0.01"/>
+    </div>
+    <div class="form-row">
+      <label>Keterangan (opsional)</label>
+      <input type="text" id="restockNote" placeholder="cth: Restock mingguan"/>
+    </div>
+    <div class="form-foot">
+      <button class="btn-cancel" onclick="closeRestockModal()">Batal</button>
+      <button class="btn-save" id="restockSaveBtn" onclick="submitRestock()">Tambah Stok</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT RESEP -->
+<div class="modal-overlay" id="recipeModal">
+  <div class="modal">
+    <div class="modal-title" id="recipeModalTitle">Edit Resep</div>
+    <input type="hidden" id="recipeMenuId"/>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:16px">
+      Tentukan bahan baku dan jumlah yang digunakan per 1 porsi menu ini.
+    </p>
+    <div class="recipe-editor" id="recipeEditor"></div>
+    <button class="btn-add-ingredient" onclick="addRecipeRow()">
+      <i class="fa-solid fa-plus"></i> Tambah Bahan
+    </button>
+    <div class="form-foot">
+      <button class="btn-cancel" onclick="closeRecipeModal()">Batal</button>
+      <button class="btn-save" id="recipeSaveBtn" onclick="submitRecipe()">Simpan Resep</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script>
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",
+    authDomain:        "cobold-b0e8d.firebaseapp.com",
+    projectId:         "cobold-b0e8d",
+    storageBucket:     "cobold-b0e8d.firebasestorage.app",
+    messagingSenderId: "317072309656",
+    appId:             "1:317072309656:web:803003d311f119e437bfed"
+  };
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, getDocs, addDoc, doc, getDoc,
+    updateDoc, deleteDoc, query, orderBy, serverTimestamp, increment
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUser  = null;
+  let ingredients  = [];   // [{id, name, stock, unit, minStock, category}]
+  let menuItems    = [];   // [{id, name, category, recipe:[{ingredientId, amount}]}]
+  let stockLogs    = [];
+
+  // ── AUTH GUARD ──
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { location.href = "login.html"; return; }
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (!snap.exists() || snap.data().role !== "admin") {
+      location.href = "login.html"; return;
+    }
+    currentUser = { uid: user.uid, name: snap.data().name || user.email };
+    await Promise.all([loadIngredients(), loadMenu(), loadLogs()]);
+    renderIngredients();
+    renderRecipes();
+    renderLogs();
+    checkAlerts();
+    document.getElementById("loadingOverlay").style.display = "none";
+  });
+
+  // ── LOAD ──
+  async function loadIngredients() {
+    const snap = await getDocs(query(collection(db, "ingredients"), orderBy("category")));
+    ingredients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async function loadMenu() {
+    const snap = await getDocs(query(collection(db, "menu"), orderBy("category")));
+    menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async function loadLogs() {
+    const snap = await getDocs(query(collection(db, "stockLogs"), orderBy("createdAt", "desc")));
+    stockLogs = snap.docs.map(d => ({ id: d.id, ...d.data() })).slice(0, 50);
+  }
+
+  // ── TABS ──
+  window.switchTab = function(tab, btn) {
+    ['stok','resep','log'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+    });
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (tab === 'resep') renderRecipes();
+    if (tab === 'log')   renderLogs();
+  };
+
+  // ── ALERTS ──
+  function checkAlerts() {
+    const low = ingredients.filter(i => i.stock <= i.minStock && i.minStock > 0);
+    if (!low.length) return;
+    document.getElementById("alertBanner").classList.add("show");
+    document.getElementById("alertItems").innerHTML = low.map(i => {
+      const lvl = i.stock <= 0 ? 'HABIS' : (i.stock <= i.minStock * 0.5 ? 'KRITIS' : 'RENDAH');
+      return `• ${i.name}: ${i.stock} ${i.unit} (${lvl})`;
+    }).join('<br>');
+  }
+
+  // ── STATUS HELPERS ──
+  function getStatus(item) {
+    if (!item.minStock || item.minStock <= 0) return 'aman';
+    const ratio = item.stock / item.minStock;
+    if (ratio <= 0.5) return 'kritis';
+    if (ratio <= 1)   return 'rendah';
+    return 'aman';
+  }
+
+  function statusLabel(s) {
+    return { kritis: 'KRITIS', rendah: 'RENDAH', aman: 'AMAN' }[s];
+  }
+
+  function barWidth(item) {
+    if (!item.minStock || item.minStock <= 0) return 80;
+    return Math.min(100, Math.round((item.stock / (item.minStock * 2)) * 100));
+  }
+
+  // ── RENDER INGREDIENTS ──
+  window.renderIngredients = function() {
+    const q     = document.getElementById("searchIngredient").value.toLowerCase();
+    const tbody = document.getElementById("ingredientTbody");
+    const list  = ingredients.filter(i => !q || i.name.toLowerCase().includes(q) || (i.category||'').toLowerCase().includes(q));
+    if (!list.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Tidak ada bahan ditemukan.</td></tr>`; return;
+    }
+    tbody.innerHTML = list.map(i => {
+      const st  = getStatus(i);
+      const pct = barWidth(i);
+      return `<tr>
+        <td><strong>${i.name}</strong></td>
+        <td><span style="font-size:11px;color:var(--accent)">${i.category || '—'}</span></td>
+        <td><strong>${i.stock}</strong><span class="unit-tag">${i.unit}</span></td>
+        <td>${i.minStock || 0}<span class="unit-tag">${i.unit}</span></td>
+        <td>
+          <div class="stock-bar-wrap">
+            <div class="stock-bar"><div class="stock-bar-fill fill-${st}" style="width:${pct}%"></div></div>
+            <span style="font-size:11px;color:var(--dim);min-width:28px">${pct}%</span>
+          </div>
+        </td>
+        <td><span class="badge badge-${st}">${statusLabel(st)}</span></td>
+        <td>
+          <button class="action-btn restock" onclick="openRestockModal('${i.id}')"><i class="fa-solid fa-plus"></i> Stok</button>
+          <button class="action-btn" onclick="openIngredientModal('${i.id}')">Edit</button>
+          <button class="action-btn danger" onclick="deleteIngredient('${i.id}')">Hapus</button>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+
+  // ── RENDER RECIPES ──
+  window.renderRecipes = function() {
+    const grid = document.getElementById("recipeGrid");
+    if (!menuItems.length) {
+      grid.innerHTML = `<div class="no-recipe">Belum ada menu. Tambahkan di halaman Menu.</div>`; return;
+    }
+    grid.innerHTML = menuItems.map(m => {
+      const recipe = m.recipe || [];
+      const rows = recipe.length
+        ? recipe.map(r => {
+            const ing = ingredients.find(i => i.id === r.ingredientId);
+            return `<div class="recipe-item">
+              <span class="recipe-item-name">${ing ? ing.name : '(dihapus)'}</span>
+              <span class="recipe-item-amount">${r.amount} ${ing ? ing.unit : ''}</span>
+            </div>`;
+          }).join('')
+        : `<div class="recipe-empty">Belum ada resep</div>`;
+      return `<div class="recipe-card">
+        <div class="recipe-card-head">
+          <div>
+            <div class="recipe-name">${m.name}</div>
+            <div class="recipe-cat">${m.category || ''}</div>
+          </div>
+          <div class="recipe-actions">
+            <button class="action-btn" onclick="openRecipeModal('${m.id}')">Edit Resep</button>
+          </div>
+        </div>
+        ${rows}
+      </div>`;
+    }).join('');
+  };
+
+  // ── RENDER LOGS ──
+  function renderLogs() {
+    const tbody = document.getElementById("logTbody");
+    if (!stockLogs.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada riwayat.</td></tr>`; return;
+    }
+    tbody.innerHTML = stockLogs.map(l => {
+      const isPos = l.change > 0;
+      const color = isPos ? 'var(--green)' : 'var(--red)';
+      const sign  = isPos ? '+' : '';
+      return `<tr>
+        <td style="color:var(--dim);font-size:12px">${fmtDate(l.createdAt)}</td>
+        <td>${l.ingredientName}</td>
+        <td style="color:${color};font-weight:600">${sign}${l.change} ${l.unit}</td>
+        <td style="font-size:12px;color:var(--dim)">${l.note || '—'}</td>
+        <td style="font-size:12px;color:var(--dim)">${l.byName || '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── INGREDIENT MODAL ──
+  window.openIngredientModal = function(id) {
+    document.getElementById("editIngId").value = id || '';
+    if (id) {
+      const i = ingredients.find(x => x.id === id);
+      document.getElementById("ingredientModalTitle").textContent = "Edit Bahan";
+      document.getElementById("ingName").value     = i.name;
+      document.getElementById("ingCategory").value = i.category || 'Lainnya';
+      document.getElementById("ingUnit").value      = i.unit;
+      document.getElementById("ingStock").value     = i.stock;
+      document.getElementById("ingMinStock").value  = i.minStock || 0;
+    } else {
+      document.getElementById("ingredientModalTitle").textContent = "Tambah Bahan Baku";
+      document.getElementById("ingName").value = '';
+      document.getElementById("ingStock").value = '';
+      document.getElementById("ingMinStock").value = '';
+    }
+    document.getElementById("ingredientModal").classList.add("show");
+  };
+
+  window.closeIngredientModal = function() {
+    document.getElementById("ingredientModal").classList.remove("show");
+  };
+
+  window.submitIngredient = async function() {
+    const btn   = document.getElementById("ingSaveBtn");
+    const id    = document.getElementById("editIngId").value;
+    const name  = document.getElementById("ingName").value.trim();
+    const cat   = document.getElementById("ingCategory").value;
+    const unit  = document.getElementById("ingUnit").value;
+    const stock = parseFloat(document.getElementById("ingStock").value);
+    const minSt = parseFloat(document.getElementById("ingMinStock").value) || 0;
+    if (!name || isNaN(stock)) { showToast("Nama dan stok wajib diisi.", "error"); return; }
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    try {
+      if (id) {
+        await updateDoc(doc(db, "ingredients", id), { name, category: cat, unit, stock, minStock: minSt });
+      } else {
+        await addDoc(collection(db, "ingredients"), {
+          name, category: cat, unit, stock, minStock: minSt, createdAt: serverTimestamp()
+        });
+      }
+      await loadIngredients();
+      renderIngredients();
+      checkAlerts();
+      closeIngredientModal();
+      showToast("✓ Bahan disimpan", "success");
+    } catch (e) { showToast("Error: " + e.message, "error"); }
+    btn.disabled = false; btn.textContent = "Simpan";
+  };
+
+  window.deleteIngredient = async function(id) {
+    const i = ingredients.find(x => x.id === id);
+    if (!confirm(`Hapus bahan "${i?.name}"?`)) return;
+    try {
+      await deleteDoc(doc(db, "ingredients", id));
+      await loadIngredients();
+      renderIngredients();
+      showToast("Bahan dihapus", "success");
+    } catch (e) { showToast("Error: " + e.message, "error"); }
+  };
+
+  // ── RESTOCK MODAL ──
+  window.openRestockModal = function(id) {
+    const i = ingredients.find(x => x.id === id);
+    document.getElementById("restockId").value      = id;
+    document.getElementById("restockName").textContent    = i.name;
+    document.getElementById("restockCurrent").textContent = `Stok saat ini: ${i.stock} ${i.unit}`;
+    document.getElementById("restockAmount").value  = '';
+    document.getElementById("restockNote").value    = '';
+    document.getElementById("restockModal").classList.add("show");
+  };
+
+  window.closeRestockModal = function() {
+    document.getElementById("restockModal").classList.remove("show");
+  };
+
+  window.submitRestock = async function() {
+    const btn    = document.getElementById("restockSaveBtn");
+    const id     = document.getElementById("restockId").value;
+    const amount = parseFloat(document.getElementById("restockAmount").value);
+    const note   = document.getElementById("restockNote").value.trim() || "Restock manual";
+    if (isNaN(amount) || amount <= 0) { showToast("Jumlah tidak valid.", "error"); return; }
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    try {
+      const i = ingredients.find(x => x.id === id);
+      await updateDoc(doc(db, "ingredients", id), { stock: increment(amount) });
+      await addDoc(collection(db, "stockLogs"), {
+        ingredientId: id, ingredientName: i.name, unit: i.unit,
+        change: amount, note, byName: currentUser.name,
+        createdAt: serverTimestamp()
+      });
+      await loadIngredients();
+      await loadLogs();
+      renderIngredients();
+      renderLogs();
+      checkAlerts();
+      closeRestockModal();
+      showToast(`✓ +${amount} ${i.unit} ditambahkan`, "success");
+    } catch (e) { showToast("Error: " + e.message, "error"); }
+    btn.disabled = false; btn.textContent = "Tambah Stok";
+  };
+
+  // ── RECIPE MODAL ──
+  let recipeRows = [];
+
+  window.openRecipeModal = function(menuId) {
+    const m = menuItems.find(x => x.id === menuId);
+    document.getElementById("recipeMenuId").value       = menuId;
+    document.getElementById("recipeModalTitle").textContent = `Resep: ${m.name}`;
+    recipeRows = (m.recipe || []).map(r => ({ ingredientId: r.ingredientId, amount: r.amount }));
+    renderRecipeEditor();
+    document.getElementById("recipeModal").classList.add("show");
+  };
+
+  window.closeRecipeModal = function() {
+    document.getElementById("recipeModal").classList.remove("show");
+  };
+
+  window.addRecipeRow = function() {
+    recipeRows.push({ ingredientId: ingredients[0]?.id || '', amount: 0 });
+    renderRecipeEditor();
+  };
+
+  function renderRecipeEditor() {
+    const editor = document.getElementById("recipeEditor");
+    if (!ingredients.length) {
+      editor.innerHTML = `<p style="font-size:12px;color:var(--dim);text-align:center;padding:12px 0">Belum ada bahan baku. Tambahkan dulu di tab Stok Bahan.</p>`;
+      return;
+    }
+    const opts = ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+    editor.innerHTML = recipeRows.map((r, idx) => {
+      const ing = ingredients.find(i => i.id === r.ingredientId);
+      return `<div class="recipe-editor-item">
+        <select onchange="updateRecipeRow(${idx}, 'ingredientId', this.value)">
+          ${ingredients.map(i => `<option value="${i.id}" ${i.id === r.ingredientId ? 'selected' : ''}>${i.name}</option>`).join('')}
+        </select>
+        <input type="number" value="${r.amount}" min="0" step="0.01" placeholder="Jml"
+          onchange="updateRecipeRow(${idx}, 'amount', parseFloat(this.value))"/>
+        <span class="unit-label">${ing ? ing.unit : ''}</span>
+        <button class="btn-remove-recipe" onclick="removeRecipeRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
+      </div>`;
+    }).join('');
+  }
+
+  window.updateRecipeRow = function(idx, field, val) {
+    recipeRows[idx][field] = val;
+    if (field === 'ingredientId') renderRecipeEditor();
+  };
+
+  window.removeRecipeRow = function(idx) {
+    recipeRows.splice(idx, 1);
+    renderRecipeEditor();
+  };
+
+  window.submitRecipe = async function() {
+    const btn    = document.getElementById("recipeSaveBtn");
+    const menuId = document.getElementById("recipeMenuId").value;
+    const valid  = recipeRows.filter(r => r.ingredientId && r.amount > 0);
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    try {
+      await updateDoc(doc(db, "menu", menuId), { recipe: valid });
+      await loadMenu();
+      renderRecipes();
+      closeRecipeModal();
+      showToast("✓ Resep disimpan", "success");
+    } catch (e) { showToast("Error: " + e.message, "error"); }
+    btn.disabled = false; btn.textContent = "Simpan Resep";
+  };
+
+  // ── HELPERS ──
+  function fmtDate(ts) {
+    if (!ts) return '—';
+    const d = ts.toDate ? ts.toDate() : new Date(ts.seconds * 1000);
+    return d.toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove("show"), 2400);
+  }
+  window.showToast = showToast;
+
+  window.doLogout = async function() {
+    await signOut(auth); location.href = "login.html";
+  };
+</script>
+</body>
+</html>
