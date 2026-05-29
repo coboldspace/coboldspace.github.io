@@ -58,7 +58,6 @@
       border-radius: 8px;
       margin-bottom: 10px;
       transition: 0.3s;
-      font-size: 14px;
     }
     .nav-item i { margin-right: 12px; width: 20px; }
     .nav-item:hover, .nav-item.active { background-color: #222; color: var(--accent); }
@@ -77,22 +76,23 @@
     .btn-logout:hover { background: var(--red); color: white; }
 
     /* ── MAIN (identik dashboard.html) ── */
-    .main {
+    .main-content {
       flex-grow: 1;
       padding: 40px;
       overflow-y: auto;
     }
 
-    .page-header {
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 30px;
-      flex-wrap: wrap;
-      gap: 14px;
     }
-    .page-header h1 { font-size: 24px; margin: 0 0 4px 0; }
-    .page-header p  { font-size: 14px; color: var(--text-dim); margin: 0; }
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+    .header p { font-size: 14px; color: var(--text-dim); margin: 4px 0 0 0; }
 
     .btn-primary {
       background: var(--accent);
@@ -444,7 +444,7 @@
 </div>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main-content">
 
   <!-- Alert stok rendah -->
   <div class="alert-banner" id="alertBanner">
@@ -455,7 +455,7 @@
     </div>
   </div>
 
-  <div class="page-header">
+  <div class="header">
     <div>
       <h1>Inventori Bahan Baku</h1>
       <p>Kelola stok bahan baku dan resep menu.</p>
@@ -527,7 +527,7 @@
     </div>
   </div>
 
-</div><!-- /main -->
+</div><!-- /main-content -->
 
 <!-- MODAL: TAMBAH/EDIT BAHAN -->
 <div class="modal-overlay" id="ingredientModal">
