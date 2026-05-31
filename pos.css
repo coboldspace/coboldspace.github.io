@@ -166,7 +166,7 @@ body {
 /* Label tetap muncul, tidak hilang */
 .bn-item.active span {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(-22px);
   color: var(--accent);
 }
 
