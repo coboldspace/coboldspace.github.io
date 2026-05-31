@@ -167,51 +167,138 @@
     .confirm-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
     .confirm-total span:last-child { color: var(--accent); }
 
-    /* ── MOBILE ADJUSTMENTS ── */
+    /* ── MOBILE: TAB SWITCH LAYOUT ── */
     @media (max-width: 640px) {
       .pos-wrap { 
         flex-direction: column; 
         flex: 1 1 auto;
         min-height: 0;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        /* padding-bottom buat bottom nav */
-        padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
+        overflow: hidden;
+        position: relative;
       }
 
-      /* FIX: Menu panel di atas, kasih min-height biar ga ketutup order panel */
-      .menu-panel { 
-        flex: 1; 
-        min-height: 0;
+      /* Tab switcher */
+      .pos-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+        background: var(--card-bg);
+        flex-shrink: 0;
+        z-index: 10;
       }
+      .pos-tab {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-dim);
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: 0.2s;
+      }
+      .pos-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+      .pos-tab .tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        background: var(--accent);
+        color: white;
+        border-radius: 9px;
+        font-size: 10px;
+        margin-left: 6px;
+        font-weight: 600;
+      }
+
+      /* Menu panel: full height when active */
+      .menu-panel { 
+        flex: 1;
+        min-height: 0;
+        display: none;
+      }
+      .menu-panel.active { display: flex; }
+
       .menu-toolbar { padding: 12px 14px; }
       .menu-grid { 
         padding: 12px 14px; 
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-        gap: 8px; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 10px; 
       }
-      .menu-card { padding: 12px; }
+      .menu-card { padding: 14px; }
       .menu-card-name { font-size: 13px; }
 
-      /* FIX: Order panel di bawah, max-height lebih kecil biar menu tetap kelihatan */
+      /* Order panel: full height when active */
       .order-panel {
         width: 100%;
         border-left: none;
-        border-top: 1px solid var(--border);
-        /* FIX: max-height lebih kecil, biar menu grid tetap ada space */
-        max-height: 35vh;
-        flex-shrink: 0;
+        border-top: none;
+        display: none;
+        flex: 1;
         min-height: 0;
       }
-      .order-items { padding: 12px 14px; }
+      .order-panel.active { display: flex; }
+
+      .order-items { 
+        flex: 1; 
+        padding: 12px 14px; 
+        overflow-y: auto;
+      }
       .order-notes { display: none; }
       .order-head { padding: 12px 14px; }
+      .order-foot { padding: 12px 14px; }
+
+      /* Floating cart summary (always visible) */
+      .cart-float {
+        position: fixed;
+        bottom: calc(var(--bn-total) + 8px);
+        left: 16px;
+        right: 16px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 700;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      }
+      .cart-float.hidden { display: none; }
+      .cart-float-total { font-size: 14px; color: var(--text-dim); }
+      .cart-float-total span { color: var(--accent); font-weight: 600; font-size: 18px; }
+      .cart-float-btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
     }
 
     /* ── TABLET ADJUSTMENTS ── */
     @media (max-width: 1024px) and (min-width: 641px) {
       .order-panel { width: 260px; }
       .menu-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+      .pos-tabs { display: none; }
+      .cart-float { display: none !important; }
+    }
+
+    /* Desktop: hide tab switcher */
+    @media (min-width: 641px) {
+      .pos-tabs { display: none; }
+      .cart-float { display: none !important; }
     }
   </style>
 </head>
@@ -243,7 +330,8 @@
 
 <!-- POS -->
 <div class="pos-wrap">
-  <div class="menu-panel">
+  <!-- <div class="menu-panel"> -->
+  <div class="menu-panel active" id="menuPanel"></div>
     <div class="menu-toolbar">
       <input class="search-input" type="text" id="searchInput" placeholder="Cari menu..." oninput="renderMenu()" style="width:160px"/>
       <div class="cat-pills" id="catPills"></div>
@@ -251,7 +339,8 @@
     <div class="menu-grid" id="menuGrid"><div class="menu-empty">Memuat menu...</div></div>
   </div>
 
-  <div class="order-panel">
+  <!-- <div class="order-panel"> -->
+  <div class="order-panel" id="orderPanel"></div>
     <div class="order-head">
       <div class="order-head-top">
         <h2>Pesanan</h2>
@@ -425,6 +514,51 @@
     setTimeout(()=>t.classList.remove('show'),2200);
   }
   document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
+
+    // ── MOBILE TAB SWITCH ──
+  window.switchTab = function(tab) {
+    const menuPanel = document.getElementById('menuPanel');
+    const orderPanel = document.getElementById('orderPanel');
+    const tabMenu = document.getElementById('tabMenu');
+    const tabOrder = document.getElementById('tabOrder');
+    
+    if (tab === 'menu') {
+      menuPanel.classList.add('active');
+      orderPanel.classList.remove('active');
+      tabMenu.classList.add('active');
+      tabOrder.classList.remove('active');
+    } else {
+      menuPanel.classList.remove('active');
+      orderPanel.classList.add('active');
+      tabMenu.classList.remove('active');
+      tabOrder.classList.add('active');
+    }
+  };
+
+  // Update floating cart & badge
+  function updateCartFloat() {
+    const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+    const badge = document.getElementById('tabBadge');
+    const cartFloat = document.getElementById('cartFloat');
+    const cartFloatTotal = document.getElementById('cartFloatTotal');
+    
+    if (cart.length > 0) {
+      badge.style.display = 'inline-flex';
+      badge.textContent = cart.reduce((s, c) => s + c.qty, 0);
+      cartFloat.classList.remove('hidden');
+      cartFloatTotal.textContent = 'Rp ' + total.toLocaleString('id');
+    } else {
+      badge.style.display = 'none';
+      cartFloat.classList.add('hidden');
+    }
+  }
+
+  // Override renderCart to also update float
+  const originalRenderCart = renderCart;
+  renderCart = function() {
+    originalRenderCart();
+    updateCartFloat();
+  };
 </script>
 </body>
 </html>
