@@ -488,19 +488,29 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
    MOBILE  ≤ 640px
    ════════════════════════════════ */
 @media (max-width: 640px) {
+  /* FIX: Lock body ke viewport height & prevent body scroll.
+     Biar .main-content yang jadi scrollable area. */
   body {
     flex-direction: column;
-    /* FIX: hapus padding bawah dari body, pindah ke .main-content biar scrollable */
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
     padding-bottom: 0;
   }
 
   .sidebar    { display: none !important; }
   .bottom-nav { display: block; }
 
-  /* FIX: padding bawah di .main-content biar konten terakhir ga ketutup bottom nav */
+  /* FIX: .main-content wajib jadi scrollable container.
+     min-height: 0 adalah kunci biar flex item bisa ngecil & scroll. */
   .main-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
     padding: 20px 16px;
     padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
+    /* iOS momentum scroll */
+    -webkit-overflow-scrolling: touch;
   }
 
   .header { margin-bottom: 14px; }
