@@ -537,17 +537,22 @@
     const orderPanel = document.getElementById('orderPanel');
     const tabMenu = document.getElementById('tabMenu');
     const tabOrder = document.getElementById('tabOrder');
+    const cartFloat = document.getElementById('cartFloat'); // FIX: ambil ref cartFloat
     
     if (tab === 'menu') {
       menuPanel.classList.add('active');
       orderPanel.classList.remove('active');
       tabMenu.classList.add('active');
       tabOrder.classList.remove('active');
+      // FIX: tampilin floating cart di tab Menu (kalau ada item)
+      if (cart.length > 0) cartFloat.classList.remove('hidden');
     } else {
       menuPanel.classList.remove('active');
       orderPanel.classList.add('active');
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
+      // FIX: sembunyiin floating cart di tab Pesanan
+      cartFloat.classList.add('hidden');
     }
   };
 
