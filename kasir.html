@@ -169,7 +169,6 @@
 
     /* ── MOBILE ADJUSTMENTS ── */
     @media (max-width: 640px) {
-      /* FIX: .pos-wrap jadi scrollable container (sama kayak .main-content di dashboard) */
       .pos-wrap { 
         flex-direction: column; 
         flex: 1 1 auto;
@@ -180,17 +179,27 @@
         padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
       }
 
-      .menu-panel { flex: 1; min-height: 0; }
+      /* FIX: Menu panel di atas, kasih min-height biar ga ketutup order panel */
+      .menu-panel { 
+        flex: 1; 
+        min-height: 0;
+      }
       .menu-toolbar { padding: 12px 14px; }
-      .menu-grid { padding: 12px 14px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+      .menu-grid { 
+        padding: 12px 14px; 
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+        gap: 8px; 
+      }
       .menu-card { padding: 12px; }
       .menu-card-name { font-size: 13px; }
 
+      /* FIX: Order panel di bawah, max-height lebih kecil biar menu tetap kelihatan */
       .order-panel {
         width: 100%;
         border-left: none;
         border-top: 1px solid var(--border);
-        /* HAPUS max-height, biar natural flow */
+        /* FIX: max-height lebih kecil, biar menu grid tetap ada space */
+        max-height: 35vh;
         flex-shrink: 0;
         min-height: 0;
       }
