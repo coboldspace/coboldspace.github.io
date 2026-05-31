@@ -243,6 +243,8 @@
         display: none;
         flex: 1;
         min-height: 0;
+        /* FIX: padding bawah biar "Proses Pesanan" ga ketutup bottom nav */
+        padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 20px + env(safe-area-inset-bottom, 16px));
       }
       .order-panel.active { display: flex; }
 
@@ -346,7 +348,6 @@
 
 <!-- POS -->
 <div class="pos-wrap">
-  <!-- FIX: BUKAN self-closing div! -->
   <div class="menu-panel active" id="menuPanel">
     <div class="menu-toolbar">
       <input class="search-input" type="text" id="searchInput" placeholder="Cari menu..." oninput="renderMenu()" style="width:160px"/>
@@ -355,7 +356,6 @@
     <div class="menu-grid" id="menuGrid"><div class="menu-empty">Memuat menu...</div></div>
   </div>
 
-  <!-- FIX: BUKAN self-closing div! -->
   <div class="order-panel" id="orderPanel">
     <div class="order-head">
       <div class="order-head-top">
