@@ -490,14 +490,18 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
 @media (max-width: 640px) {
   body {
     flex-direction: column;
-    /* ruang bawah = bn-bar + bubble yang nongol + padding + safe area */
-    padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
+    /* FIX: hapus padding bawah dari body, pindah ke .main-content biar scrollable */
+    padding-bottom: 0;
   }
 
   .sidebar    { display: none !important; }
   .bottom-nav { display: block; }
 
-  .main-content { padding: 20px 16px; }
+  /* FIX: padding bawah di .main-content biar konten terakhir ga ketutup bottom nav */
+  .main-content {
+    padding: 20px 16px;
+    padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
+  }
 
   .header { margin-bottom: 14px; }
   .header h1 { font-size: 20px; }
