@@ -41,8 +41,17 @@
       <h1>Dashboard</h1>
       <div class="header-sub" id="userInfo">Memuat...</div>
     </div>
-    <div class="header-date">
-      <i class="fa-solid fa-calendar"></i> <span id="currentDate"></span>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="header-date">
+        <i class="fa-solid fa-calendar"></i> <span id="currentDate"></span>
+      </div>
+      <!-- Logout btn: muncul di mobile (sidebar tersembunyi) -->
+      <button id="btnLogoutMobile" onclick="doLogout()"
+        style="display:none;background:none;border:1px solid #444;color:#ff5f5f;
+               padding:7px 14px;border-radius:8px;font-family:'Inter',sans-serif;
+               font-size:13px;font-weight:600;cursor:pointer;align-items:center;gap:6px">
+        <i class="fa-solid fa-right-from-bracket"></i> Logout
+      </button>
     </div>
   </div>
 
@@ -198,7 +207,17 @@
     } catch(e) { console.error(e); }
   }
 
-  document.getElementById('btnLogout').addEventListener('click', ()=>signOut(auth).then(()=>location.href="login.html"));
+  const doLogout = () => signOut(auth).then(() => location.href = "login.html");
+  window.doLogout = doLogout;
+  document.getElementById('btnLogout').addEventListener('click', doLogout);
+
+  // Tampilkan/sembunyikan mobile logout button
+  const mobileLogout = document.getElementById('btnLogoutMobile');
+  const checkMobile = () => {
+    mobileLogout.style.display = window.innerWidth <= 640 ? 'inline-flex' : 'none';
+  };
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
 </script>
 </body>
 </html>
