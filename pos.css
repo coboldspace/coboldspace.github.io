@@ -97,16 +97,16 @@ body {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   z-index: 800;
-  /* Extra top padding agar bubble tidak terpotong */
+  /* padding atas buat bubble, bawah buat safe-area (notch iPhone) */
   padding-top: calc(var(--bn-bubble) / 2 + 4px);
-  padding-bottom: var(--safe-bot);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
   background: transparent;
   pointer-events: none;
 }
 
 /* Bar floating hitam */
 .bn-bar {
-  margin: 0 16px calc(10px + var(--safe-bot));
+  margin: 0 16px 10px;
   height: var(--bn-h);
   background: #1c1c19;
   border-radius: 26px;
@@ -472,8 +472,8 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
 @media (max-width: 640px) {
   body {
     flex-direction: column;
-    /* ruang bawah = tinggi bottom nav total + safe area */
-    padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 20px + var(--safe-bot));
+    /* ruang bawah = bn-bar + bubble yang nongol + padding + safe area */
+    padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
   }
 
   .sidebar    { display: none !important; }
@@ -503,7 +503,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
 
   /* Toast di atas bottom nav */
   .toast {
-    bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 20px + var(--safe-bot) + 8px);
+    bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px) + 8px);
     width: calc(100% - 32px);
     text-align: center; white-space: normal;
   }
