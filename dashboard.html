@@ -7,6 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <link rel="stylesheet" href="pos.css"/>
+  <style>
+    #btnLogoutMobile { padding: 8px 14px; font-size: 13px; font-weight: 600; }
+    #btnLogoutMobile:hover { background: rgba(255,95,95,0.1); }
+    @media (max-width: 640px) {
+      #btnLogoutMobile { padding: 9px 11px; }
+      #btnLogoutMobile .logout-label { display: none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -36,23 +44,23 @@
 
 <!-- MAIN CONTENT -->
 <div class="main-content">
-  <div class="header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:8px">
     <div>
-      <h1>Dashboard</h1>
+      <h1 style="font-size:24px;font-weight:600;margin-bottom:4px">Dashboard</h1>
       <div class="header-sub" id="userInfo">Memuat...</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="header-date">
+      <div class="header-date" style="margin-top:4px" id="dateWrap">
         <i class="fa-solid fa-calendar"></i> <span id="currentDate"></span>
       </div>
-      <!-- Logout btn: muncul di mobile (sidebar tersembunyi) -->
-      <button id="btnLogoutMobile" onclick="doLogout()"
-        style="display:none;background:none;border:1px solid #444;color:#ff5f5f;
-               padding:7px 14px;border-radius:8px;font-family:'Inter',sans-serif;
-               font-size:13px;font-weight:600;cursor:pointer;align-items:center;gap:6px">
-        <i class="fa-solid fa-right-from-bracket"></i> Logout
-      </button>
     </div>
+    <!-- Logout pojok kanan atas, mobile = icon only -->
+    <button id="btnLogoutMobile" onclick="doLogout()"
+      style="background:none;border:1px solid #444;color:#ff5f5f;
+             border-radius:8px;font-family:'Inter',sans-serif;cursor:pointer;
+             display:flex;align-items:center;gap:6px;
+             transition:background 0.2s;flex-shrink:0">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span class="logout-label">Logout</span>
+    </button>
   </div>
 
   <!-- Alert stok rendah -->
@@ -209,15 +217,9 @@
 
   const doLogout = () => signOut(auth).then(() => location.href = "login.html");
   window.doLogout = doLogout;
-  document.getElementById('btnLogout').addEventListener('click', doLogout);
-
-  // Tampilkan/sembunyikan mobile logout button
-  const mobileLogout = document.getElementById('btnLogoutMobile');
-  const checkMobile = () => {
-    mobileLogout.style.display = window.innerWidth <= 640 ? 'inline-flex' : 'none';
-  };
-  checkMobile();
-  window.addEventListener('resize', checkMobile);
+  // Sidebar logout (desktop/tablet)
+  const sidebarLogout = document.getElementById('btnLogout');
+  if (sidebarLogout) sidebarLogout.addEventListener('click', doLogout);
 </script>
 </body>
 </html>
