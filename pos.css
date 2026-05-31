@@ -9,7 +9,7 @@
   --bg-color:  #0d0d0d;
   --card-bg:   #161616;
   --accent:    #b08968;
-  --accent-h:  #c49a7a;
+  --accent-h:  oklch(71.728% 0.06695 58.703);
   --text-main: #e0e0e0;
   --text-dim:  #888;
   --border:    #222;
@@ -166,7 +166,7 @@ body {
 /* Label tetap muncul, tidak hilang */
 .bn-item.active span {
   opacity: 1;
-  transform: translateY(-22px);
+  transform: translateY(0);
   color: var(--accent);
 }
 
