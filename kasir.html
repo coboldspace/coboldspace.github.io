@@ -328,10 +328,26 @@
   </div>
 </nav>
 
+<!-- MOBILE TAB SWITCHER -->
+<div class="pos-tabs" id="posTabs">
+  <button class="pos-tab active" onclick="switchTab('menu')" id="tabMenu">
+    📋 Menu
+  </button>
+  <button class="pos-tab" onclick="switchTab('order')" id="tabOrder">
+    🛒 Pesanan <span class="tab-badge" id="tabBadge" style="display:none">0</span>
+  </button>
+</div>
+
+<!-- FLOATING CART (mobile only) -->
+<div class="cart-float hidden" id="cartFloat">
+  <div class="cart-float-total">Total: <span id="cartFloatTotal">Rp 0</span></div>
+  <button class="cart-float-btn" onclick="switchTab('order')">Lihat Pesanan</button>
+</div>
+
 <!-- POS -->
 <div class="pos-wrap">
-  <!-- <div class="menu-panel"> -->
-  <div class="menu-panel active" id="menuPanel"></div>
+  <!-- FIX: BUKAN self-closing div! -->
+  <div class="menu-panel active" id="menuPanel">
     <div class="menu-toolbar">
       <input class="search-input" type="text" id="searchInput" placeholder="Cari menu..." oninput="renderMenu()" style="width:160px"/>
       <div class="cat-pills" id="catPills"></div>
@@ -339,8 +355,8 @@
     <div class="menu-grid" id="menuGrid"><div class="menu-empty">Memuat menu...</div></div>
   </div>
 
-  <!-- <div class="order-panel"> -->
-  <div class="order-panel" id="orderPanel"></div>
+  <!-- FIX: BUKAN self-closing div! -->
+  <div class="order-panel" id="orderPanel">
     <div class="order-head">
       <div class="order-head-top">
         <h2>Pesanan</h2>
@@ -515,7 +531,7 @@
   }
   document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
 
-    // ── MOBILE TAB SWITCH ──
+  // ── MOBILE TAB SWITCH ──
   window.switchTab = function(tab) {
     const menuPanel = document.getElementById('menuPanel');
     const orderPanel = document.getElementById('orderPanel');
