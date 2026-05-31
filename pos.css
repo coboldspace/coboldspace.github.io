@@ -144,33 +144,51 @@ body {
 .bn-item i {
   font-size: 20px;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s;
-  position: relative; z-index: 2;
+  position: relative;
+  z-index: 2;
+  /* FIX: mastiin glyph Font Awesome center di bounding box 20x20 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
 }
 .bn-item span {
   font-size: 10px;
   transition: opacity 0.2s, transform 0.2s;
   opacity: 1;
-  position: relative; z-index: 2;
+  position: relative;
+  z-index: 2;
 }
 .bn-item.admin-only { display: none; }
 
-/* AKTIF — icon naik ke bubble, label tetap visible di bawah */
-.bn-item.active { color: var(--accent); }
-
-/* Icon naik ke atas (masuk ke bubble) */
-.bn-item.active i {
-  color: white;
-  transform: translateY(calc(-1 * var(--bn-lift)));
+/* AKTIF — icon absolute center di bubble, label tetap di bawah */
+.bn-item.active {
+  color: var(--accent);
+  /* FIX: push label ke bawah biar ga naik ke tengah pas icon diangkat dari flex flow */
+  justify-content: flex-end;
+  padding-bottom: 8px;
 }
 
-/* Label tetap muncul, tidak hilang */
+/* FIX: Icon absolute — exact same coordinate kayak bubble */
+.bn-item.active i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-50% - var(--bn-lift)));
+  color: white;
+  z-index: 3;
+}
+
+/* Label tetap muncul di bawah */
 .bn-item.active span {
   opacity: 1;
   transform: translateY(0);
   color: var(--accent);
 }
 
-/* Bubble lingkaran — center tepat di atas icon */
+/* Bubble lingkaran — center di atas icon */
 .bn-item.active::before {
   content: '';
   position: absolute;
