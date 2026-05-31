@@ -23,6 +23,7 @@
       flex-direction: column;
       overflow: hidden;
       min-width: 0;
+      min-height: 0;
     }
     .menu-toolbar {
       padding: 16px 20px;
@@ -168,28 +169,32 @@
 
     /* ── MOBILE ADJUSTMENTS ── */
     @media (max-width: 640px) {
+      /* FIX: .pos-wrap jadi scrollable container (sama kayak .main-content di dashboard) */
       .pos-wrap { 
         flex-direction: column; 
-        /* FIX: height dikurangi bottom nav biar ga ketutup */
-        height: calc(100dvh - var(--bn-total));
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        /* padding-bottom buat bottom nav */
+        padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 40px + env(safe-area-inset-bottom, 16px));
       }
 
-      /* Menu panel di atas */
       .menu-panel { flex: 1; min-height: 0; }
       .menu-toolbar { padding: 12px 14px; }
       .menu-grid { padding: 12px 14px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
       .menu-card { padding: 12px; }
       .menu-card-name { font-size: 13px; }
 
-      /* Order panel di bawah */
       .order-panel {
         width: 100%;
         border-left: none;
         border-top: 1px solid var(--border);
-        /* FIX: max-height lebih kecil biar ga overlap bottom nav */
-        max-height: 38vh;
+        /* HAPUS max-height, biar natural flow */
         flex-shrink: 0;
+        min-height: 0;
       }
+      .order-items { padding: 12px 14px; }
       .order-notes { display: none; }
       .order-head { padding: 12px 14px; }
     }
@@ -199,7 +204,6 @@
       .order-panel { width: 260px; }
       .menu-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
     }
-  
   </style>
 </head>
 <body>

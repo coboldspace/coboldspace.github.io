@@ -512,12 +512,12 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
   }
 
   /* FIX: Support POS page (kasir.html) — .pos-wrap harus sama behavior kayak .main-content */
-  .pos-wrap {
+  /* .pos-wrap {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
     height: calc(100dvh - var(--bn-total)) !important;
-  }
+  } */
 
   .header { margin-bottom: 14px; }
   .header h1 { font-size: 20px; }
