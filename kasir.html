@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="pos.css"/>
   <style>
     /* ── POS LAYOUT ── */
-    body { height: 100vh; height: 100dvh; overflow: hidden; }
+    /* body { height: 100vh; height: 100dvh; overflow: hidden; } */
 
     .pos-wrap {
       display: flex;
@@ -168,8 +168,9 @@
 
     /* ── MOBILE ADJUSTMENTS ── */
     @media (max-width: 640px) {
-      body { overflow: hidden; padding-bottom: 0 !important; }
-      .pos-wrap { flex-direction: column; height: calc(100dvh - var(--bn-height) - env(safe-area-inset-bottom, 16px) - 24px); }
+      /* body { overflow: hidden; padding-bottom: 0 !important; } */
+      .pos-wrap { flex-direction: column; height: calc(100dvh - var(--bn-total)); }
+      /* .pos-wrap { flex-direction: column; height: calc(100dvh - var(--bn-height) - env(safe-area-inset-bottom, 16px) - 24px); } */
 
       /* Menu panel takes upper portion */
       .menu-panel { flex: 1; min-height: 0; }
