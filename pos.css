@@ -19,7 +19,7 @@
   --sidebar-w: 240px;
   --bn-h:      60px;
   --bn-bubble: 46px;
-  --bn-lift:   24px;
+  --bn-lift:   28px;
   --safe-bot:  env(safe-area-inset-bottom, 0px);
   /* total tinggi ruang bawah di mobile */
   --bn-total:  calc(var(--bn-h) + var(--bn-bubble)/2 + 10px + var(--safe-bot));
