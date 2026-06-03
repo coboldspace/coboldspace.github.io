@@ -512,12 +512,12 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
   }
 
   /* FIX: Support POS page (kasir.html) — .pos-wrap harus sama behavior kayak .main-content */
-  .pos-wrap {
+  /* .pos-wrap {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
     height: calc(100dvh - var(--bn-total)) !important;
-  }
+  } */
 
   .header { margin-bottom: 14px; }
   .header h1 { font-size: 20px; }
@@ -550,31 +550,4 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
   .btn-sm { padding: 5px 8px; font-size: 11px; }
   .search-input { width: 100%; }
   .filter-select { flex: 1; }
-
-  /* ════════════════════════════════
-     FIX: BOTTOM NAV SCROLLABLE (6+ buttons)
-     ════════════════════════════════ */
-  
-  /* Bar: scrollable horizontal */
-  .bn-bar {
-    justify-content: flex-start;        /* btn mulai dari kiri */
-    overflow-x: auto;                 /* scroll horizontal */
-    -webkit-overflow-scrolling: touch; /* iOS momentum */
-    scrollbar-width: none;            /* Firefox hide scrollbar */
-    gap: 0;                           /* rapat */
-    padding: 0 8px;                   /* padding kiri kanan */
-  }
-  .bn-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari hide scrollbar */
-
-  /* Item: fixed width, ga stretch */
-  .bn-item {
-    flex: 0 0 auto;                   /* ga grow, ga shrink, auto width */
-    min-width: 64px;                  /* minimum 64px per btn */
-    padding: 0 10px;                   /* padding horizontal */
-  }
-  
-  /* Active bubble tetap center di item */
-  .bn-item.active::before {
-    /* tetap sama, udah center dengan translate(-50%, -50%) */
-  }
 }
