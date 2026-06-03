@@ -161,6 +161,8 @@ body {
   position: relative;
   z-index: 2;
 }
+
+/* FIX: admin-only hidden by default (JS will show for admin) */
 .bn-item.admin-only { display: none; }
 
 /* AKTIF — icon absolute center di bubble, label tetap di bawah */
@@ -573,8 +575,13 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
     padding: 0 10px;                   /* padding horizontal */
   }
   
-  /* Active bubble tetap center di item */
-  .bn-item.active::before {
-    /* tetap sama, udah center dengan translate(-50%, -50%) */
+  /* FIX: admin-only hidden by default di mobile juga */
+  .bn-item.admin-only {
+    display: none;
+  }
+  
+  /* FIX: kalau JS show admin-only, override dengan !important */
+  .bn-item.admin-only[style*="flex"] {
+    display: flex !important;
   }
 }
