@@ -1,32 +1,20 @@
 // ============================================
-// COBOLD POS — Auto-scroll + center nav items
+// COBOLD POS — Auto-scroll bottom nav ke active item
+// Taruh sebelum </body> di semua HTML: <script src="nav-scroll.js"></script>
 // ============================================
 
 (function() {
   'use strict';
 
-  function adjustNav() {
+  function scrollToActive() {
     const nav = document.querySelector('.bottom-nav');
-    const bar = document.querySelector('.bn-bar');
     const active = document.querySelector('.bn-item.active');
-    if (!nav || !bar || !active) return;
+    if (!nav || !active) return;
 
-    // Hitung jumlah visible item
-    const visibleItems = bar.querySelectorAll('.bn-item:not([style*="display: none"])');
-    
-    // Kalau item ≤ 3, center them. Kalau > 3, flex-start (scrollable)
-    if (visibleItems.length <= 3) {
-      bar.style.justifyContent = 'center';
-      bar.style.minWidth = 'auto';
-    } else {
-      bar.style.justifyContent = 'flex-start';
-      bar.style.minWidth = 'max-content';
-    }
-
-    // Auto-scroll ke active item
     const navRect = nav.getBoundingClientRect();
     const activeRect = active.getBoundingClientRect();
 
+    // Scroll ke kanan: posisi active item - lebar nav + lebar item + padding
     const scrollRight = active.offsetLeft - nav.offsetWidth + active.offsetWidth + 24;
 
     if (activeRect.right > navRect.right - 8) {
@@ -38,17 +26,17 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', adjustNav);
+    document.addEventListener('DOMContentLoaded', scrollToActive);
   } else {
-    adjustNav();
+    scrollToActive();
   }
 
-  window.addEventListener('resize', adjustNav);
+  window.addEventListener('resize', scrollToActive);
 
   const nav = document.querySelector('.bottom-nav');
   if (nav) {
     const observer = new MutationObserver(() => {
-      setTimeout(adjustNav, 150);
+      setTimeout(scrollToActive, 150);
     });
     observer.observe(nav, { childList: true, subtree: true, attributes: true });
   }
