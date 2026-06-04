@@ -509,7 +509,7 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     pointer-events: auto;
-    scroll-behavior: smooth;
+    /* FIX: jangan pakai scroll-behavior: smooth di sini, biar swipe natural */
   }
   .bottom-nav::-webkit-scrollbar { display: none; }
 
@@ -577,13 +577,17 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
     min-width: max-content;           /* lebar minimal = total item */
   }
 
-  /* FIX: kalau item dikit (≤3), center them */
-  .bn-bar.few-items {
+  /* FIX: centering via .bottom-nav, bukan .bn-bar */
+  .bottom-nav.few-items {
+    justify-content: center;
+    overflow-x: visible;              /* ga perlu scroll kalau item dikit */
+  }
+  .bottom-nav.few-items .bn-bar {
     justify-content: center;
     min-width: auto;
-    width: 100%;
+    width: auto;
   }
-  .bn-bar.few-items .bn-item {
+  .bottom-nav.few-items .bn-item {
     flex: 0 0 auto;
     min-width: 80px;
   }
