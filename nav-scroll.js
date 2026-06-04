@@ -1,42 +1,68 @@
 // ============================================
-// COBOLD POS — Auto-scroll bottom nav ke active item
-// Taruh sebelum </body> di semua HTML: <script src="nav-scroll.js"></script>
+// COBOLD POS — Auto-scroll + center nav items
+// Taruh sebelum </body>: <script src="nav-scroll.js"></script>
 // ============================================
 
 (function() {
   'use strict';
 
-  function scrollToActive() {
+  function adjustNav() {
     const nav = document.querySelector('.bottom-nav');
+    const bar = document.querySelector('.bn-bar');
     const active = document.querySelector('.bn-item.active');
-    if (!nav || !active) return;
+    if (!nav || !bar || !active) return;
 
-    const navRect = nav.getBoundingClientRect();
-    const activeRect = active.getBoundingClientRect();
+    // Hitung jumlah visible item
+    const visibleItems = bar.querySelectorAll('.bn-item:not([style*="display: none"])');
 
-    // Scroll ke kanan: posisi active item - lebar nav + lebar item + padding
-    const scrollRight = active.offsetLeft - nav.offsetWidth + active.offsetWidth + 24;
-
-    if (activeRect.right > navRect.right - 8) {
-      nav.scrollTo({ left: scrollRight, behavior: 'smooth' });
+    // FIX: kalau item ≤ 3, center them
+    if (visibleItems.length <= 3) {
+      bar.style.justifyContent = 'center';
+      bar.style.minWidth = 'auto';
+      bar.style.width = '100%';
+      // Setiap item jadi fixed width biar rapi
+      visibleItems.forEach(item => {
+        item.style.flex = '0 0 auto';
+        item.style.minWidth = '80px';
+      });
+    } else {
+      // Reset ke default (scrollable)
+      bar.style.justifyContent = 'flex-start';
+      bar.style.minWidth = 'max-content';
+      bar.style.width = '';
+      visibleItems.forEach(item => {
+        item.style.flex = '';
+        item.style.minWidth = '';
+      });
     }
-    else if (activeRect.left < navRect.left + 8) {
-      nav.scrollTo({ left: active.offsetLeft - 24, behavior: 'smooth' });
+
+    // Auto-scroll ke active item (hanya kalau > 3 item)
+    if (visibleItems.length > 3) {
+      const navRect = nav.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const scrollRight = active.offsetLeft - nav.offsetWidth + active.offsetWidth + 24;
+
+      if (activeRect.right > navRect.right - 8) {
+        nav.scrollTo({ left: scrollRight, behavior: 'smooth' });
+      }
+      else if (activeRect.left < navRect.left + 8) {
+        nav.scrollTo({ left: active.offsetLeft - 24, behavior: 'smooth' });
+      }
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scrollToActive);
+    document.addEventListener('DOMContentLoaded', adjustNav);
   } else {
-    scrollToActive();
+    adjustNav();
   }
 
-  window.addEventListener('resize', scrollToActive);
+  window.addEventListener('resize', adjustNav);
 
   const nav = document.querySelector('.bottom-nav');
   if (nav) {
     const observer = new MutationObserver(() => {
-      setTimeout(scrollToActive, 150);
+      setTimeout(adjustNav, 150);
     });
     observer.observe(nav, { childList: true, subtree: true, attributes: true });
   }
