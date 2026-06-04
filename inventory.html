@@ -366,5 +366,6 @@
   function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}
   document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
 </script>
+<script src="nav-scroll.js"></script>
 </body>
 </html>
