@@ -12,25 +12,26 @@
     const active = document.querySelector('.bn-item.active');
     if (!nav || !bar || !active) return;
 
-    // Hitung jumlah visible item
-    const visibleItems = bar.querySelectorAll('.bn-item:not([style*="display: none"])');
+    // FIX: cek computed style, bukan inline style
+    const allItems = bar.querySelectorAll('.bn-item');
+    const visibleItems = Array.from(allItems).filter(item => {
+      return window.getComputedStyle(item).display !== 'none';
+    });
 
     // FIX: kalau item ≤ 3, center them
     if (visibleItems.length <= 3) {
       bar.style.justifyContent = 'center';
       bar.style.minWidth = 'auto';
       bar.style.width = '100%';
-      // Setiap item jadi fixed width biar rapi
       visibleItems.forEach(item => {
         item.style.flex = '0 0 auto';
         item.style.minWidth = '80px';
       });
     } else {
-      // Reset ke default (scrollable)
       bar.style.justifyContent = 'flex-start';
       bar.style.minWidth = 'max-content';
       bar.style.width = '';
-      visibleItems.forEach(item => {
+      allItems.forEach(item => {
         item.style.flex = '';
         item.style.minWidth = '';
       });
