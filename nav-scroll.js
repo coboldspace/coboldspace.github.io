@@ -18,19 +18,24 @@
       return window.getComputedStyle(item).display !== 'none';
     });
 
-    // FIX: kalau item ≤ 3, center them
+    // FIX: kalau item ≤ 3, center them tapi FIT (nggak stretch full width)
     if (visibleItems.length <= 3) {
       bar.style.justifyContent = 'center';
       bar.style.minWidth = 'auto';
-      bar.style.width = '100%';
+      bar.style.width = 'auto';        // FIT: cukup lebar buat item
+      bar.style.margin = '0 auto';     // Center tapi nggak stretch
+      bar.style.flexShrink = '0';
       visibleItems.forEach(item => {
-        item.style.flex = '0 0 auto';
-        item.style.minWidth = '80px';
+        item.style.flex = '1 1 auto';  // Item stretch rata
+        item.style.minWidth = '64px';  // Minimum width
       });
     } else {
+      // Reset ke default (scrollable)
       bar.style.justifyContent = 'flex-start';
       bar.style.minWidth = 'max-content';
       bar.style.width = '';
+      bar.style.margin = '';
+      bar.style.flexShrink = '';
       allItems.forEach(item => {
         item.style.flex = '';
         item.style.minWidth = '';
