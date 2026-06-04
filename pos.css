@@ -577,6 +577,17 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
     min-width: max-content;           /* lebar minimal = total item */
   }
 
+  /* FIX: kalau item dikit (≤3), center them */
+  .bn-bar.few-items {
+    justify-content: center;
+    min-width: auto;
+    width: 100%;
+  }
+  .bn-bar.few-items .bn-item {
+    flex: 0 0 auto;
+    min-width: 80px;
+  }
+
   /* Item: fixed width, ga stretch */
   .bn-item {
     flex: 0 0 auto;                   /* ga grow, ga shrink, auto width */

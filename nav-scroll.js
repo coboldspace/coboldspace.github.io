@@ -1,5 +1,6 @@
 // ============================================
 // COBOLD POS — Auto-scroll + center nav items
+// Taruh sebelum </body> di semua HTML: <script src="nav-scroll-v3.js"></script>
 // ============================================
 
 (function() {
@@ -11,29 +12,28 @@
     const active = document.querySelector('.bn-item.active');
     if (!nav || !bar || !active) return;
 
-    // Hitung jumlah visible item
+    // Hitung jumlah visible item (yang ga display:none)
     const visibleItems = bar.querySelectorAll('.bn-item:not([style*="display: none"])');
-    
-    // Kalau item ≤ 3, center them. Kalau > 3, flex-start (scrollable)
+
+    // FIX: kalau item ≤ 3, center them. Kalau > 3, flex-start (scrollable)
     if (visibleItems.length <= 3) {
-      bar.style.justifyContent = 'center';
-      bar.style.minWidth = 'auto';
+      bar.classList.add('few-items');
     } else {
-      bar.style.justifyContent = 'flex-start';
-      bar.style.minWidth = 'max-content';
+      bar.classList.remove('few-items');
     }
 
-    // Auto-scroll ke active item
-    const navRect = nav.getBoundingClientRect();
-    const activeRect = active.getBoundingClientRect();
+    // Auto-scroll ke active item (hanya kalau > 3 item)
+    if (visibleItems.length > 3) {
+      const navRect = nav.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const scrollRight = active.offsetLeft - nav.offsetWidth + active.offsetWidth + 24;
 
-    const scrollRight = active.offsetLeft - nav.offsetWidth + active.offsetWidth + 24;
-
-    if (activeRect.right > navRect.right - 8) {
-      nav.scrollTo({ left: scrollRight, behavior: 'smooth' });
-    }
-    else if (activeRect.left < navRect.left + 8) {
-      nav.scrollTo({ left: active.offsetLeft - 24, behavior: 'smooth' });
+      if (activeRect.right > navRect.right - 8) {
+        nav.scrollTo({ left: scrollRight, behavior: 'smooth' });
+      }
+      else if (activeRect.left < navRect.left + 8) {
+        nav.scrollTo({ left: active.offsetLeft - 24, behavior: 'smooth' });
+      }
     }
   }
 
