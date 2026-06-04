@@ -504,11 +504,12 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
   .bottom-nav {
     display: flex;
     align-items: flex-end;
-    /* FIX: pindahin horizontal scroll ke sini biar .bn-bar ga nge-clip bubble */
+    /* FIX: pindahin horizontal scroll ke .bottom-nav biar .bn-bar ga nge-clip bubble */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    pointer-events: auto; /* perlu aktif biar scroll jalan */
+    pointer-events: auto;
+    scroll-behavior: smooth;
   }
   .bottom-nav::-webkit-scrollbar { display: none; }
 
@@ -528,11 +529,6 @@ tbody tr:hover td { background: rgba(255,255,255,0.015); }
     min-height: 0;
     overflow: hidden;
     height: calc(100dvh - var(--bn-total)) !important;
-  }
-
-  /* FIX: pos-tabs juga perlu padding bawah biar ga ketutup bottom nav */
-  .pos-tabs {
-    flex-shrink: 0;
   }
 
   .header { margin-bottom: 14px; }
