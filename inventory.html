@@ -44,6 +44,7 @@
       .form-row-2 { grid-template-columns:1fr; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -137,7 +138,7 @@
     <div class="form-group"><label>Nama Bahan</label><input type="text" id="ingName" placeholder="cth: House Blend"/></div>
     <div class="form-row-2">
       <div class="form-group"><label>Kategori</label>
-        <select id="ingCat"><option>Kopi</option><option>Susu</option><option>Sirup</option><option>Topping</option><option>Gula</option><option>Lainnya</option></select>
+        <select id="ingCat"><option>Green Bean</option><option>Roasted Bean</option><option>Kopi</option><option>Susu</option><option>Sirup</option><option>Topping</option><option>Gula</option><option>Lainnya</option></select>
       </div>
       <div class="form-group"><label>Satuan</label>
         <select id="ingUnit"><option value="g">Gram (g)</option><option value="Kg">Kilogram (Kg)</option><option value="ml">Mililiter (ml)</option><option value="L">Liter (L)</option><option value="pcs">Pieces (pcs)</option><option value="btl">Botol (btl)</option><option value="ktg">Kantong (ktg)</option><option value="karton">Karton</option></select>
@@ -146,6 +147,10 @@
     <div class="form-row-2">
       <div class="form-group"><label>Stok Saat Ini</label><input type="number" id="ingStock" placeholder="0" min="0" step="0.01"/></div>
       <div class="form-group"><label>Stok Minimum</label><input type="number" id="ingMin" placeholder="0" min="0" step="0.01"/></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Harga Beli (Rp)</label><input type="number" id="ingHarga" placeholder="150000" min="0" step="1"/></div>
+      <div class="form-group"><label>Unit Multiplier</label><input type="number" id="ingMultiplier" placeholder="1000" min="1" step="1"/></div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="closeIngModal()">Batal</button>
@@ -254,7 +259,7 @@
 
   window.openIngModal=function(id){
     document.getElementById('ingEditId').value=id||'';
-    if(id){const i=ingredients.find(x=>x.id===id);document.getElementById('ingModalTitle').textContent='Edit Bahan';document.getElementById('ingName').value=i.name;document.getElementById('ingCat').value=i.category||'Lainnya';document.getElementById('ingUnit').value=i.unit;document.getElementById('ingStock').value=i.stock;document.getElementById('ingMin').value=i.minStock||0;}
+    if(id){const i=ingredients.find(x=>x.id===id);document.getElementById('ingModalTitle').textContent='Edit Bahan';document.getElementById('ingName').value=i.name;document.getElementById('ingCat').value=i.category||'Lainnya';document.getElementById('ingUnit').value=i.unit;document.getElementById('ingStock').value=i.stock;document.getElementById('ingMin').value=i.minStock||0;document.getElementById('ingHarga').value=i.hargaBeli||'';document.getElementById('ingMultiplier').value=i.unitMultiplier||'';}
     else{document.getElementById('ingModalTitle').textContent='Tambah Bahan';document.getElementById('ingName').value='';document.getElementById('ingStock').value='';document.getElementById('ingMin').value='';}
     document.getElementById('ingModal').classList.add('show');
   };
@@ -267,11 +272,13 @@
     const unit=document.getElementById('ingUnit').value;
     const stock=parseFloat(document.getElementById('ingStock').value);
     const min=parseFloat(document.getElementById('ingMin').value)||0;
+    const hargaBeli=parseFloat(document.getElementById('ingHarga').value)||0;
+    const unitMultiplier=parseFloat(document.getElementById('ingMultiplier').value)||1000;
     if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');return;}
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      if(id)await updateDoc(doc(db,"ingredients",id),{name,category:cat,unit,stock,minStock:min});
-      else await addDoc(collection(db,"ingredients"),{name,category:cat,unit,stock,minStock:min,createdAt:serverTimestamp()});
+      if(id)await updateDoc(doc(db,"ingredients",id),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier});
+      else await addDoc(collection(db,"ingredients"),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier,createdAt:serverTimestamp()});
       await loadIngredients();renderIngredients();checkAlerts();closeIngModal();toast('✓ Bahan disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan';
