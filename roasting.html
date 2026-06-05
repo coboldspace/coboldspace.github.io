@@ -133,6 +133,7 @@
       .batch-stats { grid-template-columns: repeat(3,1fr); }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -216,7 +217,7 @@
         <input type="text" id="batchNo" readonly style="opacity:0.6"/>
       </div>
       <div class="form-group">
-        <label>Nama Blend</label>
+        <label>Nama Beans</label>
         <input type="text" id="blendName" placeholder="cth: House Blend v3"/>
       </div>
     </div>
@@ -303,7 +304,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, serverTimestamp, query, orderBy, where }
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, increment, serverTimestamp, query, orderBy, where }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const fc = {
@@ -367,7 +368,7 @@
       const ts = b.createdAt?.toDate ? b.createdAt.toDate() : new Date((b.createdAt?.seconds||0)*1000);
       const dateStr = ts.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
       const hppStr  = b.hppPerGram ? `Rp ${b.hppPerGram.toLocaleString('id',{maximumFractionDigits:1})}/g` : '—';
-      const blendStr = (b.blend||[]).map(x=>`${x.name} ${x.pct}%`).join(' · ');
+      const blendStr = (b.blend||[]).map(x=>`${x.name} ${x.grams}g`).join(' · ');
       const profileCls = b.profile||'medium';
       return `<div class="batch-card">
         <div class="batch-head">
@@ -375,7 +376,17 @@
             <div class="batch-no">${b.batchNo||'—'}</div>
             <div class="batch-name">${b.blendName||'Unnamed'}</div>
           </div>
-          <div class="batch-date">${b.roastDate||dateStr}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="batch-date">${b.roastDate||dateStr}</div>
+            <button onclick="deleteBatch('${b.id}')"
+              style="background:none;border:1px solid var(--border);border-radius:7px;
+                     color:var(--red);cursor:pointer;padding:5px 10px;font-size:12px;
+                     font-family:'Inter',sans-serif;transition:0.2s;display:flex;align-items:center;gap:5px"
+              onmouseover="this.style.background='rgba(255,95,95,0.1)'"
+              onmouseout="this.style.background='none'">
+              <i class="fa-solid fa-trash-can"></i> Hapus
+            </button>
+          </div>
         </div>
         <div class="batch-tags">
           <span class="batch-tag ${profileCls}">${(b.profile||'').toUpperCase()}</span>
@@ -402,6 +413,82 @@
     }).join('');
   }
 
+  // ── DELETE BATCH + ROLLBACK STOK ──
+  window.deleteBatch = async function(batchId) {
+    const b = batches.find(x => x.id === batchId);
+    if(!b) return;
+
+    const blendNames = (b.blend||[]).map(x=>`${x.name} +${x.grams}g`).join(', ');
+    const targetIng  = ingredients.find(i=>i.id===b.roastedTargetId);
+
+    const confirm1 = confirm(
+      `Hapus batch ${b.batchNo} — "${b.blendName}"?
+
+` +
+      `Rollback stok yang akan dilakukan:
+` +
+      `• Green bean dikembalikan: ${blendNames}
+` +
+      `• Roasted bean dikurangi: ${b.roastedOutput}g dari "${targetIng?.name||'—'}"
+
+` +
+      `Aksi ini tidak bisa dibatalkan.`
+    );
+    if(!confirm1) return;
+
+    // Guard check: pastikan stok roasted bean cukup untuk dikurangi
+    if(b.roastedTargetId && b.roastedOutput) {
+      if(!targetIng || targetIng.stock < b.roastedOutput) {
+        toast('Stok roasted bean tidak mencukupi untuk rollback','error');
+        return;
+      }
+    }
+
+    try {
+      // 1. Rollback stok green bean (kembalikan naik)
+      for(const r of (b.blend||[])) {
+        if(!r.id || !r.grams) continue;
+        await updateDoc(doc(db,"ingredients",r.id), { stock: increment(+r.grams) });
+        await addDoc(collection(db,"stockLogs"), {
+          ingredientId: r.id,
+          ingredientName: r.name,
+          unit: 'g',
+          change: +r.grams,
+          note: `Rollback hapus batch ${b.batchNo}`,
+          byName: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // 2. Rollback stok roasted bean (kurangi balik)
+      if(b.roastedTargetId && b.roastedOutput) {
+        await updateDoc(doc(db,"ingredients",b.roastedTargetId), {
+          stock: increment(-b.roastedOutput)
+        });
+        await addDoc(collection(db,"stockLogs"), {
+          ingredientId: b.roastedTargetId,
+          ingredientName: targetIng?.name || b.roastedTargetId,
+          unit: 'g',
+          change: -b.roastedOutput,
+          note: `Rollback hapus batch ${b.batchNo}`,
+          byName: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // 3. Hapus batch record
+      await deleteDoc(doc(db,"roastingBatches",batchId));
+
+      await loadIngredients();
+      await loadBatches();
+      renderBatches();
+      renderGreenBeans();
+      toast(`✓ Batch ${b.batchNo} dihapus & stok di-rollback`, 'success');
+    } catch(e) {
+      toast('Error: '+e.message, 'error');
+    }
+  };
+
   // ── RENDER GREEN BEANS ──
   function renderGreenBeans() {
     const tbody = document.getElementById('greenBeanTbody');
@@ -425,7 +512,6 @@
 
   // ── MODAL ──
   window.openRoastModal = function() {
-    // Auto batch number
     const pad = n => String(n).padStart(3,'0');
     const now = new Date();
     const batchNo = `RST-${now.getFullYear()}${pad(now.getMonth()+1)}-${pad(batches.length+1)}`;
@@ -438,16 +524,13 @@
     document.getElementById('roastTime').value = '';
     document.getElementById('blendName').value = '';
 
-    // Profile pills reset
     document.querySelectorAll('.profile-pill').forEach((b,i)=>b.classList.toggle('active',i===0));
     roastProfile = 'light';
 
-    // Blend rows — start with 2 empty
     blendRows = [{id:'',pct:50},{id:'',pct:50}];
     renderBlendRows();
     calcPreview();
 
-    // Populate roasted target dropdown
     const sel = document.getElementById('roastedTarget');
     sel.innerHTML = `<option value="">— Pilih item roasted bean di inventory —</option>` +
       ingredients.filter(i=>i.category==='Kopi'||i.category==='Roasted Bean')
@@ -506,7 +589,6 @@
     const roasted    = Math.round(totalGreen * yieldPct / 100);
     const loss       = totalGreen - roasted;
 
-    // Kalkulasi HPP bahan
     let hppBahan = 0;
     for(const r of blendRows) {
       const ing = ingredients.find(i=>i.id===r.id);
@@ -547,7 +629,6 @@
     const totalGreen = blendRows.reduce((s,r)=>s+(+r.grams||0),0);
     const roasted    = Math.round(totalGreen * yieldPct / 100);
 
-    // Build blend array dengan nama
     const blend = blendRows.filter(r=>r.id&&r.grams).map(r => {
       const ing = ingredients.find(i=>i.id===r.id);
       return { id:r.id, name:ing?.name||r.id, grams:+r.grams, pct:+r.pct||0 };
@@ -555,7 +636,6 @@
 
     btn.disabled = true; btn.textContent = 'Menyimpan...';
     try {
-      // Kurangi stok green bean
       for(const r of blend) {
         await updateDoc(doc(db,"ingredients",r.id), { stock: increment(-r.grams) });
         await addDoc(collection(db,"stockLogs"), {
@@ -565,7 +645,6 @@
         });
       }
 
-      // Tambah stok roasted bean
       const targetIng = ingredients.find(i=>i.id===targetId);
       await updateDoc(doc(db,"ingredients",targetId), { stock: increment(roasted) });
       await addDoc(collection(db,"stockLogs"), {
@@ -574,12 +653,11 @@
         byName: currentUser.name, createdAt: serverTimestamp()
       });
 
-      // Simpan batch record
       await addDoc(collection(db,"roastingBatches"), {
         batchNo, blendName, roastDate, profile: roastProfile,
         temp: +temp||null, duration: +duration||null,
         blend, totalGreen, yieldPct, roastedOutput: roasted,
-        roastCost, hppPerGram: 0, // dihitung di HPP calculator
+        roastCost, hppPerGram: 0,
         roastedTargetId: targetId,
         createdBy: currentUser.name, createdAt: serverTimestamp()
       });
