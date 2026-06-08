@@ -3,45 +3,134 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Cobold POS — Inventori</title>
+  <title>Cobold POS — Roasting</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <link rel="stylesheet" href="pos.css"/>
   <style>
     .section { display:none; } .section.active { display:block; }
-    .stock-bar-wrap { display:flex; align-items:center; gap:8px; }
-    .stock-bar { flex:1; height:4px; background:#2a2a2a; border-radius:4px; overflow:hidden; min-width:60px; }
-    .stock-bar-fill { height:100%; border-radius:4px; transition:width .3s; }
-    .fill-kritis { background:var(--red); }
-    .fill-rendah { background:var(--yellow); }
-    .fill-aman   { background:var(--green); }
-    .unit-tag { font-size:11px; color:var(--text-dim); margin-left:3px; }
-    .recipe-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
-    .recipe-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px; }
-    .recipe-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
-    .recipe-name { font-weight:600; font-size:14px; margin-bottom:2px; }
-    .recipe-cat  { font-size:11px; color:var(--accent); }
-    .recipe-item { display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid #1a1a1a; }
-    .recipe-item:last-child { border-bottom:none; }
-    .recipe-item-name   { color:var(--text-dim); }
-    .recipe-item-amount { color:var(--text-main); font-weight:600; }
-    .recipe-empty { font-size:12px; color:var(--text-dim); font-style:italic; text-align:center; padding:10px 0; }
-    .restock-info { background:#111; border-radius:9px; padding:14px; font-size:13px; margin-bottom:16px; }
-    .restock-info .ri-name { font-weight:600; margin-bottom:4px; }
-    .restock-info .ri-stock { color:var(--text-dim); font-size:12px; }
-    .recipe-editor-item { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
-    .recipe-editor-item select,.recipe-editor-item input { background:#111; border:1px solid var(--border); border-radius:7px; padding:8px 10px; color:var(--text-main); font-family:'Inter',sans-serif; font-size:12px; outline:none; }
-    .recipe-editor-item select { flex:2; } .recipe-editor-item input { flex:1; }
-    .recipe-editor-item select:focus,.recipe-editor-item input:focus { border-color:var(--accent); }
-    .unit-label { font-size:11px; color:var(--text-dim); min-width:28px; }
-    .btn-remove-recipe { background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; padding:0 4px; }
-    .btn-add-ingredient { width:100%; padding:8px; background:none; border:1px dashed var(--border); border-radius:7px; color:var(--text-dim); font-family:'Inter',sans-serif; font-size:13px; cursor:pointer; transition:.2s; margin-top:4px; }
-    .btn-add-ingredient:hover { border-color:var(--accent); color:var(--accent); }
-    @media(max-width:640px){
-      .recipe-grid { grid-template-columns:1fr; }
-      .card-head { flex-direction:column; align-items:flex-start; }
-      .card-head .btn-primary { width:100%; justify-content:center; }
-      .form-row-2 { grid-template-columns:1fr; }
+
+    /* Blend composer */
+    .blend-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 10px;
+    }
+    .blend-row select,
+    .blend-row input {
+      width: 100%; background: #0d0d0d;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; color: var(--text-main);
+      font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
+      -webkit-appearance: none;
+    }
+    .blend-row select:focus,
+    .blend-row input:focus { border-color: var(--accent); }
+    .blend-row label {
+      font-size: 11px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      display: block; margin-bottom: 6px;
+    }
+    .btn-remove {
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--red);
+      width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s; flex-shrink: 0;
+    }
+    .btn-remove:hover { background: rgba(255,95,95,0.1); }
+    .btn-add-row {
+      width: 100%; padding: 9px;
+      background: none; border: 1px dashed var(--border);
+      border-radius: 8px; color: var(--text-dim);
+      font-family: 'Inter', sans-serif; font-size: 13px;
+      cursor: pointer; transition: 0.2s; margin-top: 4px;
+    }
+    .btn-add-row:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Result preview */
+    .result-box {
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .result-box.highlight { border-color: var(--accent); }
+    .result-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 8px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 14px;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-row span:first-child { color: var(--text-dim); }
+    .result-row span:last-child  { color: var(--text-main); font-weight: 600; }
+    .result-row.accent span:last-child { color: var(--accent); font-size: 16px; }
+
+    /* Profile pills */
+    .profile-pills { display: flex; gap: 8px; }
+    .profile-pill {
+      flex: 1; padding: 9px;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: none; color: var(--text-dim);
+      font-family: 'Inter', sans-serif; font-size: 13px;
+      cursor: pointer; transition: 0.2s; text-align: center;
+    }
+    .profile-pill.active { background: #222; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+    /* Batch card */
+    .batch-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: 0.2s;
+    }
+    .batch-card:hover { border-color: #333; }
+    .batch-head {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 12px;
+    }
+    .batch-no { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2px; }
+    .batch-name { font-size: 15px; font-weight: 600; }
+    .batch-date { font-size: 12px; color: var(--text-dim); }
+    .batch-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .batch-tag {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(176,137,104,0.15); color: var(--accent);
+    }
+    .batch-tag.light  { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .batch-tag.medium { background: rgba(176,137,104,0.15); color: var(--accent); }
+    .batch-tag.dark   { background: rgba(100,70,40,0.3);   color: #c49a7a; }
+    .batch-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+    }
+    .batch-stat { text-align: center; }
+    .batch-stat-val { font-size: 16px; font-weight: 600; color: var(--text-main); }
+    .batch-stat-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+    .batch-blend { font-size: 12px; color: var(--text-dim); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.8; }
+
+    /* form 3 col */
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* hpp ref badge */
+    .hpp-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green); border-radius: 8px;
+      padding: 6px 12px; font-size: 12px; font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .blend-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .blend-row .btn-remove { grid-column: 2; justify-self: end; height: 36px; }
+      .form-row-3 { grid-template-columns: 1fr 1fr; }
+      .batch-stats { grid-template-columns: repeat(3,1fr); }
     }
   </style>
 <base target="_blank">
@@ -69,125 +158,143 @@
   <div class="bn-bar">
     <a href="dashboard.html" class="bn-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
     <a href="kasir.html"     class="bn-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
-    <a href="admin.html"     class="bn-item"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
-    <a href="inventory.html" class="bn-item active"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
-    <a href="roasting.html"  class="bn-item"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="admin.html"     class="bn-item "><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
+    <a href="inventory.html" class="bn-item"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="roasting.html"  class="bn-item active"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
     <a href="hpp.html"       class="bn-item"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
 </nav>
 
 <div class="main-content">
   <div class="header">
-    <div><h1>Inventori</h1><div class="header-sub">Kelola stok bahan baku dan resep menu.</div></div>
-    <button class="btn-primary" onclick="openIngModal()"><i class="fa-solid fa-plus"></i> Tambah Bahan</button>
-  </div>
-
-  <!-- Alert -->
-  <div class="alert-low" id="alertLow">
-    <i class="fa-solid fa-triangle-exclamation"></i>
     <div>
-      <div class="alert-low-title">Stok Rendah!</div>
-      <div class="alert-low-body" id="alertBody"></div>
+      <h1>Roasting</h1>
+      <div class="header-sub">Catat sesi roasting & kelola blend</div>
     </div>
+    <button class="btn-primary" onclick="openRoastModal()">
+      <i class="fa-solid fa-plus"></i> Sesi Roasting
+    </button>
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('stok',this)">📦 Stok Bahan</button>
-    <button class="tab-btn"        onclick="switchTab('resep',this)">📋 Resep Menu</button>
-    <button class="tab-btn"        onclick="switchTab('log',this)">📜 Riwayat</button>
+    <button class="tab-btn active" onclick="switchTab('batch',this)">🔥 Riwayat Batch</button>
+    <button class="tab-btn"        onclick="switchTab('stok',this)">☕ Stok Green Bean</button>
   </div>
 
-  <!-- STOK -->
-  <div class="section active" id="tab-stok">
+  <!-- BATCH HISTORY -->
+  <div class="section active" id="tab-batch">
+    <div id="batchList">
+      <div style="text-align:center;padding:48px;color:var(--text-dim);font-size:14px">Memuat batch...</div>
+    </div>
+  </div>
+
+  <!-- STOK GREEN BEAN -->
+  <div class="section" id="tab-stok">
     <div class="card">
       <div class="card-head">
-        <input class="search-input" type="text" id="searchIng" placeholder="Cari bahan..." oninput="renderIngredients()" style="width:200px"/>
+        <h2>Stok Green Bean</h2>
+        <div class="hpp-badge"><i class="fa-solid fa-info-circle"></i> Tambah green bean via Inventori</div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Bahan</th><th>Kategori</th><th>Stok</th><th>Min</th><th>Level</th><th>Status</th><th>Aksi</th></tr></thead>
-          <tbody id="ingTbody"><tr><td colspan="7" class="empty-cell">Memuat...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- RESEP -->
-  <div class="section" id="tab-resep">
-    <div class="recipe-grid" id="recipeGrid"><p style="color:var(--text-dim);font-size:14px">Memuat resep...</p></div>
-  </div>
-
-  <!-- LOG -->
-  <div class="section" id="tab-log">
-    <div class="card">
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Waktu</th><th>Bahan</th><th>Perubahan</th><th>Keterangan</th><th>Oleh</th></tr></thead>
-          <tbody id="logTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
+          <thead><tr><th>Nama</th><th>Stok</th><th>Min</th><th>Status</th></tr></thead>
+          <tbody id="greenBeanTbody"><tr><td colspan="4" class="empty-cell">Memuat...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL BAHAN -->
-<div class="modal-overlay" id="ingModal">
-  <div class="modal">
-    <h2 id="ingModalTitle">Tambah Bahan</h2>
-    <input type="hidden" id="ingEditId"/>
-    <div class="form-group"><label>Nama Bahan</label><input type="text" id="ingName" placeholder="cth: House Blend"/></div>
-    <div class="form-row-2">
-      <div class="form-group"><label>Kategori</label>
-        <select id="ingCat"><option>Green Bean</option><option>Roasted Bean</option><option>Kopi</option><option>Susu</option><option>Sirup</option><option>Topping</option><option>Gula</option><option>Lainnya</option></select>
-      </div>
-      <div class="form-group"><label>Satuan</label>
-        <select id="ingUnit"><option value="g">Gram (g)</option><option value="Kg">Kilogram (Kg)</option><option value="ml">Mililiter (ml)</option><option value="L">Liter (L)</option><option value="pcs">Pieces (pcs)</option><option value="btl">Botol (btl)</option><option value="ktg">Kantong (ktg)</option><option value="karton">Karton</option></select>
-      </div>
-    </div>
-    <div class="form-row-2">
-      <div class="form-group"><label>Stok Saat Ini</label><input type="number" id="ingStock" placeholder="0" min="0" step="0.01"/></div>
-      <div class="form-group"><label>Stok Minimum</label><input type="number" id="ingMin" placeholder="0" min="0" step="0.01"/></div>
-    </div>
-    <div class="form-row-2">
-      <div class="form-group"><label>Harga Beli (Rp)</label><input type="number" id="ingHarga" placeholder="150000" min="0" step="1"/></div>
-      <div class="form-group"><label>Unit Multiplier</label><input type="number" id="ingMultiplier" placeholder="1000" min="1" step="1"/></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeIngModal()">Batal</button>
-      <button class="btn-modal-confirm" id="ingSaveBtn" onclick="submitIng()">Simpan</button>
-    </div>
-  </div>
-</div>
+<!-- MODAL ROASTING -->
+<div class="modal-overlay" id="roastModal">
+  <div class="modal" style="max-width:560px">
+    <h2>🔥 Sesi Roasting Baru</h2>
 
-<!-- MODAL RESTOCK -->
-<div class="modal-overlay" id="restockModal">
-  <div class="modal" style="max-width:360px">
-    <h2>Tambah Stok</h2>
-    <input type="hidden" id="restockId"/>
-    <div class="restock-info">
-      <div class="ri-name" id="restockName">—</div>
-      <div class="ri-stock" id="restockCurrent">Stok saat ini: —</div>
+    <!-- Batch info -->
+    <div class="form-row-2" style="margin-bottom:0">
+      <div class="form-group">
+        <label>No. Batch (auto)</label>
+        <input type="text" id="batchNo" readonly style="opacity:0.6"/>
+      </div>
+      <div class="form-group">
+        <label>Nama Beans</label>
+        <input type="text" id="blendName" placeholder="cth: House Blend v3"/>
+      </div>
     </div>
-    <div class="form-group"><label>Jumlah Penambahan</label><input type="number" id="restockAmt" placeholder="0" min="0.01" step="0.01"/></div>
-    <div class="form-group"><label>Keterangan</label><input type="text" id="restockNote" placeholder="Restock mingguan"/></div>
-    <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeRestock()">Batal</button>
-      <button class="btn-modal-confirm" id="restockSaveBtn" onclick="submitRestock()">Tambah Stok</button>
-    </div>
-  </div>
-</div>
 
-<!-- MODAL RESEP -->
-<div class="modal-overlay" id="recipeModal">
-  <div class="modal">
-    <h2 id="recipeModalTitle">Edit Resep</h2>
-    <input type="hidden" id="recipeMenuId"/>
-    <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Bahan baku per 1 porsi menu ini.</p>
-    <div id="recipeEditor"></div>
-    <button class="btn-add-ingredient" onclick="addRecipeRow()"><i class="fa-solid fa-plus"></i> Tambah Bahan</button>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Tanggal Roasting</label>
+        <input type="date" id="roastDate"/>
+      </div>
+      <div class="form-group">
+        <label>Profil Roast</label>
+        <div class="profile-pills" style="margin-top:2px">
+          <button class="profile-pill active" onclick="setProfile('light',this)">Light</button>
+          <button class="profile-pill" onclick="setProfile('medium',this)">Medium</button>
+          <button class="profile-pill" onclick="setProfile('dark',this)">Dark</button>
+        </div>
+        <input type="hidden" id="roastProfile" value="light"/>
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>Suhu (°C)</label>
+        <input type="number" id="roastTemp" placeholder="200"/>
+      </div>
+      <div class="form-group">
+        <label>Waktu (menit)</label>
+        <input type="number" id="roastTime" placeholder="12"/>
+      </div>
+      <div class="form-group">
+        <label>Biaya Roasting (Rp)</label>
+        <input type="number" id="roastCost" placeholder="50000"/>
+      </div>
+    </div>
+
+    <!-- Blend composer -->
+    <div class="form-group">
+      <label>Komposisi Green Bean</label>
+      <div id="blendRows"></div>
+      <button class="btn-add-row" onclick="addBlendRow()">
+        <i class="fa-solid fa-plus"></i> Tambah Origin
+      </button>
+    </div>
+
+    <!-- Yield -->
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Yield % <span style="color:var(--text-dim);font-size:11px">(biasanya 80-85%)</span></label>
+        <input type="number" id="yieldPct" value="82" min="1" max="100" oninput="calcPreview()"/>
+      </div>
+      <div class="form-group">
+        <label>Target Green Bean Total (g)</label>
+        <input type="number" id="totalGreen" readonly style="opacity:0.6" placeholder="auto"/>
+      </div>
+    </div>
+
+    <!-- Preview kalkulasi -->
+    <div class="result-box highlight" id="roastPreview">
+      <div class="result-row"><span>Total green bean</span><span id="prevGreen">—</span></div>
+      <div class="result-row"><span>Roasted bean output</span><span id="prevRoasted">—</span></div>
+      <div class="result-row"><span>Susut berat</span><span id="prevLoss">—</span></div>
+      <div class="result-row accent"><span>HPP per gram roasted</span><span id="prevHpp">—</span></div>
+    </div>
+
+    <!-- Target roasted bean di inventory -->
+    <div class="form-group" style="margin-top:16px">
+      <label>Tambahkan ke stok bahan <span style="color:var(--accent)">*</span></label>
+      <select id="roastedTarget">
+        <option value="">— Pilih item roasted bean di inventory —</option>
+      </select>
+    </div>
+
     <div class="modal-footer">
-      <button class="btn-modal-cancel" onclick="closeRecipeModal()">Batal</button>
-      <button class="btn-modal-confirm" id="recipeSaveBtn" onclick="submitRecipe()">Simpan Resep</button>
+      <button class="btn-modal-cancel" onclick="closeRoastModal()">Batal</button>
+      <button class="btn-modal-confirm" id="roastSaveBtn" onclick="submitRoast()">
+        <i class="fa-solid fa-fire"></i> Simpan Sesi
+      </button>
     </div>
   </div>
 </div>
@@ -197,181 +304,382 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, increment }
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, increment, serverTimestamp, query, orderBy, where }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
-  const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
-  let currentUser=null,ingredients=[],menuItems=[],stockLogs=[],recipeRows=[];
+  const fc = {
+    apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",
+    authDomain:"cobold-b0e8d.firebaseapp.com",
+    projectId:"cobold-b0e8d",
+    storageBucket:"cobold-b0e8d.firebasestorage.app",
+    messagingSenderId:"317072309656",
+    appId:"1:317072309656:web:803003d311f119e437bfed"
+  };
+  const app=initializeApp(fc), auth=getAuth(app), db=getFirestore(app);
 
-  onAuthStateChanged(auth,async(user)=>{
+  let currentUser = null;
+  let ingredients  = [];  // semua ingredient
+  let greenBeans   = [];  // filter kategori Kopi
+  let batches      = [];
+  let blendRows    = [];
+  let roastProfile = 'light';
+
+  // ── AUTH ──
+  onAuthStateChanged(auth, async(user) => {
     if(!user){location.href="login.html";return;}
-    const snap=await getDoc(doc(db,"users",user.uid));
+    const snap = await getDoc(doc(db,"users",user.uid));
     if(!snap.exists()||snap.data().role!=='admin'){location.href="login.html";return;}
-    currentUser={uid:user.uid,name:snap.data().name||user.email};
-    await Promise.all([loadIngredients(),loadMenu(),loadLogs()]);
-    renderIngredients();renderRecipes();renderLogs();checkAlerts();
+    currentUser = {uid:user.uid, name:snap.data().name||user.email};
+    await Promise.all([loadIngredients(), loadBatches()]);
+    renderBatches();
+    renderGreenBeans();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
-  async function loadIngredients(){const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));ingredients=s.docs.map(d=>({id:d.id,...d.data()}));}
-  async function loadMenu(){const s=await getDocs(query(collection(db,"menu"),orderBy("category")));menuItems=s.docs.map(d=>({id:d.id,...d.data()}));}
-  async function loadLogs(){const s=await getDocs(query(collection(db,"stockLogs"),orderBy("createdAt","desc")));stockLogs=s.docs.map(d=>({id:d.id,...d.data()})).slice(0,50);}
+  async function loadIngredients() {
+    const s = await getDocs(query(collection(db,"ingredients"), orderBy("name")));
+    ingredients = s.docs.map(d=>({id:d.id,...d.data()}));
+    greenBeans  = ingredients.filter(i => i.category === 'Green Bean');
+  }
 
-  window.switchTab=function(tab,btn){
-    ['stok','resep','log'].forEach(t=>document.getElementById('tab-'+t).classList.remove('active'));
+  async function loadBatches() {
+    const s = await getDocs(query(collection(db,"roastingBatches"), orderBy("createdAt","desc")));
+    batches = s.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  // ── TABS ──
+  window.switchTab = function(tab, btn) {
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById('tab-'+tab).classList.add('active');
     btn.classList.add('active');
-    if(tab==='resep')renderRecipes();
-    if(tab==='log')renderLogs();
+    if(tab==='stok') renderGreenBeans();
   };
 
-  function checkAlerts(){
-    const low=ingredients.filter(i=>i.minStock>0&&i.stock<=i.minStock);
-    if(!low.length)return;
-    document.getElementById('alertLow').classList.add('show');
-    document.getElementById('alertBody').innerHTML=low.map(i=>`• ${i.name}: ${i.stock} ${i.unit}`).join('<br>');
-  }
-  function getStatus(i){if(!i.minStock||i.minStock<=0)return'aman';const r=i.stock/i.minStock;return r<=0.5?'kritis':r<=1?'rendah':'aman';}
-  function barW(i){if(!i.minStock||i.minStock<=0)return 80;return Math.min(100,Math.round((i.stock/(i.minStock*2))*100));}
-
-  window.renderIngredients=function(){
-    const q=document.getElementById('searchIng').value.toLowerCase();
-    const list=ingredients.filter(i=>!q||i.name.toLowerCase().includes(q)||(i.category||'').toLowerCase().includes(q));
-    document.getElementById('ingTbody').innerHTML=list.length?list.map(i=>{
-      const st=getStatus(i),pct=barW(i),lbl={kritis:'KRITIS',rendah:'RENDAH',aman:'AMAN'}[st],cls={kritis:'badge-red',rendah:'badge-yellow',aman:'badge-green'}[st];
-      return `<tr>
-        <td><strong>${i.name}</strong></td>
-        <td><span style="font-size:11px;color:var(--accent)">${i.category||'—'}</span></td>
-        <td><strong>${i.stock}</strong><span class="unit-tag">${i.unit}</span></td>
-        <td>${i.minStock||0}<span class="unit-tag">${i.unit}</span></td>
-        <td><div class="stock-bar-wrap"><div class="stock-bar"><div class="stock-bar-fill fill-${st}" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--text-dim)">${pct}%</span></div></td>
-        <td><span class="badge ${cls}">${lbl}</span></td>
-        <td>
-          <button class="btn-sm" style="color:var(--green);border-color:rgba(34,197,94,.3)" onclick="openRestock('${i.id}')">+ Stok</button>
-          <button class="btn-sm" onclick="openIngModal('${i.id}')">Edit</button>
-          <button class="btn-sm danger" onclick="deleteIng('${i.id}')">Hapus</button>
-        </td>
-      </tr>`;
-    }).join(''):`<tr><td colspan="7" class="empty-cell">Tidak ada bahan ditemukan.</td></tr>`;
-  };
-
-  window.openIngModal=function(id){
-    document.getElementById('ingEditId').value=id||'';
-    if(id){const i=ingredients.find(x=>x.id===id);document.getElementById('ingModalTitle').textContent='Edit Bahan';document.getElementById('ingName').value=i.name;document.getElementById('ingCat').value=i.category||'Lainnya';document.getElementById('ingUnit').value=i.unit;document.getElementById('ingStock').value=i.stock;document.getElementById('ingMin').value=i.minStock||0;document.getElementById('ingHarga').value=i.hargaBeli||'';document.getElementById('ingMultiplier').value=i.unitMultiplier||'';}
-    else{document.getElementById('ingModalTitle').textContent='Tambah Bahan';document.getElementById('ingName').value='';document.getElementById('ingStock').value='';document.getElementById('ingMin').value='';}
-    document.getElementById('ingModal').classList.add('show');
-  };
-  window.closeIngModal=function(){document.getElementById('ingModal').classList.remove('show');};
-  window.submitIng=async function(){
-    const btn=document.getElementById('ingSaveBtn');
-    const id=document.getElementById('ingEditId').value;
-    const name=document.getElementById('ingName').value.trim();
-    const cat=document.getElementById('ingCat').value;
-    const unit=document.getElementById('ingUnit').value;
-    const stock=parseFloat(document.getElementById('ingStock').value);
-    const min=parseFloat(document.getElementById('ingMin').value)||0;
-    const hargaBeli=parseFloat(document.getElementById('ingHarga').value)||0;
-    const unitMultiplier=parseFloat(document.getElementById('ingMultiplier').value)||1000;
-    if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');return;}
-    btn.disabled=true;btn.textContent='Menyimpan...';
-    try{
-      if(id)await updateDoc(doc(db,"ingredients",id),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier});
-      else await addDoc(collection(db,"ingredients"),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier,createdAt:serverTimestamp()});
-      await loadIngredients();renderIngredients();checkAlerts();closeIngModal();toast('✓ Bahan disimpan','success');
-    }catch(e){toast('Error: '+e.message,'error');}
-    btn.disabled=false;btn.textContent='Simpan';
-  };
-  window.deleteIng=async function(id){
-    const i=ingredients.find(x=>x.id===id);if(!confirm(`Hapus "${i?.name}"?`))return;
-    try{await deleteDoc(doc(db,"ingredients",id));await loadIngredients();renderIngredients();toast('Bahan dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
-  };
-
-  window.openRestock=function(id){
-    const i=ingredients.find(x=>x.id===id);
-    document.getElementById('restockId').value=id;
-    document.getElementById('restockName').textContent=i.name;
-    document.getElementById('restockCurrent').textContent=`Stok saat ini: ${i.stock} ${i.unit}`;
-    document.getElementById('restockAmt').value='';document.getElementById('restockNote').value='';
-    document.getElementById('restockModal').classList.add('show');
-  };
-  window.closeRestock=function(){document.getElementById('restockModal').classList.remove('show');};
-  window.submitRestock=async function(){
-    const btn=document.getElementById('restockSaveBtn');
-    const id=document.getElementById('restockId').value;
-    const amt=parseFloat(document.getElementById('restockAmt').value);
-    const note=document.getElementById('restockNote').value.trim()||'Restock manual';
-    if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');return;}
-    btn.disabled=true;btn.textContent='Menyimpan...';
-    try{
-      const i=ingredients.find(x=>x.id===id);
-      await updateDoc(doc(db,"ingredients",id),{stock:increment(amt)});
-      await addDoc(collection(db,"stockLogs"),{ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()});
-      await loadIngredients();await loadLogs();renderIngredients();renderLogs();checkAlerts();closeRestock();toast(`✓ +${amt} ${i.unit} ditambahkan`,'success');
-    }catch(e){toast('Error: '+e.message,'error');}
-    btn.disabled=false;btn.textContent='Tambah Stok';
-  };
-
-  window.renderRecipes=function(){
-    const grid=document.getElementById('recipeGrid');
-    if(!menuItems.length){grid.innerHTML=`<p style="color:var(--text-dim);font-size:14px">Belum ada menu.</p>`;return;}
-    grid.innerHTML=menuItems.map(m=>{
-      const r=m.recipe||[];
-      const rows=r.length?r.map(x=>{const ing=ingredients.find(i=>i.id===x.ingredientId);return`<div class="recipe-item"><span class="recipe-item-name">${ing?ing.name:'(dihapus)'}</span><span class="recipe-item-amount">${x.amount} ${ing?ing.unit:''}</span></div>`;}).join(''):`<div class="recipe-empty">Belum ada resep</div>`;
-      return`<div class="recipe-card"><div class="recipe-card-head"><div><div class="recipe-name">${m.name}</div><div class="recipe-cat">${m.category||''}</div></div><button class="btn-sm" onclick="openRecipeModal('${m.id}')">Edit Resep</button></div>${rows}</div>`;
-    }).join('');
-  };
-  window.openRecipeModal=function(menuId){
-    const m=menuItems.find(x=>x.id===menuId);
-    document.getElementById('recipeMenuId').value=menuId;
-    document.getElementById('recipeModalTitle').textContent=`Resep: ${m.name}`;
-    recipeRows=(m.recipe||[]).map(r=>({ingredientId:r.ingredientId,amount:r.amount}));
-    renderRecipeEditor();document.getElementById('recipeModal').classList.add('show');
-  };
-  window.closeRecipeModal=function(){document.getElementById('recipeModal').classList.remove('show');};
-  window.addRecipeRow=function(){recipeRows.push({ingredientId:ingredients[0]?.id||'',amount:0});renderRecipeEditor();};
-  function renderRecipeEditor(){
-    const ed=document.getElementById('recipeEditor');
-    if(!ingredients.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku dulu.</p>`;return;}
-    ed.innerHTML=recipeRows.map((r,idx)=>{
-      const ing=ingredients.find(i=>i.id===r.ingredientId);
-      return`<div class="recipe-editor-item">
-        <select onchange="updateRecipeRow(${idx},'ingredientId',this.value)">${ingredients.map(i=>`<option value="${i.id}"${i.id===r.ingredientId?' selected':''}>${i.name}</option>`).join('')}</select>
-        <input type="number" value="${r.amount}" min="0" step="0.01" placeholder="Jml" onchange="updateRecipeRow(${idx},'amount',parseFloat(this.value))"/>
-        <span class="unit-label">${ing?ing.unit:''}</span>
-        <button class="btn-remove-recipe" onclick="removeRecipeRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
+  // ── RENDER BATCHES ──
+  function renderBatches() {
+    const el = document.getElementById('batchList');
+    if(!batches.length) {
+      el.innerHTML = `<div style="text-align:center;padding:48px;color:var(--text-dim);font-size:14px">
+        Belum ada sesi roasting. Klik tombol "Sesi Roasting" untuk memulai.</div>`;
+      return;
+    }
+    el.innerHTML = batches.map(b => {
+      const ts = b.createdAt?.toDate ? b.createdAt.toDate() : new Date((b.createdAt?.seconds||0)*1000);
+      const dateStr = ts.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+      const hppStr  = b.hppPerGram ? `Rp ${b.hppPerGram.toLocaleString('id',{maximumFractionDigits:1})}/g` : '—';
+      const blendStr = (b.blend||[]).map(x=>`${x.name} ${x.grams}g`).join(' · ');
+      const profileCls = b.profile||'medium';
+      return `<div class="batch-card">
+        <div class="batch-head">
+          <div>
+            <div class="batch-no">${b.batchNo||'—'}</div>
+            <div class="batch-name">${b.blendName||'Unnamed'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="batch-date">${b.roastDate||dateStr}</div>
+            <button onclick="deleteBatch('${b.id}')"
+              style="background:none;border:1px solid var(--border);border-radius:7px;
+                     color:var(--red);cursor:pointer;padding:5px 10px;font-size:12px;
+                     font-family:'Inter',sans-serif;transition:0.2s;display:flex;align-items:center;gap:5px"
+              onmouseover="this.style.background='rgba(255,95,95,0.1)'"
+              onmouseout="this.style.background='none'">
+              <i class="fa-solid fa-trash-can"></i> Hapus
+            </button>
+          </div>
+        </div>
+        <div class="batch-tags">
+          <span class="batch-tag ${profileCls}">${(b.profile||'').toUpperCase()}</span>
+          ${b.temp?`<span class="batch-tag">${b.temp}°C</span>`:''}
+          ${b.duration?`<span class="batch-tag">${b.duration} mnt</span>`:''}
+          <span class="batch-tag" style="background:rgba(34,197,94,0.1);color:var(--green)">HPP ${hppStr}</span>
+        </div>
+        <div class="batch-stats">
+          <div class="batch-stat">
+            <div class="batch-stat-val">${(b.totalGreen||0).toLocaleString('id')}g</div>
+            <div class="batch-stat-lbl">Green Bean</div>
+          </div>
+          <div class="batch-stat">
+            <div class="batch-stat-val">${(b.roastedOutput||0).toLocaleString('id')}g</div>
+            <div class="batch-stat-lbl">Roasted</div>
+          </div>
+          <div class="batch-stat">
+            <div class="batch-stat-val">${b.yieldPct||0}%</div>
+            <div class="batch-stat-lbl">Yield</div>
+          </div>
+        </div>
+        ${blendStr?`<div class="batch-blend">🫘 ${blendStr}</div>`:''}
       </div>`;
     }).join('');
   }
-  window.updateRecipeRow=function(idx,field,val){recipeRows[idx][field]=val;if(field==='ingredientId')renderRecipeEditor();};
-  window.removeRecipeRow=function(idx){recipeRows.splice(idx,1);renderRecipeEditor();};
-  window.submitRecipe=async function(){
-    const btn=document.getElementById('recipeSaveBtn');
-    const menuId=document.getElementById('recipeMenuId').value;
-    const valid=recipeRows.filter(r=>r.ingredientId&&r.amount>0);
-    btn.disabled=true;btn.textContent='Menyimpan...';
-    try{await updateDoc(doc(db,"menu",menuId),{recipe:valid});await loadMenu();renderRecipes();closeRecipeModal();toast('✓ Resep disimpan','success');}
-    catch(e){toast('Error: '+e.message,'error');}
-    btn.disabled=false;btn.textContent='Simpan Resep';
+
+  // ── DELETE BATCH + ROLLBACK STOK ──
+  window.deleteBatch = async function(batchId) {
+    const b = batches.find(x => x.id === batchId);
+    if(!b) return;
+
+    const blendNames = (b.blend||[]).map(x=>`${x.name} +${x.grams}g`).join(', ');
+    const targetIng  = ingredients.find(i=>i.id===b.roastedTargetId);
+
+    const confirm1 = confirm(
+      `Hapus batch ${b.batchNo} — "${b.blendName}"?
+
+` +
+      `Rollback stok yang akan dilakukan:
+` +
+      `• Green bean dikembalikan: ${blendNames}
+` +
+      `• Roasted bean dikurangi: ${b.roastedOutput}g dari "${targetIng?.name||'—'}"
+
+` +
+      `Aksi ini tidak bisa dibatalkan.`
+    );
+    if(!confirm1) return;
+
+    // Guard check: pastikan stok roasted bean cukup untuk dikurangi
+    if(b.roastedTargetId && b.roastedOutput) {
+      if(!targetIng || targetIng.stock < b.roastedOutput) {
+        toast('Stok roasted bean tidak mencukupi untuk rollback','error');
+        return;
+      }
+    }
+
+    try {
+      // 1. Rollback stok green bean (kembalikan naik)
+      for(const r of (b.blend||[])) {
+        if(!r.id || !r.grams) continue;
+        await updateDoc(doc(db,"ingredients",r.id), { stock: increment(+r.grams) });
+        await addDoc(collection(db,"stockLogs"), {
+          ingredientId: r.id,
+          ingredientName: r.name,
+          unit: 'g',
+          change: +r.grams,
+          note: `Rollback hapus batch ${b.batchNo}`,
+          byName: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // 2. Rollback stok roasted bean (kurangi balik)
+      if(b.roastedTargetId && b.roastedOutput) {
+        await updateDoc(doc(db,"ingredients",b.roastedTargetId), {
+          stock: increment(-b.roastedOutput)
+        });
+        await addDoc(collection(db,"stockLogs"), {
+          ingredientId: b.roastedTargetId,
+          ingredientName: targetIng?.name || b.roastedTargetId,
+          unit: 'g',
+          change: -b.roastedOutput,
+          note: `Rollback hapus batch ${b.batchNo}`,
+          byName: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      // 3. Hapus batch record
+      await deleteDoc(doc(db,"roastingBatches",batchId));
+
+      await loadIngredients();
+      await loadBatches();
+      renderBatches();
+      renderGreenBeans();
+      toast(`✓ Batch ${b.batchNo} dihapus & stok di-rollback`, 'success');
+    } catch(e) {
+      toast('Error: '+e.message, 'error');
+    }
   };
 
-  function renderLogs(){
-    document.getElementById('logTbody').innerHTML=stockLogs.length?stockLogs.map(l=>{
-      const isPos=l.change>0;const col=isPos?'var(--green)':'var(--red)';
-      const ts=l.createdAt?.toDate?l.createdAt.toDate():new Date((l.createdAt?.seconds||0)*1000);
-      return`<tr>
-        <td style="font-size:12px;color:var(--text-dim)">${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-        <td>${l.ingredientName}</td>
-        <td style="color:${col};font-weight:600">${isPos?'+':''}${l.change} ${l.unit}</td>
-        <td style="font-size:12px;color:var(--text-dim)">${l.note||'—'}</td>
-        <td style="font-size:12px;color:var(--text-dim)">${l.byName||'—'}</td>
+  // ── RENDER GREEN BEANS ──
+  function renderGreenBeans() {
+    const tbody = document.getElementById('greenBeanTbody');
+    const list  = ingredients.filter(i => i.category === 'Green Bean');
+    if(!list.length) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-cell">Belum ada bahan kategori "Kopi" atau "Green Bean" di Inventori.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(i => {
+      const r   = i.minStock>0 ? i.stock/i.minStock : 2;
+      const cls = r<=0?'badge-red':r<=0.5?'badge-red':r<=1?'badge-yellow':'badge-green';
+      const lbl = r<=0?'HABIS':r<=0.5?'KRITIS':r<=1?'RENDAH':'AMAN';
+      return `<tr>
+        <td><strong>${i.name}</strong></td>
+        <td>${i.stock} ${i.unit}</td>
+        <td>${i.minStock||0} ${i.unit}</td>
+        <td><span class="badge ${cls}">${lbl}</span></td>
       </tr>`;
-    }).join(''):`<tr><td colspan="5" class="empty-cell">Belum ada riwayat.</td></tr>`;
+    }).join('');
   }
 
-  function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}
-  document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
+  // ── MODAL ──
+  window.openRoastModal = function() {
+    const pad = n => String(n).padStart(3,'0');
+    const now = new Date();
+    const batchNo = `RST-${now.getFullYear()}${pad(now.getMonth()+1)}-${pad(batches.length+1)}`;
+    document.getElementById('batchNo').value   = batchNo;
+    document.getElementById('roastDate').value = now.toISOString().split('T')[0];
+    document.getElementById('roastProfile').value = 'light';
+    document.getElementById('yieldPct').value  = 82;
+    document.getElementById('roastCost').value = '';
+    document.getElementById('roastTemp').value = '';
+    document.getElementById('roastTime').value = '';
+    document.getElementById('blendName').value = '';
+
+    document.querySelectorAll('.profile-pill').forEach((b,i)=>b.classList.toggle('active',i===0));
+    roastProfile = 'light';
+
+    blendRows = [{id:'',pct:50},{id:'',pct:50}];
+    renderBlendRows();
+    calcPreview();
+
+    const sel = document.getElementById('roastedTarget');
+    sel.innerHTML = `<option value="">— Pilih item roasted bean di inventory —</option>` +
+      ingredients.filter(i=>i.category==='Roasted Bean')
+        .map(i=>`<option value="${i.id}">${i.name} (stok: ${i.stock} ${i.unit})</option>`).join('');
+
+    document.getElementById('roastModal').classList.add('show');
+  };
+
+  window.closeRoastModal = function() {
+    document.getElementById('roastModal').classList.remove('show');
+  };
+
+  window.setProfile = function(p, btn) {
+    roastProfile = p;
+    document.getElementById('roastProfile').value = p;
+    document.querySelectorAll('.profile-pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+
+  // ── BLEND ROWS ──
+  function renderBlendRows() {
+    const wrap = document.getElementById('blendRows');
+    wrap.innerHTML = blendRows.map((r,idx) => `
+      <div class="blend-row">
+        <div>
+          <label>Origin / Green Bean</label>
+          <select onchange="updateBlend(${idx},'id',this.value)">
+            <option value="">— Pilih —</option>
+            ${ingredients.filter(i=>i.category==='Green Bean')
+              .map(i=>`<option value="${i.id}" ${i.id===r.id?'selected':''}>${i.name} (${i.stock}${i.unit})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label>Berat (g)</label>
+          <input type="number" value="${r.grams||''}" min="1"
+            placeholder="g" oninput="updateBlend(${idx},'grams',+this.value)"/>
+        </div>
+        <div>
+          <label>Rasio (%)</label>
+          <input type="number" value="${r.pct||''}" min="1" max="100"
+            placeholder="%" oninput="updateBlend(${idx},'pct',+this.value)"/>
+        </div>
+        <button class="btn-remove" onclick="removeBlend(${idx})"><i class="fa-solid fa-xmark"></i></button>
+      </div>`).join('');
+  }
+
+  window.addBlendRow    = function() { blendRows.push({id:'',grams:0,pct:0}); renderBlendRows(); calcPreview(); };
+  window.removeBlend    = function(idx) { blendRows.splice(idx,1); renderBlendRows(); calcPreview(); };
+  window.updateBlend    = function(idx,field,val) { blendRows[idx][field]=val; calcPreview(); };
+
+  // ── CALC PREVIEW ──
+  window.calcPreview = function() {
+    const totalGreen = blendRows.reduce((s,r)=>s+(+r.grams||0),0);
+    const yieldPct   = parseFloat(document.getElementById('yieldPct').value)||82;
+    const roastCost  = parseFloat(document.getElementById('roastCost').value)||0;
+    const roasted    = Math.round(totalGreen * yieldPct / 100);
+    const loss       = totalGreen - roasted;
+
+    let hppBahan = 0;
+    for(const r of blendRows) {
+      const ing = ingredients.find(i=>i.id===r.id);
+      if(ing && ing.hargaBeli && r.grams) {
+        hppBahan += (ing.hargaBeli / (ing.unitMultiplier||1000)) * r.grams;
+      }
+    }
+    const totalHpp   = hppBahan + roastCost;
+    const hppPerGram = roasted > 0 ? totalHpp / roasted : 0;
+
+    document.getElementById('totalGreen').value   = totalGreen || '';
+    document.getElementById('prevGreen').textContent   = totalGreen ? `${totalGreen.toLocaleString('id')} g` : '—';
+    document.getElementById('prevRoasted').textContent = roasted   ? `${roasted.toLocaleString('id')} g` : '—';
+    document.getElementById('prevLoss').textContent    = loss      ? `${loss.toLocaleString('id')} g` : '—';
+    document.getElementById('prevHpp').textContent     = hppPerGram
+      ? `Rp ${hppPerGram.toLocaleString('id',{maximumFractionDigits:1})}/g`
+      : '(input harga beli bahan di HPP Calculator)';
+  };
+
+  // ── SUBMIT ──
+  window.submitRoast = async function() {
+    const btn       = document.getElementById('roastSaveBtn');
+    const batchNo   = document.getElementById('batchNo').value;
+    const blendName = document.getElementById('blendName').value.trim();
+    const roastDate = document.getElementById('roastDate').value;
+    const yieldPct  = parseFloat(document.getElementById('yieldPct').value)||82;
+    const roastCost = parseFloat(document.getElementById('roastCost').value)||0;
+    const temp      = document.getElementById('roastTemp').value;
+    const duration  = document.getElementById('roastTime').value;
+    const targetId  = document.getElementById('roastedTarget').value;
+
+    if(!blendName) { toast('Nama blend wajib diisi.','error'); return; }
+    if(!blendRows.length || blendRows.every(r=>!r.id||!r.grams)) {
+      toast('Minimal 1 origin green bean dengan berat.','error'); return;
+    }
+    if(!targetId) { toast('Pilih target stok roasted bean.','error'); return; }
+
+    const totalGreen = blendRows.reduce((s,r)=>s+(+r.grams||0),0);
+    const roasted    = Math.round(totalGreen * yieldPct / 100);
+
+    const blend = blendRows.filter(r=>r.id&&r.grams).map(r => {
+      const ing = ingredients.find(i=>i.id===r.id);
+      return { id:r.id, name:ing?.name||r.id, grams:+r.grams, pct:+r.pct||0 };
+    });
+
+    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    try {
+      for(const r of blend) {
+        await updateDoc(doc(db,"ingredients",r.id), { stock: increment(-r.grams) });
+        await addDoc(collection(db,"stockLogs"), {
+          ingredientId: r.id, ingredientName: r.name, unit: 'g',
+          change: -r.grams, note: `Roasting batch ${batchNo}`,
+          byName: currentUser.name, createdAt: serverTimestamp()
+        });
+      }
+
+      const targetIng = ingredients.find(i=>i.id===targetId);
+      await updateDoc(doc(db,"ingredients",targetId), { stock: increment(roasted) });
+      await addDoc(collection(db,"stockLogs"), {
+        ingredientId: targetId, ingredientName: targetIng?.name||targetId, unit: 'g',
+        change: roasted, note: `Hasil roasting batch ${batchNo}`,
+        byName: currentUser.name, createdAt: serverTimestamp()
+      });
+
+      await addDoc(collection(db,"roastingBatches"), {
+        batchNo, blendName, roastDate, profile: roastProfile,
+        temp: +temp||null, duration: +duration||null,
+        blend, totalGreen, yieldPct, roastedOutput: roasted,
+        roastCost, hppPerGram: 0,
+        roastedTargetId: targetId,
+        createdBy: currentUser.name, createdAt: serverTimestamp()
+      });
+
+      await loadIngredients();
+      await loadBatches();
+      renderBatches();
+      renderGreenBeans();
+      closeRoastModal();
+      toast(`✓ Batch ${batchNo} disimpan — ${roasted.toLocaleString('id')}g roasted bean ditambahkan`, 'success');
+    } catch(e) { toast('Error: '+e.message,'error'); }
+    btn.disabled = false; btn.textContent = '🔥 Simpan Sesi';
+  };
+
+  function toast(msg,type='') {
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.className=`toast ${type} show`;
+    setTimeout(()=>t.classList.remove('show'),3000);
+  }
+
+  document.getElementById('btnLogout').addEventListener('click',
+    ()=>signOut(auth).then(()=>location.href="login.html"));
 </script>
 <script src="nav-scroll.js"></script>
 </body>
