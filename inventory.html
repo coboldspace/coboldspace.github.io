@@ -45,6 +45,7 @@
     }
   </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -207,7 +208,14 @@
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
     const snap=await getDoc(doc(db,"users",user.uid));
-    if(!snap.exists()||snap.data().role!=='admin'){location.href="login.html";return;}
+    if(!snap.exists()){location.href="login.html";return;}
+    const role = snap.data().role || 'kasir';
+    if(role === 'admin') {
+      document.body.classList.add('is-admin');
+    } else {
+      location.href = "dashboard.html";
+      return;
+    }
     currentUser={uid:user.uid,name:snap.data().name||user.email};
     await Promise.all([loadIngredients(),loadMenu(),loadLogs()]);
     renderIngredients();renderRecipes();renderLogs();checkAlerts();

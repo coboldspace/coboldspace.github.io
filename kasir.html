@@ -303,6 +303,7 @@
       .cart-float { display: none !important; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -428,7 +429,7 @@
     const role=snap.data().role;
     if(role!=='kasir'&&role!=='admin'){location.href="login.html";return;}
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
-    if(role==='admin') document.querySelectorAll('.admin-only').forEach(el=>el.style.display='flex');
+    if(role==='admin') document.body.classList.add('is-admin');
     await loadMenu();
     document.getElementById('loadingOverlay').style.display='none';
   });

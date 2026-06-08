@@ -24,6 +24,7 @@
       .filters .filter-select { flex:1; min-width:0; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -173,7 +174,21 @@
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
     const snap=await getDoc(doc(db,"users",user.uid));
-    if(!snap.exists()||snap.data().role!=='admin'){location.href="login.html";return;}
+    if(!snap.exists()){location.href="login.html";return;}
+
+    const role = snap.data().role || 'kasir';
+
+    // Show admin nav items
+    if(role === 'admin') {
+      document.body.classList.add('is-admin');
+    }
+
+    // Redirect kasir trying to access admin pages
+    if(role !== 'admin') {
+      location.href = "dashboard.html";
+      return;
+    }
+
     await Promise.all([loadMenu(),loadOrders()]);
     renderMenuTable(); renderTransaksi();
     document.getElementById('loadingOverlay').style.display='none';

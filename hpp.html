@@ -167,6 +167,7 @@
       .pkg-row .hpp-input { grid-column: 1; }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -300,7 +301,14 @@
   onAuthStateChanged(auth, async(user) => {
     if(!user){location.href="login.html";return;}
     const snap = await getDoc(doc(db,"users",user.uid));
-    if(!snap.exists()||snap.data().role!=='admin'){location.href="login.html";return;}
+    if(!snap.exists()){location.href="login.html";return;}
+    const role = snap.data().role || 'kasir';
+    if(role === 'admin') {
+      document.body.classList.add('is-admin');
+    } else {
+      location.href = "dashboard.html";
+      return;
+    }
     await Promise.all([loadMenu(), loadIngredients(), loadLatestBatches()]);
     renderMenuSelector();
     // Default 1 pkg row
