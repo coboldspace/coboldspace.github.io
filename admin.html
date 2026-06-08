@@ -17,163 +17,14 @@
     .detail-total span:last-child { color:var(--accent); }
     .filters { display:flex; gap:8px; flex-wrap:wrap; }
 
-    /* ── RECIPE BUILDER ── */
-    .recipe-row {
-      display: grid;
-      grid-template-columns: 1fr 80px 70px 110px 110px 36px;
-      gap: 8px;
-      align-items: end;
-      margin-bottom: 8px;
-    }
-    .recipe-row label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
-    .recipe-row input, .recipe-row select {
-      width: 100%; background: #0d0d0d;
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 10px; color: var(--text-main);
-      font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
-      -webkit-appearance: none;
-    }
-    .recipe-row input:focus, .recipe-row select:focus { border-color: var(--accent); }
-    .recipe-row .cost-display {
-      font-size: 12px; color: var(--text-dim);
-      padding: 8px 0; text-align: right;
-    }
-    .btn-remove-row {
-      background: none; border: 1px solid var(--border);
-      border-radius: 8px; color: var(--red);
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
-    }
-    .btn-remove-row:hover { background: rgba(255,95,95,0.1); }
-    .btn-add-row {
-      width: 100%; padding: 8px;
-      background: none; border: 1px dashed var(--border);
-      border-radius: 8px; color: var(--text-dim);
-      font-family: 'Inter', sans-serif; font-size: 13px;
-      cursor: pointer; transition: 0.2s; margin-top: 4px;
-    }
-    .btn-add-row:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* ── PACKAGING BUILDER ── */
-    .pkg-row {
-      display: grid; grid-template-columns: 1fr 130px 36px;
-      gap: 10px; align-items: end; margin-bottom: 8px;
-    }
-    .pkg-row label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
-    .pkg-row input {
-      width: 100%; background: #0d0d0d;
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 8px 10px; color: var(--text-main);
-      font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
-    }
-    .pkg-row input:focus { border-color: var(--accent); }
-
-    /* ── HPP SUMMARY BOX ── */
-    .hpp-box {
-      background: #111;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 16px;
-    }
-    .hpp-row {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 6px 0;
-      border-bottom: 1px solid #1a1a1a; font-size: 13px;
-    }
-    .hpp-row:last-child { border-bottom: none; }
-    .hpp-row span:first-child { color: var(--text-dim); }
-    .hpp-row.total { font-size: 15px; font-weight: 600; padding-top: 8px; margin-top: 4px; border-top: 2px solid var(--border); }
-    .hpp-row.total span:last-child { color: var(--accent); }
-    .margin-box {
-      background: rgba(34,197,94,0.08);
-      border: 1px solid rgba(34,197,94,0.3);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-top: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .margin-box.danger {
-      background: rgba(255,95,95,0.08);
-      border-color: rgba(255,95,95,0.3);
-    }
-    .margin-box.warning {
-      background: rgba(234,179,8,0.08);
-      border-color: rgba(234,179,8,0.3);
-    }
-    .margin-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
-    .margin-value { font-size: 20px; font-weight: 600; }
-    .margin-box .margin-value { color: var(--green); }
-    .margin-box.danger .margin-value { color: var(--red); }
-    .margin-box.warning .margin-value { color: var(--yellow); }
-    .margin-pct { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-
-    /* ── MARGIN OVERVIEW TABLE ── */
-    .margin-bar {
-      height: 6px; border-radius: 3px;
-      background: var(--border); overflow: hidden;
-      width: 80px; display: inline-block;
-      vertical-align: middle; margin-right: 8px;
-    }
-    .margin-bar-fill {
-      height: 100%; border-radius: 3px;
-      transition: width 0.3s;
-    }
-    .margin-status {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 11px; font-weight: 600; padding: 2px 8px;
-      border-radius: 10px;
-    }
-    .margin-status.good { background: rgba(34,197,94,0.15); color: var(--green); }
-    .margin-status.warn { background: rgba(234,179,8,0.15); color: var(--yellow); }
-    .margin-status.bad  { background: rgba(255,95,95,0.15); color: var(--red); }
-
-    /* ── MODAL TABS ── */
-    .modal-tabs {
-      display: flex; gap: 4px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 16px;
-    }
-    .modal-tab {
-      padding: 8px 14px;
-      background: none; border: none;
-      color: var(--text-dim); font-family: 'Inter', sans-serif;
-      font-size: 13px; cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: 0.2s;
-    }
-    .modal-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-      font-weight: 600;
-    }
-    .modal-section { display: none; }
-    .modal-section.active { display: block; }
-
     @media (max-width:640px) {
       .card-head { flex-direction:column; align-items:flex-start; }
       .card-head .btn-primary { width:100%; justify-content:center; }
       .filters { width:100%; }
       .filters .filter-select { flex:1; min-width:0; }
-      .recipe-row {
-        grid-template-columns: 1fr 70px 60px 90px 90px 36px;
-        gap: 6px;
-      }
-      .pkg-row { grid-template-columns: 1fr 100px 36px; }
-      .modal-tabs { overflow-x: auto; }
-    }
-    @media (max-width:480px) {
-      .recipe-row {
-        grid-template-columns: 1fr 60px 50px 80px 80px 32px;
-        gap: 4px;
-      }
-      .recipe-row input, .recipe-row select { padding: 6px 8px; font-size: 12px; }
     }
   </style>
-<base target="_blank">
+
 </head>
 <body>
 
@@ -211,7 +62,6 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('menu',this)">☕ Menu</button>
     <button class="tab-btn"        onclick="showTab('transaksi',this)">🧾 Transaksi</button>
-    <button class="tab-btn"        onclick="showTab('margin',this)">📊 Margin</button>
   </div>
 
   <!-- MENU -->
@@ -226,8 +76,8 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>HPP</th><th>Margin</th><th>Tersedia</th><th>Aksi</th></tr></thead>
-          <tbody id="menuTbody"><tr><td colspan="7" class="empty-cell">Memuat...</td></tr></tbody>
+          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Tersedia</th><th>Aksi</th></tr></thead>
+          <tbody id="menuTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -260,150 +110,36 @@
       </div>
     </div>
   </div>
-
-  <!-- MARGIN OVERVIEW -->
-  <div class="section" id="sec-margin">
-    <div class="card">
-      <div class="card-head">
-        <h2>Margin Overview</h2>
-        <div class="filters">
-          <select class="filter-select" id="marginFilter" onchange="renderMarginOverview()">
-            <option value="">Semua</option>
-            <option value="good">🟢 Sehat (>55%)</option>
-            <option value="warn">🟡 Waspada (45-55%)</option>
-            <option value="bad">🔴 Berbahaya (<45%)</option>
-          </select>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Menu</th>
-              <th>Harga Jual</th>
-              <th>HPP/Cup</th>
-              <th>Margin Rp</th>
-              <th>Margin %</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="marginTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-    <!-- Margin Summary Cards -->
-    <div class="stats-grid" style="margin-top:20px">
-      <div class="stat-card">
-        <h3>Rata-rata Margin</h3>
-        <div class="value" id="avgMargin">0%</div>
-        <div class="value-sub" id="avgMarginSub">semua menu</div>
-      </div>
-      <div class="stat-card">
-        <h3>Menu Sehat</h3>
-        <div class="value" id="goodCount" style="color:var(--green)">0</div>
-        <div class="value-sub">margin > 55%</div>
-      </div>
-      <div class="stat-card">
-        <h3>Menu Waspada</h3>
-        <div class="value" id="warnCount" style="color:var(--yellow)">0</div>
-        <div class="value-sub">margin 45-55%</div>
-      </div>
-      <div class="stat-card">
-        <h3>Menu Berbahaya</h3>
-        <div class="value" id="badCount" style="color:var(--red)">0</div>
-        <div class="value-sub">margin < 45%</div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL MENU -->
 <div class="modal-overlay" id="menuModal">
-  <div class="modal" style="max-width:700px; max-height:90vh; overflow-y:auto;">
+  <div class="modal">
     <h2 id="menuModalTitle">Tambah Menu</h2>
     <input type="hidden" id="menuEditId"/>
-
-    <!-- Modal Tabs -->
-    <div class="modal-tabs">
-      <button class="modal-tab active" onclick="showModalTab('basic',this)">📋 Info Dasar</button>
-      <button class="modal-tab"        onclick="showModalTab('recipe',this)">🧪 Resep</button>
-      <button class="modal-tab"        onclick="showModalTab('hpp',this)">💰 HPP & Margin</button>
+    <div class="form-group">
+      <label>Nama</label>
+      <input type="text" id="mName" placeholder="cth: Cappuccino"/>
     </div>
-
-    <!-- TAB: BASIC -->
-    <div class="modal-section active" id="modal-basic">
+    <div class="form-row-2">
       <div class="form-group">
-        <label>Nama Menu</label>
-        <input type="text" id="mName" placeholder="cth: Cappuccino"/>
-      </div>
-      <div class="form-row-2">
-        <div class="form-group">
-          <label>Harga Jual (Rp)</label>
-          <input type="number" id="mPrice" placeholder="32000" oninput="calcHPP()"/>
-        </div>
-        <div class="form-group">
-          <label>Kategori</label>
-          <select id="mCategory">
-            <option>Espresso</option><option>Manual Brew</option>
-            <option>Signature</option><option>Bites</option><option>Lainnya</option>
-          </select>
-        </div>
+        <label>Harga (Rp)</label>
+        <input type="number" id="mPrice" placeholder="32000"/>
       </div>
       <div class="form-group">
-        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
-          <input type="checkbox" id="mAvail" checked style="accent-color:var(--accent);width:16px;height:16px"/>
-          Tersedia di kasir
-        </label>
+        <label>Kategori</label>
+        <select id="mCategory">
+          <option>Espresso</option><option>Manual Brew</option>
+          <option>Signature</option><option>Bites</option><option>Lainnya</option>
+        </select>
       </div>
     </div>
-
-    <!-- TAB: RECIPE -->
-    <div class="modal-section" id="modal-recipe">
-      <h3 style="font-size:14px;margin-bottom:10px;color:var(--text-dim)">Bahan Baku</h3>
-      <div id="recipeRows"></div>
-      <button class="btn-add-row" onclick="addRecipeRow()"><i class="fa-solid fa-plus"></i> Tambah Bahan</button>
-
-      <h3 style="font-size:14px;margin:20px 0 10px;color:var(--text-dim)">Packaging</h3>
-      <div id="pkgRows"></div>
-      <button class="btn-add-row" onclick="addPkgRow()"><i class="fa-solid fa-plus"></i> Tambah Packaging</button>
-
-      <div class="form-group" style="margin-top:16px">
-        <label>Overhead Markup (%)</label>
-        <input type="number" id="mOverhead" value="15" min="0" max="100" step="1" oninput="calcHPP()" style="width:120px"/>
-        <p style="font-size:11px;color:var(--text-dim);margin-top:4px">Persentase biaya operasional ditambahkan ke total bahan + packaging.</p>
-      </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
+        <input type="checkbox" id="mAvail" checked style="accent-color:var(--accent);width:16px;height:16px"/>
+        Tersedia di kasir
+      </label>
     </div>
-
-    <!-- TAB: HPP -->
-    <div class="modal-section" id="modal-hpp">
-      <div class="hpp-box">
-        <div class="hpp-row"><span>Total Bahan Baku</span><span id="sumBahan">Rp 0</span></div>
-        <div class="hpp-row"><span>Total Packaging</span><span id="sumPkg">Rp 0</span></div>
-        <div class="hpp-row"><span>Subtotal</span><span id="sumSubtotal">Rp 0</span></div>
-        <div class="hpp-row"><span>Overhead (<span id="lblOverhead">15%</span>)</span><span id="sumOverhead">Rp 0</span></div>
-        <div class="hpp-row total"><span>TOTAL HPP / CUP</span><span id="sumHPP">Rp 0</span></div>
-      </div>
-
-      <div class="hpp-box" style="margin-top:12px">
-        <div class="hpp-row"><span>Harga Jual</span><span id="sumPrice">Rp 0</span></div>
-        <div class="hpp-row total"><span>PROFIT / CUP</span><span id="sumProfit">Rp 0</span></div>
-      </div>
-
-      <div class="margin-box" id="marginBox">
-        <div>
-          <div class="margin-label">Margin</div>
-          <div class="margin-value" id="marginValue">0%</div>
-          <div class="margin-pct" id="marginSub">Rp 0 / cup</div>
-        </div>
-        <div id="marginStatus" class="margin-status good">SEHAT</div>
-      </div>
-
-      <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.6">
-        <i class="fa-solid fa-circle-info"></i> 
-        🟢 Sehat: >55% &nbsp;|&nbsp; 🟡 Waspada: 45-55% &nbsp;|&nbsp; 🔴 Berbahaya: <45%
-      </div>
-    </div>
-
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="closeMenuModal()">Batal</button>
       <button class="btn-modal-confirm" id="menuSaveBtn" onclick="submitMenu()">Simpan</button>
@@ -434,9 +170,6 @@
   const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
   const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
   let menuData=[],ordersData=[],activeOrderId=null;
-  let ingredientsData=[]; // cache ingredients
-  let recipeRows=[]; // {ingredientId, amount, unit, costPerUnit}
-  let pkgRows=[];    // {name, price}
 
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -444,31 +177,25 @@
     if(!snap.exists()){location.href="login.html";return;}
 
     const role = snap.data().role || 'kasir';
+
+    // Show admin nav items
     if(role === 'admin') {
       document.body.classList.add('is-admin');
     }
+
+    // Redirect kasir trying to access admin pages
     if(role !== 'admin') {
       location.href = "dashboard.html";
       return;
     }
 
-    await Promise.all([loadMenu(), loadOrders(), loadIngredients()]);
-    renderMenuTable(); renderTransaksi(); renderMarginOverview();
+    await Promise.all([loadMenu(),loadOrders()]);
+    renderMenuTable(); renderTransaksi();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
-  async function loadMenu(){
-    const s=await getDocs(query(collection(db,"menu"),orderBy("category")));
-    menuData=s.docs.map(d=>({id:d.id,...d.data()}));
-  }
-  async function loadOrders(){
-    const s=await getDocs(query(collection(db,"orders"),orderBy("createdAt","desc")));
-    ordersData=s.docs.map(d=>({id:d.id,...d.data()}));
-  }
-  async function loadIngredients(){
-    const s=await getDocs(collection(db,"ingredients"));
-    ingredientsData=s.docs.map(d=>({id:d.id,...d.data()}));
-  }
+  async function loadMenu(){const s=await getDocs(query(collection(db,"menu"),orderBy("category")));menuData=s.docs.map(d=>({id:d.id,...d.data()}));}
+  async function loadOrders(){const s=await getDocs(query(collection(db,"orders"),orderBy("createdAt","desc")));ordersData=s.docs.map(d=>({id:d.id,...d.data()}));}
 
   window.showTab=function(id,btn){
     document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -477,226 +204,25 @@
     btn.classList.add('active');
   };
 
-  // ── MODAL TABS ──
-  window.showModalTab=function(id,btn){
-    document.querySelectorAll('.modal-section').forEach(s=>s.classList.remove('active'));
-    document.querySelectorAll('.modal-tab').forEach(b=>b.classList.remove('active'));
-    document.getElementById('modal-'+id).classList.add('active');
-    btn.classList.add('active');
-  };
-
-  // ── RECIPE BUILDER ──
-  function renderRecipeRows(){
-    const wrap=document.getElementById('recipeRows');
-    if(!recipeRows.length){
-      wrap.innerHTML='<p style="color:var(--text-dim);font-size:13px;padding:12px 0">Belum ada bahan. Klik "Tambah Bahan".</p>';
-      return;
-    }
-    wrap.innerHTML=recipeRows.map((r,idx)=>{
-      const ing=ingredientsData.find(i=>i.id===r.ingredientId);
-      const ingOptions=ingredientsData.map(i=>`<option value="${i.id}"${i.id===r.ingredientId?' selected':''}>${i.name} (${i.unit})</option>`).join('');
-      // Auto-calculate cost per unit from inventory
-      let costPerUnit=0;
-      if(ing){
-        const hargaBeli=ing.hargaBeli||0;
-        const multiplier=ing.unitMultiplier||1;
-        costPerUnit=multiplier>0?hargaBeli/multiplier:0;
-      }
-      // Use saved cost if manually overridden, otherwise use inventory
-      const cost=r.costPerUnit||costPerUnit;
-      const total=cost*r.amount;
-      return `<div class="recipe-row">
-        <div>
-          <label>Bahan</label>
-          <select onchange="changeRecipeIng(${idx},this.value)"><option value="">Pilih bahan...</option>${ingOptions}</select>
-        </div>
-        <div>
-          <label>Qty</label>
-          <input type="text" inputmode="decimal" value="${r.amount}" placeholder="0" oninput="changeRecipeQty(${idx},this.value)" style="text-align:center"/>
-        </div>
-        <div>
-          <label>Unit</label>
-          <input type="text" value="${r.unit||ing?.unit||''}" readonly style="opacity:0.6; text-align:center"/>
-        </div>
-        <div>
-          <label>Harga/Unit</label>
-          <input type="text" value="${cost>0?'Rp '+Math.round(cost).toLocaleString('id')+' / '+ (ing?.unit||''):'—'}" readonly style="opacity:0.8; text-align:right; font-size:12px; ${ing?'border-color:rgba(176,137,104,0.3);background:rgba(176,137,104,0.05)':''}"/>
-          ${ing?`<div style="font-size:10px;color:var(--accent);margin-top:3px"><i class="fa-solid fa-box"></i> inventory: Rp ${Math.round(costPerUnit).toLocaleString('id')}/${ing.unit}</div>`:''}
-        </div>
-        <div>
-          <label>Biaya</label>
-          <div class="cost-display">${total?('Rp '+Math.round(total).toLocaleString('id')):'—'}</div>
-        </div>
-        <button class="btn-remove-row" onclick="removeRecipeRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
-      </div>`;
-    }).join('');
-    calcHPP();
-  }
-
-  window.addRecipeRow=function(){
-    recipeRows.push({ingredientId:'',amount:0,unit:'',costPerUnit:0});
-    renderRecipeRows();
-  };
-  window.removeRecipeRow=function(idx){ recipeRows.splice(idx,1); renderRecipeRows(); };
-  window.changeRecipeIng=function(idx,id){
-    const ing=ingredientsData.find(i=>i.id===id);
-    recipeRows[idx].ingredientId=id;
-    recipeRows[idx].unit=ing?.unit||'';
-    // Auto-calculate cost per unit from inventory: hargaBeli / unitMultiplier
-    if(ing){
-      const hargaBeli=ing.hargaBeli||0;
-      const multiplier=ing.unitMultiplier||1;
-      recipeRows[idx].costPerUnit=multiplier>0?hargaBeli/multiplier:0;
-    }
-    renderRecipeRows();
-  };
-  window.changeRecipeQty=function(idx,val){ 
-    const num = parseFloat(val.replace(',', '.'));
-    recipeRows[idx].amount = isNaN(num) ? 0 : num; 
-    renderRecipeRows(); 
-  };
-  /* Harga/Unit auto dari inventory, readonly */
-
-  // ── PACKAGING BUILDER ──
-  function renderPkgRows(){
-    const wrap=document.getElementById('pkgRows');
-    if(!pkgRows.length){
-      wrap.innerHTML='<p style="color:var(--text-dim);font-size:13px;padding:8px 0">Belum ada packaging.</p>';
-      calcHPP(); return;
-    }
-    wrap.innerHTML=pkgRows.map((p,idx)=>`
-      <div class="pkg-row">
-        <div>
-          <label>Nama Item</label>
-          <input type="text" value="${p.name}" placeholder="cth: Cup 12oz" oninput="changePkgName(${idx},this.value)"/>
-        </div>
-        <div>
-          <label>Harga (Rp)</label>
-          <input type="number" value="${p.price}" min="0" oninput="changePkgPrice(${idx},+this.value)"/>
-        </div>
-        <button class="btn-remove-row" onclick="removePkgRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
-      </div>`).join('');
-    calcHPP();
-  }
-
-  window.addPkgRow=function(){ pkgRows.push({name:'',price:0}); renderPkgRows(); };
-  window.removePkgRow=function(idx){ pkgRows.splice(idx,1); renderPkgRows(); };
-  window.changePkgName=function(idx,val){ pkgRows[idx].name=val; };
-  window.changePkgPrice=function(idx,val){ pkgRows[idx].price=val; calcHPP(); };
-
-  // ── HPP CALCULATION ──
-  window.calcHPP=function(){
-    const price=parseFloat(document.getElementById('mPrice').value)||0;
-    const overheadPct=parseFloat(document.getElementById('mOverhead').value)||0;
-
-    // Bahan
-    let totalBahan=0;
-    for(const r of recipeRows){
-      totalBahan+=(r.costPerUnit||0)*(r.amount||0);
-    }
-    // Packaging
-    let totalPkg=0;
-    for(const p of pkgRows){
-      totalPkg+=p.price||0;
-    }
-    const subtotal=totalBahan+totalPkg;
-    const overheadAmount=subtotal*(overheadPct/100);
-    const hpp=subtotal+overheadAmount;
-    const profit=price-hpp;
-    const marginPct=price>0?((profit/price)*100):0;
-
-    // Update UI
-    document.getElementById('sumBahan').textContent='Rp '+Math.round(totalBahan).toLocaleString('id');
-    document.getElementById('sumPkg').textContent='Rp '+Math.round(totalPkg).toLocaleString('id');
-    document.getElementById('sumSubtotal').textContent='Rp '+Math.round(subtotal).toLocaleString('id');
-    document.getElementById('lblOverhead').textContent=overheadPct+'%';
-    document.getElementById('sumOverhead').textContent='Rp '+Math.round(overheadAmount).toLocaleString('id');
-    document.getElementById('sumHPP').textContent='Rp '+Math.round(hpp).toLocaleString('id');
-    document.getElementById('sumPrice').textContent='Rp '+price.toLocaleString('id');
-    document.getElementById('sumProfit').textContent='Rp '+Math.round(profit).toLocaleString('id');
-    document.getElementById('sumProfit').style.color=profit>=0?'var(--green)':'var(--red)';
-
-    document.getElementById('marginValue').textContent=marginPct.toFixed(1)+'%';
-    document.getElementById('marginSub').textContent='Rp '+Math.round(profit).toLocaleString('id')+' / cup';
-
-    const box=document.getElementById('marginBox');
-    const status=document.getElementById('marginStatus');
-    box.className='margin-box';
-    status.className='margin-status';
-    if(marginPct>=55){ box.classList.add(''); status.classList.add('good'); status.textContent='SEHAT'; }
-    else if(marginPct>=45){ box.classList.add('warning'); status.classList.add('warn'); status.textContent='WASPADA'; }
-    else { box.classList.add('danger'); status.classList.add('bad'); status.textContent='BERBAHAYA'; }
-  };
-
-  // ── MENU CRUD ──
+  // MENU
   window.renderMenuTable=function(){
     const q=document.getElementById('menuSearch').value.toLowerCase();
     const list=menuData.filter(m=>!q||m.name.toLowerCase().includes(q));
-    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>{
-      const hpp=m.hpp||0;
-      const margin=m.marginPct||0;
-      let marginCls='badge-green', marginLbl='Sehat';
-      if(margin<45){marginCls='badge-red';marginLbl='Bahaya';}
-      else if(margin<55){marginCls='badge-yellow';marginLbl='Waspada';}
-      return `<tr>
-        <td><strong>${m.name}</strong></td>
-        <td><span class="badge badge-accent">${m.category||'—'}</span></td>
-        <td>Rp ${(m.price||0).toLocaleString('id')}</td>
-        <td>Rp ${Math.round(hpp).toLocaleString('id')}</td>
-        <td><span class="badge ${marginCls}">${margin.toFixed(1)}%</span></td>
-        <td><label class="avail-toggle"><input type="checkbox" ${m.available!==false?'checked':''} onchange="toggleAvail('${m.id}',this.checked)"/> ${m.available!==false?'Ya':'Tidak'}</label></td>
-        <td><button class="btn-sm" onclick="openMenuModal('${m.id}')">Edit</button><button class="btn-sm danger" onclick="deleteMenu('${m.id}')">Hapus</button></td>
-      </tr>`;
-    }).join(''):`<tr><td colspan="7" class="empty-cell">Tidak ada menu.</td></tr>`;
+    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>`<tr>
+      <td><strong>${m.name}</strong></td>
+      <td><span class="badge badge-accent">${m.category||'—'}</span></td>
+      <td>Rp ${(m.price||0).toLocaleString('id')}</td>
+      <td><label class="avail-toggle"><input type="checkbox" ${m.available!==false?'checked':''} onchange="toggleAvail('${m.id}',this.checked)"/> ${m.available!==false?'Ya':'Tidak'}</label></td>
+      <td><button class="btn-sm" onclick="openMenuModal('${m.id}')">Edit</button><button class="btn-sm danger" onclick="deleteMenu('${m.id}')">Hapus</button></td>
+    </tr>`).join(''):`<tr><td colspan="5" class="empty-cell">Tidak ada menu.</td></tr>`;
   };
-
   window.openMenuModal=function(id){
     document.getElementById('menuEditId').value=id||'';
-    // Reset tabs to basic
-    document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.modal-section').forEach(s=>s.classList.remove('active'));
-    const firstTab = document.querySelector('.modal-tab');
-    if(firstTab) firstTab.classList.add('active');
-    const firstSection = document.querySelector('.modal-section');
-    if(firstSection) firstSection.classList.add('active');
-
-    if(id){
-      const m=menuData.find(x=>x.id===id);
-      if(!m){toast('Menu tidak ditemukan','error');return;}
-      document.getElementById('menuModalTitle').textContent='Edit Menu';
-      document.getElementById('mName').value=m.name||'';
-      document.getElementById('mPrice').value=m.price||'';
-      document.getElementById('mCategory').value=m.category||'Lainnya';
-      document.getElementById('mAvail').checked=m.available!==false;
-      document.getElementById('mOverhead').value=m.overheadPct||15;
-      // Load recipe - migrate old data if needed
-      recipeRows=(m.recipe||[]).map(r=>({
-        ingredientId:r.ingredientId||'',
-        amount:r.amount||0,
-        unit:r.unit||'',
-        costPerUnit:r.costPerUnit||0
-      }));
-      // Load packaging
-      pkgRows=(m.packaging||[]).map(p=>({
-        name:p.name||'',
-        price:p.price||0
-      }));
-    } else {
-      document.getElementById('menuModalTitle').textContent='Tambah Menu';
-      document.getElementById('mName').value='';
-      document.getElementById('mPrice').value='';
-      document.getElementById('mAvail').checked=true;
-      document.getElementById('mOverhead').value=15;
-      recipeRows=[];
-      pkgRows=[];
-    }
-    renderRecipeRows();
-    renderPkgRows();
-    calcHPP();
+    if(id){const m=menuData.find(x=>x.id===id);document.getElementById('menuModalTitle').textContent='Edit Menu';document.getElementById('mName').value=m.name;document.getElementById('mPrice').value=m.price;document.getElementById('mCategory').value=m.category||'Lainnya';document.getElementById('mAvail').checked=m.available!==false;}
+    else{document.getElementById('menuModalTitle').textContent='Tambah Menu';document.getElementById('mName').value='';document.getElementById('mPrice').value='';document.getElementById('mAvail').checked=true;}
     document.getElementById('menuModal').classList.add('show');
   };
   window.closeMenuModal=function(){document.getElementById('menuModal').classList.remove('show');};
-
   window.submitMenu=async function(){
     const btn=document.getElementById('menuSaveBtn');
     const id=document.getElementById('menuEditId').value;
@@ -704,117 +230,23 @@
     const price=parseFloat(document.getElementById('mPrice').value);
     const category=document.getElementById('mCategory').value;
     const available=document.getElementById('mAvail').checked;
-    const overheadPct=parseFloat(document.getElementById('mOverhead').value)||0;
-
     if(!name||isNaN(price)){toast('Nama dan harga wajib diisi.','error');return;}
-
-    // Calculate HPP
-    let totalBahan=0;
-    for(const r of recipeRows) totalBahan+=(r.costPerUnit||0)*(r.amount||0);
-    let totalPkg=0;
-    for(const p of pkgRows) totalPkg+=p.price||0;
-    const subtotal=totalBahan+totalPkg;
-    const hpp=subtotal*(1+overheadPct/100);
-    const marginRp=price-hpp;
-    const marginPct=price>0?((marginRp/price)*100):0;
-
-    // Filter empty rows and enrich with costPerUnit & unit from inventory
-    const cleanRecipe=recipeRows.filter(r=>r.ingredientId&&r.amount>0).map(r=>{
-      const ing=ingredientsData.find(i=>i.id===r.ingredientId);
-      // Recalculate costPerUnit from inventory to ensure accuracy
-      let costPerUnit=r.costPerUnit||0;
-      if(ing){
-        const hargaBeli=ing.hargaBeli||0;
-        const multiplier=ing.unitMultiplier||1;
-        costPerUnit=multiplier>0?hargaBeli/multiplier:0;
-      }
-      return{
-        ingredientId:r.ingredientId,
-        name:ing?.name||r.name||'',
-        amount:r.amount,
-        unit:r.unit||ing?.unit||'',
-        costPerUnit:costPerUnit
-      };
-    });
-    const cleanPkg=pkgRows.filter(p=>p.name&&p.price>0);
-
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      const data={
-        name,price,category,available,
-        recipe:cleanRecipe,
-        packaging:cleanPkg,
-        overheadPct,
-        hpp, marginRp, marginPct,
-        updatedAt:serverTimestamp()
-      };
-      if(id){
-        await updateDoc(doc(db,"menu",id),data);
-      } else {
-        data.createdAt=serverTimestamp();
-        await addDoc(collection(db,"menu"),data);
-      }
-      await loadMenu();
-      renderMenuTable();
-      renderMarginOverview();
-      closeMenuModal();
-      toast('✓ Menu disimpan','success');
+      if(id)await updateDoc(doc(db,"menu",id),{name,price,category,available});
+      else await addDoc(collection(db,"menu"),{name,price,category,available,createdAt:serverTimestamp()});
+      await loadMenu();renderMenuTable();closeMenuModal();toast('✓ Menu disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan';
   };
-
-  window.toggleAvail=async function(id,val){
-    try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();renderMarginOverview();}
-    catch(e){toast('Error: '+e.message,'error');}
-  };
+  window.toggleAvail=async function(id,val){try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
   window.deleteMenu=async function(id){
     const m=menuData.find(x=>x.id===id);
     if(!confirm(`Hapus "${m?.name}"?`))return;
-    try{await deleteDoc(doc(db,"menu",id));await loadMenu();renderMenuTable();renderMarginOverview();toast('Menu dihapus','success');}
-    catch(e){toast('Error: '+e.message,'error');}
+    try{await deleteDoc(doc(db,"menu",id));await loadMenu();renderMenuTable();toast('Menu dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
   };
 
-  // ── MARGIN OVERVIEW ──
-  window.renderMarginOverview=function(){
-    const filter=document.getElementById('marginFilter').value;
-    let list=menuData;
-    if(filter==='good') list=list.filter(m=>(m.marginPct||0)>=55);
-    else if(filter==='warn') list=list.filter(m=>{const p=m.marginPct||0;return p>=45&&p<55;});
-    else if(filter==='bad') list=list.filter(m=>(m.marginPct||0)<45);
-
-    const tbody=document.getElementById('marginTbody');
-    tbody.innerHTML=list.length?list.map(m=>{
-      const hpp=m.hpp||0;
-      const margin=m.marginPct||0;
-      const marginRp=m.marginRp||0;
-      let statusCls='good', statusLbl='SEHAT', barColor='var(--green)';
-      if(margin<45){statusCls='bad';statusLbl='BERBAHAYA';barColor='var(--red)';}
-      else if(margin<55){statusCls='warn';statusLbl='WASPADA';barColor='var(--yellow)';}
-      const barWidth=Math.min(Math.max(margin,0),100);
-      return `<tr>
-        <td><strong>${m.name}</strong><br><span style="font-size:11px;color:var(--text-dim)">${m.category||''}</span></td>
-        <td>Rp ${(m.price||0).toLocaleString('id')}</td>
-        <td>Rp ${Math.round(hpp).toLocaleString('id')}</td>
-        <td>Rp ${Math.round(marginRp).toLocaleString('id')}</td>
-        <td>
-          <div class="margin-bar"><div class="margin-bar-fill" style="width:${barWidth}%;background:${barColor}"></div></div>
-          ${margin.toFixed(1)}%
-        </td>
-        <td><span class="margin-status ${statusCls}">${statusLbl}</span></td>
-      </tr>`;
-    }).join(''):`<tr><td colspan="6" class="empty-cell">Tidak ada menu.</td></tr>`;
-
-    // Summary stats
-    const allMargins=menuData.map(m=>m.marginPct||0);
-    const avg=allMargins.length?(allMargins.reduce((a,b)=>a+b,0)/allMargins.length):0;
-    document.getElementById('avgMargin').textContent=avg.toFixed(1)+'%';
-    document.getElementById('avgMarginSub').textContent=menuData.length+' menu';
-    document.getElementById('goodCount').textContent=menuData.filter(m=>(m.marginPct||0)>=55).length;
-    document.getElementById('warnCount').textContent=menuData.filter(m=>{const p=m.marginPct||0;return p>=45&&p<55;}).length;
-    document.getElementById('badCount').textContent=menuData.filter(m=>(m.marginPct||0)<45).length;
-  };
-
-  // ── TRANSAKSI ──
+  // TRANSAKSI
   window.renderTransaksi=function(){
     const st=document.getElementById('filterStatus').value;
     const tp=document.getElementById('filterType').value;

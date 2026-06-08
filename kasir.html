@@ -421,7 +421,6 @@
   };
   const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
   let currentUser=null, menuItems=[], cart=[], orderType='dine-in', activeCat='Semua';
-  let ingredientsCache={};
 
   onAuthStateChanged(auth, async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -431,15 +430,8 @@
     if(role!=='kasir'&&role!=='admin'){location.href="login.html";return;}
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
     if(role==='admin') document.body.classList.add('is-admin');
-
-    try {
-      await Promise.all([loadMenu(), loadIngredients()]);
-    } catch(e) {
-      console.error('Init error:', e);
-      try { await loadMenu(); } catch(e2) { console.error('Menu load failed:', e2); }
-    } finally {
-      document.getElementById('loadingOverlay').style.display='none';
-    }
+    await loadMenu();
+    document.getElementById('loadingOverlay').style.display='none';
   });
 
   async function loadMenu(){
@@ -447,20 +439,6 @@
     menuItems=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.available!==false);
     buildPills(); renderMenu();
   }
-
-  async function loadIngredients(){
-    try {
-      const snap=await getDocs(collection(db,"ingredients"));
-      ingredientsCache={};
-      snap.docs.forEach(d=>{
-        ingredientsCache[d.id]={id:d.id,...d.data()};
-      });
-    } catch(e) {
-      console.log('Ingredients load failed:', e.message);
-      ingredientsCache={};
-    }
-  }
-
   function buildPills(){
     const cats=['Semua',...new Set(menuItems.map(m=>m.category).filter(Boolean))];
     document.getElementById('catPills').innerHTML=cats.map(c=>
@@ -468,75 +446,19 @@
     ).join('');
   }
   window.setCat=function(c){activeCat=c;document.querySelectorAll('.cat-pill').forEach(b=>b.classList.toggle('active',b.textContent===c));renderMenu();};
-
-  // ── STOCK CHECKING ──
-  function checkMenuStock(menuItem){
-    const recipe=menuItem.recipe||[];
-    if(!recipe.length) return {ok:true,status:'ok',items:[]};
-    let lowestRatio=Infinity;
-    const stockItems=[];
-    for(const r of recipe){
-      const ing=ingredientsCache[r.ingredientId];
-      if(!ing) continue;
-      const required=r.amount||0;
-      const available=ing.stock||0;
-      const ratio=required>0?available/required:Infinity;
-      lowestRatio=Math.min(lowestRatio,ratio);
-      stockItems.push({name:ing.name||r.name||'Unknown',unit:ing.unit||r.unit||'',required,available,ratio});
-    }
-    if(lowestRatio<=0) return {ok:false,status:'out',items:stockItems};
-    if(lowestRatio<=1) return {ok:false,status:'low',items:stockItems};
-    if(lowestRatio<=3) return {ok:true,status:'low',items:stockItems};
-    return {ok:true,status:'ok',items:stockItems};
-  }
-
-  function checkCartStock(){
-    const needed={};
-    for(const ci of cart){
-      const menu=menuItems.find(m=>m.id===ci.id);
-      if(!menu) continue;
-      for(const r of(menu.recipe||[])){
-        if(!r.ingredientId) continue;
-        if(!needed[r.ingredientId]) needed[r.ingredientId]={amount:0,name:r.name||''};
-        needed[r.ingredientId].amount+=r.amount*ci.qty;
-      }
-    }
-    const issues=[];
-    for(const[id,need] of Object.entries(needed)){
-      const ing=ingredientsCache[id];
-      if(!ing) continue;
-      const available=ing.stock||0;
-      if(available<need.amount){
-        issues.push({name:ing.name||need.name,unit:ing.unit||'',needed:need.amount,available});
-      }
-    }
-    return issues;
-  }
-
   window.renderMenu=function(){
     const q=document.getElementById('searchInput').value.toLowerCase();
     const grid=document.getElementById('menuGrid');
     const list=menuItems.filter(m=>(activeCat==='Semua'||m.category===activeCat)&&(!q||m.name.toLowerCase().includes(q)));
-    grid.innerHTML=list.length?list.map(m=>{
-      const stock=checkMenuStock(m);
-      let badgeClass='ok', badgeText='Ready';
-      if(stock.status==='out'){badgeClass='out';badgeText='Habis';}
-      else if(stock.status==='low'){badgeClass='low';badgeText='Rendah';}
-      const outOfStock=stock.status==='out';
-      const clickAttr=outOfStock?'':`onclick="addToCart('${m.id}')"`;
-      return `<div class="menu-card${outOfStock?' out-of-stock':''}" ${clickAttr}>
-        <div class="stock-badge ${badgeClass}">${badgeText}</div>
+    grid.innerHTML=list.length?list.map(m=>`
+      <div class="menu-card" onclick="addToCart('${m.id}')">
         <div class="menu-card-cat">${m.category||''}</div>
         <div class="menu-card-name">${m.name}</div>
         <div class="menu-card-price">Rp ${(m.price||0).toLocaleString('id')}</div>
-      </div>`;
-    }).join(''):`<div class="menu-empty">Menu tidak ditemukan.</div>`;
+      </div>`).join(''):`<div class="menu-empty">Menu tidak ditemukan.</div>`;
   };
-
   window.addToCart=function(id){
     const item=menuItems.find(m=>m.id===id); if(!item)return;
-    const stock=checkMenuStock(item);
-    if(!stock.ok){showToast('Stok tidak cukup untuk '+item.name,'error');return;}
     const ex=cart.find(c=>c.id===id); if(ex)ex.qty++; else cart.push({id,name:item.name,price:item.price,qty:1});
     renderCart(); showToast('+ '+item.name,'success');
   };
@@ -567,16 +489,6 @@
   };
   window.openConfirm=function(){
     if(!cart.length)return;
-    const stockIssues=checkCartStock();
-    const stockWarningEl=document.getElementById('stockWarning');
-    if(stockIssues.length){
-      stockWarningEl.innerHTML=`<div class="stock-warning">
-        <div class="stock-warning-title"><i class="fa-solid fa-triangle-exclamation"></i> Stok Tidak Cukup</div>
-        ${stockIssues.map(i=>`<div class="stock-warning-item">• ${i.name}: butuh ${i.needed} ${i.unit}, tersedia ${i.available} ${i.unit}</div>`).join('')}
-      </div>`;
-    } else {
-      stockWarningEl.innerHTML='';
-    }
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     const tableNo=document.getElementById('tableNo').value;
     const notes=document.getElementById('orderNotes')?.value||'';
@@ -589,8 +501,6 @@
   };
   window.closeConfirm=function(){document.getElementById('confirmModal').classList.remove('show');};
   window.submitOrder=async function(){
-    const stockIssues=checkCartStock();
-    if(stockIssues.length){showToast('Gagal: Stok tidak cukup','error');closeConfirm();return;}
     const btn=document.getElementById('btnConfirm');
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
@@ -612,7 +522,6 @@
           await addDoc(collection(db,"stockLogs"),{ingredientId:r.ingredientId,ingredientName:ig.data()?.name||'',unit:ig.data()?.unit||'',change:-(r.amount*ci.qty),note:`Order: ${ci.name} ×${ci.qty}`,byName:currentUser.name,createdAt:serverTimestamp()});
         }
       }
-      await loadIngredients(); renderMenu();
       closeConfirm(); clearCart();
       document.getElementById('tableNo').value='';
       if(document.getElementById('orderNotes')) document.getElementById('orderNotes').value='';
@@ -633,26 +542,32 @@
     const orderPanel = document.getElementById('orderPanel');
     const tabMenu = document.getElementById('tabMenu');
     const tabOrder = document.getElementById('tabOrder');
-    const cartFloat = document.getElementById('cartFloat');
+    const cartFloat = document.getElementById('cartFloat'); // FIX: ambil ref cartFloat
+    
     if (tab === 'menu') {
       menuPanel.classList.add('active');
       orderPanel.classList.remove('active');
       tabMenu.classList.add('active');
       tabOrder.classList.remove('active');
+      // FIX: tampilin floating cart di tab Menu (kalau ada item)
       if (cart.length > 0) cartFloat.classList.remove('hidden');
     } else {
       menuPanel.classList.remove('active');
       orderPanel.classList.add('active');
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
+      // FIX: sembunyiin floating cart di tab Pesanan
       cartFloat.classList.add('hidden');
     }
   };
+
+  // Update floating cart & badge
   function updateCartFloat() {
     const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
     const badge = document.getElementById('tabBadge');
     const cartFloat = document.getElementById('cartFloat');
     const cartFloatTotal = document.getElementById('cartFloatTotal');
+    
     if (cart.length > 0) {
       badge.style.display = 'inline-flex';
       badge.textContent = cart.reduce((s, c) => s + c.qty, 0);
@@ -663,6 +578,8 @@
       cartFloat.classList.add('hidden');
     }
   }
+
+  // Override renderCart to also update float
   const originalRenderCart = renderCart;
   renderCart = function() {
     originalRenderCart();
