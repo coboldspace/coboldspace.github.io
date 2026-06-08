@@ -173,7 +173,7 @@
       .recipe-row input, .recipe-row select { padding: 6px 8px; font-size: 12px; }
     }
   </style>
-
+<base target="_blank">
 </head>
 <body>
 
@@ -512,16 +512,16 @@
         </div>
         <div>
           <label>Qty</label>
-          <input type="number" value="${r.amount}" min="0" step="0.1" oninput="changeRecipeQty(${idx},+this.value)"/>
+          <input type="text" inputmode="decimal" value="${r.amount}" placeholder="0" oninput="changeRecipeQty(${idx},this.value)" style="text-align:center"/>
         </div>
         <div>
           <label>Unit</label>
-          <input type="text" value="${r.unit||ing?.unit||''}" readonly style="opacity:0.6"/>
+          <input type="text" value="${r.unit||ing?.unit||''}" readonly style="opacity:0.6; text-align:center"/>
         </div>
         <div>
           <label>Harga/Unit</label>
-          <input type="number" value="${cost>0?Math.round(cost):''}" min="0" step="1" oninput="changeRecipeCost(${idx},+this.value)" style="${ing?'border-color:rgba(176,137,104,0.3);background:rgba(176,137,104,0.05)':''}"/>
-          ${ing?`<div style="font-size:10px;color:var(--accent);margin-top:3px"><i class="fa-solid fa-box"></i> dari inventory: Rp ${Math.round(costPerUnit).toLocaleString('id')}/${ing.unit}</div>`:''}
+          <input type="text" value="${cost>0?'Rp '+Math.round(cost).toLocaleString('id')+' / '+ (ing?.unit||''):'—'}" readonly style="opacity:0.8; text-align:right; font-size:12px; ${ing?'border-color:rgba(176,137,104,0.3);background:rgba(176,137,104,0.05)':''}"/>
+          ${ing?`<div style="font-size:10px;color:var(--accent);margin-top:3px"><i class="fa-solid fa-box"></i> inventory: Rp ${Math.round(costPerUnit).toLocaleString('id')}/${ing.unit}</div>`:''}
         </div>
         <div>
           <label>Biaya</label>
@@ -550,8 +550,12 @@
     }
     renderRecipeRows();
   };
-  window.changeRecipeQty=function(idx,val){ recipeRows[idx].amount=val; renderRecipeRows(); };
-  window.changeRecipeCost=function(idx,val){ recipeRows[idx].costPerUnit=val; renderRecipeRows(); };
+  window.changeRecipeQty=function(idx,val){ 
+    const num = parseFloat(val.replace(',', '.'));
+    recipeRows[idx].amount = isNaN(num) ? 0 : num; 
+    renderRecipeRows(); 
+  };
+  /* Harga/Unit auto dari inventory, readonly */
 
   // ── PACKAGING BUILDER ──
   function renderPkgRows(){
@@ -648,21 +652,35 @@
 
   window.openMenuModal=function(id){
     document.getElementById('menuEditId').value=id||'';
-    // Reset tabs
-    showModalTab('basic',document.querySelector('.modal-tab'));
+    // Reset tabs to basic
+    document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.modal-section').forEach(s=>s.classList.remove('active'));
+    const firstTab = document.querySelector('.modal-tab');
+    if(firstTab) firstTab.classList.add('active');
+    const firstSection = document.querySelector('.modal-section');
+    if(firstSection) firstSection.classList.add('active');
 
     if(id){
       const m=menuData.find(x=>x.id===id);
+      if(!m){toast('Menu tidak ditemukan','error');return;}
       document.getElementById('menuModalTitle').textContent='Edit Menu';
-      document.getElementById('mName').value=m.name;
+      document.getElementById('mName').value=m.name||'';
       document.getElementById('mPrice').value=m.price||'';
       document.getElementById('mCategory').value=m.category||'Lainnya';
       document.getElementById('mAvail').checked=m.available!==false;
       document.getElementById('mOverhead').value=m.overheadPct||15;
-      // Load recipe
-      recipeRows=(m.recipe||[]).map(r=>({...r}));
+      // Load recipe - migrate old data if needed
+      recipeRows=(m.recipe||[]).map(r=>({
+        ingredientId:r.ingredientId||'',
+        amount:r.amount||0,
+        unit:r.unit||'',
+        costPerUnit:r.costPerUnit||0
+      }));
       // Load packaging
-      pkgRows=(m.packaging||[]).map(p=>({...p}));
+      pkgRows=(m.packaging||[]).map(p=>({
+        name:p.name||'',
+        price:p.price||0
+      }));
     } else {
       document.getElementById('menuModalTitle').textContent='Tambah Menu';
       document.getElementById('mName').value='';
@@ -703,12 +721,19 @@
     // Filter empty rows and enrich with costPerUnit & unit from inventory
     const cleanRecipe=recipeRows.filter(r=>r.ingredientId&&r.amount>0).map(r=>{
       const ing=ingredientsData.find(i=>i.id===r.ingredientId);
+      // Recalculate costPerUnit from inventory to ensure accuracy
+      let costPerUnit=r.costPerUnit||0;
+      if(ing){
+        const hargaBeli=ing.hargaBeli||0;
+        const multiplier=ing.unitMultiplier||1;
+        costPerUnit=multiplier>0?hargaBeli/multiplier:0;
+      }
       return{
         ingredientId:r.ingredientId,
         name:ing?.name||r.name||'',
         amount:r.amount,
         unit:r.unit||ing?.unit||'',
-        costPerUnit:r.costPerUnit||0
+        costPerUnit:costPerUnit
       };
     });
     const cleanPkg=pkgRows.filter(p=>p.name&&p.price>0);
