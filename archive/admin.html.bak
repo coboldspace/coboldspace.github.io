@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Cobold POS — Manajemen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="pos.css"/>
+  <style>
+    .section { display:none; }
+    .section.active { display:block; }
+    .detail-row { display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #1a1a1a; color:var(--text-dim); }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-row span:last-child { color:var(--text-main); }
+    .detail-total { display:flex; justify-content:space-between; font-size:15px; font-weight:600; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+    .detail-total span:last-child { color:var(--accent); }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; }
+
+    @media (max-width:640px) {
+      .card-head { flex-direction:column; align-items:flex-start; }
+      .card-head .btn-primary { width:100%; justify-content:center; }
+      .filters { width:100%; }
+      .filters .filter-select { flex:1; min-width:0; }
+    }
+  </style>
+
+</head>
+<body>
+
+<div id="loadingOverlay">COBOLD POS</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">Cobold POS</div>
+  <nav class="nav-menu">
+    <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+    <a href="kasir.html"     class="nav-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
+    <a href="admin.html"     class="nav-item active admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
+    <a href="inventory.html" class="nav-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="roasting.html"  class="nav-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="hpp.html"       class="nav-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
+  </nav>
+  <button class="btn-logout" id="btnLogout">LOGOUT</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bn-bar">
+    <a href="dashboard.html" class="bn-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+    <a href="kasir.html"     class="bn-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
+    <a href="admin.html"     class="bn-item active admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
+    <a href="inventory.html" class="bn-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
+  </div>
+</nav>
+
+<div class="main-content">
+  <div class="header"><h1>Manajemen</h1></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('menu',this)">☕ Menu</button>
+    <button class="tab-btn"        onclick="showTab('transaksi',this)">🧾 Transaksi</button>
+  </div>
+
+  <!-- MENU -->
+  <div class="section active" id="sec-menu">
+    <div class="card">
+      <div class="card-head">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <h2>Daftar Menu</h2>
+          <input class="search-input" id="menuSearch" type="text" placeholder="Cari menu..." oninput="renderMenuTable()" style="width:180px"/>
+        </div>
+        <button class="btn-primary" onclick="openMenuModal()"><i class="fa-solid fa-plus"></i> Tambah</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Tersedia</th><th>Aksi</th></tr></thead>
+          <tbody id="menuTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSAKSI -->
+  <div class="section" id="sec-transaksi">
+    <div class="card">
+      <div class="card-head">
+        <h2>Riwayat Transaksi</h2>
+        <div class="filters">
+          <select class="filter-select" id="filterStatus" onchange="renderTransaksi()">
+            <option value="">Semua Status</option>
+            <option value="pending">Pending</option>
+            <option value="done">Done</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select class="filter-select" id="filterType" onchange="renderTransaksi()">
+            <option value="">Semua Tipe</option>
+            <option value="dine-in">Dine-in</option>
+            <option value="takeaway">Takeaway</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Waktu</th><th>Kasir</th><th>Tipe</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="transTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MENU -->
+<div class="modal-overlay" id="menuModal">
+  <div class="modal">
+    <h2 id="menuModalTitle">Tambah Menu</h2>
+    <input type="hidden" id="menuEditId"/>
+    <div class="form-group">
+      <label>Nama</label>
+      <input type="text" id="mName" placeholder="cth: Cappuccino"/>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Harga (Rp)</label>
+        <input type="number" id="mPrice" placeholder="32000"/>
+      </div>
+      <div class="form-group">
+        <label>Kategori</label>
+        <select id="mCategory">
+          <option>Espresso</option><option>Manual Brew</option>
+          <option>Signature</option><option>Bites</option><option>Lainnya</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
+        <input type="checkbox" id="mAvail" checked style="accent-color:var(--accent);width:16px;height:16px"/>
+        Tersedia di kasir
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeMenuModal()">Batal</button>
+      <button class="btn-modal-confirm" id="menuSaveBtn" onclick="submitMenu()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ORDER DETAIL -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <h2>Detail Pesanan</h2>
+    <div id="orderDetail"></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeOrderModal()">Tutup</button>
+      <button class="btn-modal-confirm" id="btnDone" onclick="markDone()">Tandai Selesai</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
+  const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
+  let menuData=[],ordersData=[],activeOrderId=null;
+
+  onAuthStateChanged(auth,async(user)=>{
+    if(!user){location.href="login.html";return;}
+    const snap=await getDoc(doc(db,"users",user.uid));
+    if(!snap.exists()){location.href="login.html";return;}
+
+    const role = snap.data().role || 'kasir';
+
+    // Show admin nav items
+    if(role === 'admin') {
+      document.body.classList.add('is-admin');
+    }
+
+    // Redirect kasir trying to access admin pages
+    if(role !== 'admin') {
+      location.href = "dashboard.html";
+      return;
+    }
+
+    await Promise.all([loadMenu(),loadOrders()]);
+    renderMenuTable(); renderTransaksi();
+    document.getElementById('loadingOverlay').style.display='none';
+  });
+
+  async function loadMenu(){const s=await getDocs(query(collection(db,"menu"),orderBy("category")));menuData=s.docs.map(d=>({id:d.id,...d.data()}));}
+  async function loadOrders(){const s=await getDocs(query(collection(db,"orders"),orderBy("createdAt","desc")));ordersData=s.docs.map(d=>({id:d.id,...d.data()}));}
+
+  window.showTab=function(id,btn){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('sec-'+id).classList.add('active');
+    btn.classList.add('active');
+  };
+
+  // MENU
+  window.renderMenuTable=function(){
+    const q=document.getElementById('menuSearch').value.toLowerCase();
+    const list=menuData.filter(m=>!q||m.name.toLowerCase().includes(q));
+    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>`<tr>
+      <td><strong>${m.name}</strong></td>
+      <td><span class="badge badge-accent">${m.category||'—'}</span></td>
+      <td>Rp ${(m.price||0).toLocaleString('id')}</td>
+      <td><label class="avail-toggle"><input type="checkbox" ${m.available!==false?'checked':''} onchange="toggleAvail('${m.id}',this.checked)"/> ${m.available!==false?'Ya':'Tidak'}</label></td>
+      <td><button class="btn-sm" onclick="openMenuModal('${m.id}')">Edit</button><button class="btn-sm danger" onclick="deleteMenu('${m.id}')">Hapus</button></td>
+    </tr>`).join(''):`<tr><td colspan="5" class="empty-cell">Tidak ada menu.</td></tr>`;
+  };
+  window.openMenuModal=function(id){
+    document.getElementById('menuEditId').value=id||'';
+    if(id){const m=menuData.find(x=>x.id===id);document.getElementById('menuModalTitle').textContent='Edit Menu';document.getElementById('mName').value=m.name;document.getElementById('mPrice').value=m.price;document.getElementById('mCategory').value=m.category||'Lainnya';document.getElementById('mAvail').checked=m.available!==false;}
+    else{document.getElementById('menuModalTitle').textContent='Tambah Menu';document.getElementById('mName').value='';document.getElementById('mPrice').value='';document.getElementById('mAvail').checked=true;}
+    document.getElementById('menuModal').classList.add('show');
+  };
+  window.closeMenuModal=function(){document.getElementById('menuModal').classList.remove('show');};
+  window.submitMenu=async function(){
+    const btn=document.getElementById('menuSaveBtn');
+    const id=document.getElementById('menuEditId').value;
+    const name=document.getElementById('mName').value.trim();
+    const price=parseFloat(document.getElementById('mPrice').value);
+    const category=document.getElementById('mCategory').value;
+    const available=document.getElementById('mAvail').checked;
+    if(!name||isNaN(price)){toast('Nama dan harga wajib diisi.','error');return;}
+    btn.disabled=true;btn.textContent='Menyimpan...';
+    try{
+      if(id)await updateDoc(doc(db,"menu",id),{name,price,category,available});
+      else await addDoc(collection(db,"menu"),{name,price,category,available,createdAt:serverTimestamp()});
+      await loadMenu();renderMenuTable();closeMenuModal();toast('✓ Menu disimpan','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Simpan';
+  };
+  window.toggleAvail=async function(id,val){try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
+  window.deleteMenu=async function(id){
+    const m=menuData.find(x=>x.id===id);
+    if(!confirm(`Hapus "${m?.name}"?`))return;
+    try{await deleteDoc(doc(db,"menu",id));await loadMenu();renderMenuTable();toast('Menu dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
+  };
+
+  // TRANSAKSI
+  window.renderTransaksi=function(){
+    const st=document.getElementById('filterStatus').value;
+    const tp=document.getElementById('filterType').value;
+    let list=ordersData;
+    if(st)list=list.filter(o=>o.status===st);
+    if(tp)list=list.filter(o=>o.type===tp);
+    document.getElementById('transTbody').innerHTML=list.length?list.map(o=>{
+      const ts=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
+      const cls=o.status==='done'?'badge-green':o.status==='cancelled'?'badge-red':'badge-yellow';
+      return `<tr>
+        <td>${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+        <td>${o.kasirName||'—'}</td>
+        <td>${o.type==='dine-in'?`Dine-in #${o.tableNo||'?'}`:'Takeaway'}</td>
+        <td>Rp ${(o.total||0).toLocaleString('id')}</td>
+        <td><span class="badge ${cls}">${o.status}</span></td>
+        <td><button class="btn-sm" onclick="openOrderDetail('${o.id}')">Detail</button>${o.status==='pending'?`<button class="btn-sm danger" onclick="cancelOrder('${o.id}')">Batal</button>`:''}</td>
+      </tr>`;
+    }).join(''):`<tr><td colspan="6" class="empty-cell">Tidak ada transaksi.</td></tr>`;
+  };
+  window.openOrderDetail=function(id){
+    activeOrderId=id;const o=ordersData.find(x=>x.id===id);
+    const ts=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
+    const cls=o.status==='done'?'badge-green':o.status==='cancelled'?'badge-red':'badge-yellow';
+    document.getElementById('orderDetail').innerHTML=`
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">${ts.toLocaleString('id-ID')} · ${o.kasirName||'—'} · <span class="badge ${cls}">${o.status}</span></p>
+      ${(o.items||[]).map(i=>`<div class="detail-row"><span>${i.name} ×${i.qty}</span><span>Rp ${(i.price*i.qty).toLocaleString('id')}</span></div>`).join('')}
+      ${o.notes?`<div class="detail-row"><span>Catatan</span><span>${o.notes}</span></div>`:''}
+      <div class="detail-total"><span>Total</span><span>Rp ${(o.total||0).toLocaleString('id')}</span></div>`;
+    document.getElementById('btnDone').style.display=o.status==='pending'?'':'none';
+    document.getElementById('orderModal').classList.add('show');
+  };
+  window.closeOrderModal=function(){document.getElementById('orderModal').classList.remove('show');};
+  window.markDone=async function(){
+    try{await updateDoc(doc(db,"orders",activeOrderId),{status:"done"});closeOrderModal();await loadOrders();renderTransaksi();toast('✓ Pesanan selesai','success');}
+    catch(e){toast('Error: '+e.message,'error');}
+  };
+  window.cancelOrder=async function(id){
+    if(!confirm('Batalkan transaksi ini?'))return;
+    try{await updateDoc(doc(db,"orders",id),{status:"cancelled"});await loadOrders();renderTransaksi();toast('Dibatalkan','success');}
+    catch(e){toast('Error: '+e.message,'error');}
+  };
+
+  function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}
+  document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
+</script>
+<script src="nav-scroll.js"></script>
+</body>
+</html>

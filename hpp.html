@@ -3,171 +3,297 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Cobold POS — HPP Calculator</title>
+  <title>Cobold POS — HPP Simulator</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <link rel="stylesheet" href="pos.css"/>
   <style>
-    /* Menu selector */
-    .menu-selector {
+    /* ── SIMULATOR LAYOUT ── */
+    .sim-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
-      gap: 10px;
-      margin-bottom: 20px;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
     }
-    .menu-sel-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 12px;
-      cursor: pointer;
-      transition: 0.2s;
-      text-align: center;
-    }
-    .menu-sel-card:hover  { border-color: var(--accent); }
-    .menu-sel-card.active { border-color: var(--accent); background: rgba(176,137,104,0.1); }
-    .menu-sel-name  { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-    .menu-sel-cat   { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; }
-    .menu-sel-price { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 
-    /* Bahan input table */
-    .hpp-table { width: 100%; border-collapse: collapse; }
-    .hpp-table th {
-      text-align: left; color: var(--text-dim); font-size: 12px;
-      padding: 10px 12px; border-bottom: 1px solid var(--border); font-weight: 400;
+    /* ── INPUT CARDS ── */
+    .input-group {
+      margin-bottom: 16px;
     }
-    .hpp-table td { padding: 10px 12px; border-bottom: 1px solid #1a1a1a; vertical-align: middle; }
-    .hpp-table tr:last-child td { border-bottom: none; }
-    .hpp-input {
-      background: #0d0d0d; border: 1px solid var(--border);
-      border-radius: 7px; padding: 8px 10px;
-      color: var(--text-main); font-family: 'Inter', sans-serif;
-      font-size: 13px; outline: none; width: 130px;
+    .input-group label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
       -webkit-appearance: none;
     }
-    .hpp-input:focus { border-color: var(--accent); }
-    .hpp-input.from-batch {
-      border-color: rgba(34,197,94,0.4);
-      background: rgba(34,197,94,0.05);
+    .input-group input:focus, .input-group select:focus {
+      border-color: var(--accent);
     }
-    .batch-hint {
-      font-size: 10px; color: var(--green);
-      margin-top: 3px; display: flex; align-items: center; gap: 4px;
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .input-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
     }
 
-    /* Result cards */
-    .result-grid {
+    /* ── OVERHEAD ITEMS ── */
+    .oh-item {
       display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 12px;
-      margin-top: 16px;
+      grid-template-columns: 1fr 140px 36px;
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 8px;
+    }
+    .oh-item label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .oh-item input {
+      width: 100%;
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+    }
+    .oh-item input:focus { border-color: var(--accent); }
+
+    /* ── RESULT PANEL ── */
+    .result-panel {
+      position: sticky;
+      top: 20px;
     }
     .result-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .result-card h3 {
+      font-size: 13px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 14px;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-row span:first-child { color: var(--text-dim); }
+    .result-row.total {
+      font-size: 16px;
+      font-weight: 600;
+      padding-top: 10px;
+      margin-top: 4px;
+      border-top: 2px solid var(--border);
+    }
+    .result-row.total span:last-child { color: var(--accent); }
+
+    /* ── MARGIN DISPLAY ── */
+    .margin-big {
+      text-align: center;
+      padding: 20px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+    .margin-big.danger {
+      background: rgba(255,95,95,0.08);
+      border-color: rgba(255,95,95,0.3);
+    }
+    .margin-big.warning {
+      background: rgba(234,179,8,0.08);
+      border-color: rgba(234,179,8,0.3);
+    }
+    .margin-big-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .margin-big-value {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--green);
+    }
+    .margin-big.danger .margin-big-value { color: var(--red); }
+    .margin-big.warning .margin-big-value { color: var(--yellow); }
+    .margin-big-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* ── BREAKDOWN BAR ── */
+    .breakdown-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: var(--border);
+      overflow: hidden;
+      margin: 14px 0 8px;
+      display: flex;
+    }
+    .breakdown-seg {
+      height: 100%;
+      transition: width 0.4s;
+    }
+    .breakdown-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .breakdown-dot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .breakdown-dot span:first-child {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── RECOMMENDATION CARDS ── */
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .rec-card {
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
       text-align: center;
       transition: 0.2s;
     }
-    .result-card.recommended {
+    .rec-card:hover { border-color: var(--accent); }
+    .rec-card.recommended {
       border-color: var(--accent);
       background: rgba(176,137,104,0.08);
     }
-    .result-margin { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-    .result-price  { font-size: 22px; font-weight: 600; color: var(--accent); line-height: 1.1; }
-    .result-margin-val { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
-    .result-rec-badge {
-      display: inline-block;
-      background: var(--accent); color: #0d0d0d;
-      font-size: 9px; font-weight: 600;
-      padding: 2px 8px; border-radius: 10px;
-      text-transform: uppercase; letter-spacing: 0.08em;
+    .rec-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       margin-bottom: 6px;
     }
+    .rec-price {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .rec-profit {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+    .rec-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #0d0d0d;
+      font-size: 8px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
 
-    /* HPP summary */
-    .hpp-summary {
-      background: #111;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .hpp-summary-row {
-      display: flex; justify-content: space-between;
-      align-items: center; padding: 7px 0;
-      border-bottom: 1px solid #1a1a1a; font-size: 14px;
-    }
-    .hpp-summary-row:last-child { border-bottom: none; }
-    .hpp-summary-row span:first-child { color: var(--text-dim); }
-    .hpp-summary-row.total { font-size: 16px; font-weight: 600; }
-    .hpp-summary-row.total span:last-child { color: var(--accent); }
-
-    /* Packaging rows */
-    .pkg-row {
-      display: grid; grid-template-columns: 1fr 130px auto;
-      gap: 10px; align-items: end; margin-bottom: 8px;
-    }
-    .pkg-row input, .pkg-row select {
-      width: 100%; background: #0d0d0d;
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 9px 12px; color: var(--text-main);
-      font-family: 'Inter', sans-serif; font-size: 13px; outline: none;
-      -webkit-appearance: none;
-    }
-    .pkg-row input:focus, .pkg-row select:focus { border-color: var(--accent); }
-    .pkg-row label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 5px; }
-    .btn-remove-pkg {
-      background: none; border: 1px solid var(--border);
-      border-radius: 8px; color: var(--red);
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
-    }
-    .btn-remove-pkg:hover { background: rgba(255,95,95,0.1); }
-    .btn-add-pkg {
-      width: 100%; padding: 8px;
-      background: none; border: 1px dashed var(--border);
-      border-radius: 8px; color: var(--text-dim);
-      font-family: 'Inter', sans-serif; font-size: 13px;
-      cursor: pointer; transition: 0.2s; margin-top: 4px;
-    }
-    .btn-add-pkg:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* Empty state */
-    .empty-hpp {
-      text-align: center; padding: 48px;
-      color: var(--text-dim); font-size: 14px;
-    }
-    .empty-hpp i { font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.3; }
-
-    /* Breakdown bar */
-    .breakdown-bar {
-      height: 8px; border-radius: 4px;
-      background: var(--border); overflow: hidden;
-      margin-top: 12px; margin-bottom: 4px;
+    /* ── WASTE SLIDER ── */
+    .waste-slider {
       display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
     }
-    .breakdown-seg { height: 100%; transition: width 0.4s; }
-    .breakdown-legend {
-      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;
+    .waste-slider input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      outline: none;
     }
-    .breakdown-dot {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 11px; color: var(--text-dim);
+    .waste-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
     }
-    .breakdown-dot span:first-child {
-      width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+    .waste-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* ── AUTO-FILL BADGE ── */
+    .auto-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--green);
+      background: rgba(34,197,94,0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
     }
 
     @media (max-width: 640px) {
-      .result-grid { grid-template-columns: 1fr; }
-      .menu-selector { grid-template-columns: repeat(2,1fr); }
-      .pkg-row { grid-template-columns: 1fr auto; }
-      .pkg-row .hpp-input { grid-column: 1; }
+      .sim-grid { grid-template-columns: 1fr; }
+      .result-panel { position: static; }
+      .rec-grid { grid-template-columns: 1fr; }
+      .input-row { grid-template-columns: 1fr; }
+      .oh-item { grid-template-columns: 1fr 100px 36px; }
     }
   </style>
-
+<base target="_blank">
 </head>
 <body>
 
@@ -202,74 +328,184 @@
 <div class="main-content">
   <div class="header">
     <div>
-      <h1>HPP Calculator</h1>
-      <div class="header-sub">Hitung harga pokok produksi & rekomendasi harga jual</div>
+      <h1>HPP Simulator</h1>
+      <div class="header-sub">Simulasi harga pokok produksi dengan biaya overhead detail</div>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start" id="mainLayout">
+  <div class="sim-grid" id="simGrid">
 
-    <!-- LEFT: Input -->
+    <!-- LEFT: INPUTS -->
     <div>
-      <!-- Step 1: Pilih menu -->
+      <!-- Step 1: Pilih Menu -->
       <div class="card">
         <h2 style="margin-bottom:14px">① Pilih Menu</h2>
-        <div class="menu-selector" id="menuSelector">
-          <div class="empty-hpp"><i class="fa-solid fa-mug-hot"></i>Memuat menu...</div>
+        <div class="input-group">
+          <label>Menu</label>
+          <select id="menuSelect" onchange="selectMenu()">
+            <option value="">-- Pilih menu --</option>
+          </select>
+        </div>
+        <div id="menuInfo" style="display:none; margin-top:12px; padding:12px; background:#111; border-radius:8px; border:1px solid var(--border)">
+          <div style="font-size:13px; color:var(--text-dim)">Harga jual saat ini: <strong style="color:var(--accent)" id="menuCurrentPrice">Rp 0</strong></div>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:4px" id="menuRecipeCount">0 bahan · 0 packaging</div>
         </div>
       </div>
 
-      <!-- Step 2: Harga bahan -->
-      <div class="card" id="bahanCard" style="display:none">
-        <h2 style="margin-bottom:6px">② Harga Beli Bahan Baku</h2>
-        <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">
-          Input harga beli per unit. Bahan dari roasting akan otomatis terisi HPP-nya.
-        </p>
-        <div class="table-wrap">
-          <table class="hpp-table">
-            <thead>
-              <tr>
-                <th>Bahan</th>
-                <th>Qty/Cup</th>
-                <th>Harga per unit (Rp)</th>
-                <th>Biaya/Cup</th>
-              </tr>
-            </thead>
-            <tbody id="bahanTbody"></tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" style="text-align:right;font-size:13px;color:var(--text-dim);padding:12px">Total biaya bahan:</td>
-                <td style="font-size:14px;font-weight:600;color:var(--accent);padding:12px" id="totalBahan">Rp 0</td>
-              </tr>
-            </tfoot>
-          </table>
+      <!-- Step 2: Overhead Bulanan -->
+      <div class="card">
+        <h2 style="margin-bottom:14px">② Biaya Operasional Bulanan</h2>
+        <div id="ohItems">
+          <div class="oh-item">
+            <div>
+              <label>Kategori</label>
+              <input type="text" value="Sewa Tempat" class="oh-name" placeholder="cth: Sewa"/>
+            </div>
+            <div>
+              <label>Biaya (Rp)</label>
+              <input type="number" value="5000000" class="oh-cost" min="0" oninput="calcSim()"/>
+            </div>
+            <button class="btn-remove-row" onclick="removeOH(this)"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="oh-item">
+            <div>
+              <label>Kategori</label>
+              <input type="text" value="Listrik" class="oh-name" placeholder="cth: Listrik"/>
+            </div>
+            <div>
+              <label>Biaya (Rp)</label>
+              <input type="number" value="1500000" class="oh-cost" min="0" oninput="calcSim()"/>
+            </div>
+            <button class="btn-remove-row" onclick="removeOH(this)"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="oh-item">
+            <div>
+              <label>Kategori</label>
+              <input type="text" value="Gaji Barista" class="oh-name" placeholder="cth: Gaji"/>
+            </div>
+            <div>
+              <label>Biaya (Rp)</label>
+              <input type="number" value="4000000" class="oh-cost" min="0" oninput="calcSim()"/>
+            </div>
+            <button class="btn-remove-row" onclick="removeOH(this)"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="oh-item">
+            <div>
+              <label>Kategori</label>
+              <input type="text" value="Air & Gas" class="oh-name" placeholder="cth: Air"/>
+            </div>
+            <div>
+              <label>Biaya (Rp)</label>
+              <input type="number" value="500000" class="oh-cost" min="0" oninput="calcSim()"/>
+            </div>
+            <button class="btn-remove-row" onclick="removeOH(this)"><i class="fa-solid fa-xmark"></i></button>
+          </div>
         </div>
+        <button class="btn-add-row" onclick="addOH()" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Tambah Biaya</button>
       </div>
 
-      <!-- Step 3: Packaging -->
-      <div class="card" id="packCard" style="display:none">
-        <h2 style="margin-bottom:14px">③ Packaging</h2>
-        <div id="pkgRows"></div>
-        <button class="btn-add-pkg" onclick="addPkgRow()">
-          <i class="fa-solid fa-plus"></i> Tambah Item Packaging
-        </button>
-        <div style="display:flex;justify-content:flex-end;margin-top:12px;font-size:13px;color:var(--text-dim)">
-          Total packaging: <strong style="color:var(--accent);margin-left:8px" id="totalPkg">Rp 0</strong>
+      <!-- Step 3: Target & Waste -->
+      <div class="card">
+        <h2 style="margin-bottom:14px">③ Target & Waste</h2>
+        <div class="input-row">
+          <div class="input-group">
+            <label>Target Cup Terjual / Bulan</label>
+            <input type="number" id="targetCup" value="1000" min="1" oninput="calcSim()"/>
+            <p class="input-hint" id="autoTargetHint">Rata-rata aktual: — cup/bulan</p>
+          </div>
+          <div class="input-group">
+            <label>Waste / Shrinkage</label>
+            <div class="waste-slider">
+              <input type="range" id="wasteRange" min="0" max="20" value="5" oninput="updateWaste(this.value)"/>
+              <span class="waste-value" id="wasteValue">5%</span>
+            </div>
+            <p class="input-hint">Persentase bahan yang terbuang (tumpah, sampling, rusak)</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT: Result -->
-    <div style="position:sticky;top:20px">
-      <div class="card" id="resultCard">
-        <div class="empty-hpp">
-          <i class="fa-solid fa-calculator"></i>
-          Pilih menu dan isi harga bahan untuk melihat rekomendasi harga.
+    <!-- RIGHT: RESULTS -->
+    <div class="result-panel">
+      <!-- HPP Breakdown -->
+      <div class="result-card" id="resultCard">
+        <h3>📊 Breakdown HPP</h3>
+        <div class="result-row"><span>Bahan Baku</span><span id="resBahan">Rp 0</span></div>
+        <div class="result-row"><span>Packaging</span><span id="resPkg">Rp 0</span></div>
+        <div class="result-row"><span>Overhead / Cup</span><span id="resOH">Rp 0</span></div>
+        <div class="result-row"><span>Waste Allowance (<span id="resWastePct">5%</span>)</span><span id="resWaste">Rp 0</span></div>
+        <div class="result-row total"><span>TOTAL HPP / CUP</span><span id="resTotalHPP">Rp 0</span></div>
+
+        <!-- Breakdown Bar -->
+        <div class="breakdown-bar">
+          <div class="breakdown-seg" id="barBahan" style="width:0%; background:var(--accent)"></div>
+          <div class="breakdown-seg" id="barPkg" style="width:0%; background:var(--yellow)"></div>
+          <div class="breakdown-seg" id="barOH" style="width:0%; background:var(--green)"></div>
+          <div class="breakdown-seg" id="barWaste" style="width:0%; background:var(--red)"></div>
         </div>
+        <div class="breakdown-legend">
+          <div class="breakdown-dot"><span style="background:var(--accent)"></span>Bahan <span id="pctBahan">0%</span></div>
+          <div class="breakdown-dot"><span style="background:var(--yellow)"></span>Packaging <span id="pctPkg">0%</span></div>
+          <div class="breakdown-dot"><span style="background:var(--green)"></span>Overhead <span id="pctOH">0%</span></div>
+          <div class="breakdown-dot"><span style="background:var(--red)"></span>Waste <span id="pctWaste">0%</span></div>
+        </div>
+      </div>
+
+      <!-- Current Margin -->
+      <div class="result-card">
+        <h3>💰 Margin Saat Ini</h3>
+        <div class="result-row"><span>Harga Jual</span><span id="resPrice">Rp 0</span></div>
+        <div class="result-row"><span>HPP / Cup</span><span id="resHPP2">Rp 0</span></div>
+        <div class="result-row total"><span>Profit / Cup</span><span id="resProfit">Rp 0</span></div>
+
+        <div class="margin-big" id="marginBig">
+          <div class="margin-big-label">Margin</div>
+          <div class="margin-big-value" id="marginBigValue">0%</div>
+          <div class="margin-big-sub" id="marginBigSub">Rp 0 / cup</div>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="result-card">
+        <h3>🎯 Rekomendasi Harga Jual</h3>
+        <p style="font-size:11px;color:var(--text-dim);margin-bottom:10px">Harga dibulatkan ke kelipatan Rp 500</p>
+        <div class="rec-grid" id="recGrid">
+          <div class="rec-card">
+            <div class="rec-label">Margin 50%</div>
+            <div class="rec-price">Rp 0</div>
+            <div class="rec-profit">Profit: Rp 0</div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-label">Margin 60%</div>
+            <div class="rec-price">Rp 0</div>
+            <div class="rec-profit">Profit: Rp 0</div>
+          </div>
+          <div class="rec-card recommended">
+            <div class="rec-badge">Rekomendasi</div>
+            <div class="rec-label">Margin 65%</div>
+            <div class="rec-price">Rp 0</div>
+            <div class="rec-profit">Profit: Rp 0</div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-label">Margin 70%</div>
+            <div class="rec-price">Rp 0</div>
+            <div class="rec-profit">Profit: Rp 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Projection -->
+      <div class="result-card">
+        <h3>📈 Proyeksi Bulanan</h3>
+        <div class="result-row"><span>Target Cup / Bulan</span><span id="projCup">0</span></div>
+        <div class="result-row"><span>Omset Bulanan</span><span id="projOmset">Rp 0</span></div>
+        <div class="result-row"><span>Total HPP Bulanan</span><span id="projHPP">Rp 0</span></div>
+        <div class="result-row"><span>Total Overhead</span><span id="projOH">Rp 0</span></div>
+        <div class="result-row total"><span>ESTIMASI PROFIT BERSIH</span><span id="projNet">Rp 0</span></div>
       </div>
     </div>
 
-  </div><!-- /grid -->
+  </div><!-- /sim-grid -->
 </div><!-- /main-content -->
 
 <div class="toast" id="toast"></div>
@@ -277,7 +513,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, limit }
+  import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, where }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const fc = {
@@ -289,304 +525,239 @@
     appId:"1:317072309656:web:803003d311f119e437bfed"
   };
   const app=initializeApp(fc), auth=getAuth(app), db=getFirestore(app);
-
-  let menuItems    = [];
-  let ingredients  = [];
-  let latestBatches= {}; // ingredientId → hppPerGram dari batch terakhir
-  let selectedMenu = null;
-  let bahanPrices  = {}; // ingredientId → hargaBeli per unit
-  let pkgRows      = [];
+  let menuItems=[], selectedMenu=null;
+  let avgMonthlyCups=0;
 
   // ── AUTH ──
   onAuthStateChanged(auth, async(user) => {
     if(!user){location.href="login.html";return;}
-    const snap = await getDoc(doc(db,"users",user.uid));
+    const snap=await getDoc(doc(db,"users",user.uid));
     if(!snap.exists()){location.href="login.html";return;}
-    const role = snap.data().role || 'kasir';
-    if(role === 'admin') {
-      document.body.classList.add('is-admin');
-    } else {
-      location.href = "dashboard.html";
-      return;
-    }
-    await Promise.all([loadMenu(), loadIngredients(), loadLatestBatches()]);
-    renderMenuSelector();
-    // Default 1 pkg row
-    pkgRows = [{name:'Cup + Lid', price:1500}];
-    renderPkgRows();
+    const role=snap.data().role||'kasir';
+    if(role==='admin') document.body.classList.add('is-admin');
+    if(role!=='admin'){location.href="dashboard.html";return;}
+
+    await Promise.all([loadMenu(), calcAvgMonthlyCups()]);
+    populateMenuSelect();
+    calcSim();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
-  async function loadMenu() {
-    const s = await getDocs(query(collection(db,"menu"), orderBy("category")));
-    menuItems = s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.available!==false);
+  async function loadMenu(){
+    const s=await getDocs(query(collection(db,"menu"),orderBy("category")));
+    menuItems=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.available!==false);
   }
 
-  async function loadIngredients() {
-    const s = await getDocs(collection(db,"ingredients"));
-    ingredients = s.docs.map(d=>({id:d.id,...d.data()}));
-  }
+  async function calcAvgMonthlyCups(){
+    try{
+      // Get orders from last 3 months
+      const threeMonthsAgo=new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth()-3);
+      const s=await getDocs(query(collection(db,"orders"),where("createdAt",">=",threeMonthsAgo),orderBy("createdAt","desc")));
+      const orders=s.docs.map(d=>d.data()).filter(o=>o.status!=='cancelled');
+      if(!orders.length){avgMonthlyCups=0;return;}
 
-  async function loadLatestBatches() {
-    // Ambil semua batch, cari HPP terbaru per roasted target
-    try {
-      const s = await getDocs(query(collection(db,"roastingBatches"), orderBy("createdAt","desc")));
-      const batches = s.docs.map(d=>({id:d.id,...d.data()}));
-      // Untuk tiap roastedTargetId, ambil batch terbaru yang punya roastCost > 0
-      latestBatches = {};
-      for(const b of batches) {
-        if(b.roastedTargetId && !latestBatches[b.roastedTargetId]) {
-          // Hitung ulang hpp per gram dari data batch
-          if(b.roastedOutput && b.roastCost !== undefined) {
-            latestBatches[b.roastedTargetId] = {
-              hppPerGram: b.hppPerGram || 0,
-              batchNo: b.batchNo,
-              blendName: b.blendName,
-              roastedOutput: b.roastedOutput
-            };
-          }
-        }
+      // Group by month
+      const monthly={};
+      orders.forEach(o=>{
+        const d=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
+        const key=`${d.getFullYear()}-${d.getMonth()}`;
+        if(!monthly[key]) monthly[key]={count:0,cups:0};
+        monthly[key].count++;
+        monthly[key].cups+=(o.items||[]).reduce((s,i)=>s+(i.qty||0),0);
+      });
+      const months=Object.keys(monthly).length||1;
+      avgMonthlyCups=Math.round(Object.values(monthly).reduce((s,m)=>s+m.cups,0)/months);
+      document.getElementById('autoTargetHint').textContent=`Rata-rata aktual: ${avgMonthlyCups.toLocaleString('id')} cup/bulan`;
+      // Auto-fill if user hasn't changed default
+      if(document.getElementById('targetCup').value==='1000' && avgMonthlyCups>0){
+        document.getElementById('targetCup').value=avgMonthlyCups;
       }
-    } catch(e) { console.log('No batches yet'); }
+    }catch(e){console.log('No order history');}
   }
 
-  // ── MENU SELECTOR ──
-  function renderMenuSelector() {
-    const el = document.getElementById('menuSelector');
-    if(!menuItems.length) {
-      el.innerHTML = `<div class="empty-hpp"><i class="fa-solid fa-mug-hot"></i>Belum ada menu. Tambahkan di Admin.</div>`;
-      return;
+  function populateMenuSelect(){
+    const sel=document.getElementById('menuSelect');
+    sel.innerHTML='<option value="">-- Pilih menu --</option>'+
+      menuItems.map(m=>`<option value="${m.id}">${m.name} — Rp ${(m.price||0).toLocaleString('id')}</option>`).join('');
+  }
+
+  window.selectMenu=function(){
+    const id=document.getElementById('menuSelect').value;
+    selectedMenu=id?menuItems.find(m=>m.id===id):null;
+    const info=document.getElementById('menuInfo');
+    if(selectedMenu){
+      info.style.display='block';
+      document.getElementById('menuCurrentPrice').textContent='Rp '+(selectedMenu.price||0).toLocaleString('id');
+      const rCount=(selectedMenu.recipe||[]).length;
+      const pCount=(selectedMenu.packaging||[]).length;
+      document.getElementById('menuRecipeCount').textContent=`${rCount} bahan · ${pCount} packaging`;
+    } else {
+      info.style.display='none';
     }
-    el.innerHTML = menuItems.map(m => `
-      <div class="menu-sel-card${selectedMenu?.id===m.id?' active':''}" onclick="selectMenu('${m.id}')">
-        <div class="menu-sel-cat">${m.category||''}</div>
-        <div class="menu-sel-name">${m.name}</div>
-        <div class="menu-sel-price">${m.price?'Rp '+m.price.toLocaleString('id'):'Belum ada harga'}</div>
-      </div>`).join('');
-  }
-
-  window.selectMenu = function(id) {
-    selectedMenu = menuItems.find(m=>m.id===id);
-    renderMenuSelector();
-    renderBahanInput();
-    document.getElementById('bahanCard').style.display = '';
-    document.getElementById('packCard').style.display  = '';
-    calcHPP();
+    calcSim();
   };
 
-  // ── BAHAN INPUT ──
-  function renderBahanInput() {
-    if(!selectedMenu) return;
-    const recipe = selectedMenu.recipe || [];
-    const tbody  = document.getElementById('bahanTbody');
+  // ── OVERHEAD ITEMS ──
+  window.addOH=function(){
+    const div=document.createElement('div');
+    div.className='oh-item';
+    div.innerHTML=`<div><label>Kategori</label><input type="text" class="oh-name" placeholder="cth: Internet"/></div>
+      <div><label>Biaya (Rp)</label><input type="number" class="oh-cost" value="0" min="0" oninput="calcSim()"/></div>
+      <button class="btn-remove-row" onclick="removeOH(this)"><i class="fa-solid fa-xmark"></i></button>`;
+    document.getElementById('ohItems').appendChild(div);
+  };
+  window.removeOH=function(btn){
+    btn.closest('.oh-item').remove();
+    calcSim();
+  };
 
-    if(!recipe.length) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-dim);font-size:13px">
-        Menu ini belum punya resep. Set resep di Inventori → Resep Menu.</td></tr>`;
+  // ── WASTE SLIDER ──
+  window.updateWaste=function(val){
+    document.getElementById('wasteValue').textContent=val+'%';
+    calcSim();
+  };
+
+  // ── MAIN CALCULATION ──
+  window.calcSim=function(){
+    if(!selectedMenu){
+      // Show empty state
+      document.getElementById('resBahan').textContent='Rp 0';
+      document.getElementById('resPkg').textContent='Rp 0';
+      document.getElementById('resOH').textContent='Rp 0';
+      document.getElementById('resWaste').textContent='Rp 0';
+      document.getElementById('resTotalHPP').textContent='Rp 0';
+      document.getElementById('resPrice').textContent='Rp 0';
+      document.getElementById('resHPP2').textContent='Rp 0';
+      document.getElementById('resProfit').textContent='Rp 0';
+      document.getElementById('marginBigValue').textContent='0%';
+      document.getElementById('marginBigSub').textContent='Pilih menu untuk mulai';
+      document.getElementById('marginBig').className='margin-big';
+      document.getElementById('projCup').textContent='0';
+      document.getElementById('projOmset').textContent='Rp 0';
+      document.getElementById('projHPP').textContent='Rp 0';
+      document.getElementById('projOH').textContent='Rp 0';
+      document.getElementById('projNet').textContent='Rp 0';
+      updateBars(0,0,0,0);
+      updateRecs(0);
       return;
     }
 
-    tbody.innerHTML = recipe.map(r => {
-      const ing       = ingredients.find(i=>i.id===r.ingredientId);
-      const name      = ing?.name || r.ingredientId;
-      const unit      = ing?.unit || '';
-      const qty       = r.amount || 0;
-      // Cek apakah ada data HPP dari roasting batch
-      const batchData = latestBatches[r.ingredientId];
-      const fromBatch = batchData && batchData.hppPerGram > 0;
-      // harga per unit = HPP/gram × 1 (karena unit biasanya gram)
-      const savedPrice = bahanPrices[r.ingredientId] ||
-        (fromBatch ? Math.round(batchData.hppPerGram) : '');
+    const price=selectedMenu.price||0;
+    const targetCup=parseFloat(document.getElementById('targetCup').value)||1;
+    const wastePct=parseFloat(document.getElementById('wasteRange').value)||0;
 
-      return `<tr>
-        <td>
-          <div style="font-size:13px;font-weight:600">${name}</div>
-          ${fromBatch?`<div class="batch-hint"><i class="fa-solid fa-fire-flame-curved"></i>
-            Dari batch ${batchData.batchNo} — ${batchData.blendName}</div>`:''}
-        </td>
-        <td style="font-size:13px;color:var(--text-dim)">${qty} ${unit}</td>
-        <td>
-          <div>
-            <input class="hpp-input ${fromBatch?'from-batch':''}" type="number"
-              id="price_${r.ingredientId}"
-              value="${savedPrice}"
-              placeholder="Rp per ${unit}"
-              oninput="saveBahanPrice('${r.ingredientId}',+this.value)"
-              min="0" step="1"/>
-            ${fromBatch?`<div class="batch-hint" style="margin-top:4px">
-              <i class="fa-solid fa-check-circle"></i>HPP roasting: Rp ${batchData.hppPerGram.toFixed(1)}/${unit}
-            </div>`:''}
-          </div>
-        </td>
-        <td style="font-size:13px;font-weight:600;color:var(--accent)" id="cost_${r.ingredientId}">
-          ${savedPrice ? 'Rp '+Math.round(savedPrice*qty).toLocaleString('id') : '—'}
-        </td>
-      </tr>`;
+    // Bahan baku dari resep menu
+    let totalBahan=0;
+    for(const r of(selectedMenu.recipe||[])){
+      totalBahan+=(r.costPerUnit||0)*(r.amount||0);
+    }
+    // Packaging dari menu
+    let totalPkg=0;
+    for(const p of(selectedMenu.packaging||[])){
+      totalPkg+=p.price||0;
+    }
+
+    // Overhead per cup
+    let totalOH=0;
+    document.querySelectorAll('.oh-item').forEach(item=>{
+      const cost=parseFloat(item.querySelector('.oh-cost').value)||0;
+      totalOH+=cost;
+    });
+    const ohPerCup=totalOH/targetCup;
+
+    // Waste allowance (applied to bahan baku only)
+    const wasteAmount=totalBahan*(wastePct/100);
+
+    // Total HPP
+    const hpp=totalBahan+totalPkg+ohPerCup+wasteAmount;
+    const profit=price-hpp;
+    const marginPct=price>0?((profit/price)*100):0;
+
+    // Update UI
+    document.getElementById('resBahan').textContent='Rp '+Math.round(totalBahan).toLocaleString('id');
+    document.getElementById('resPkg').textContent='Rp '+Math.round(totalPkg).toLocaleString('id');
+    document.getElementById('resOH').textContent='Rp '+Math.round(ohPerCup).toLocaleString('id');
+    document.getElementById('resWastePct').textContent=wastePct+'%';
+    document.getElementById('resWaste').textContent='Rp '+Math.round(wasteAmount).toLocaleString('id');
+    document.getElementById('resTotalHPP').textContent='Rp '+Math.round(hpp).toLocaleString('id');
+
+    document.getElementById('resPrice').textContent='Rp '+price.toLocaleString('id');
+    document.getElementById('resHPP2').textContent='Rp '+Math.round(hpp).toLocaleString('id');
+    document.getElementById('resProfit').textContent='Rp '+Math.round(profit).toLocaleString('id');
+    document.getElementById('resProfit').style.color=profit>=0?'var(--green)':'var(--red)';
+
+    // Margin big display
+    document.getElementById('marginBigValue').textContent=marginPct.toFixed(1)+'%';
+    document.getElementById('marginBigSub').textContent='Rp '+Math.round(profit).toLocaleString('id')+' / cup';
+    const mb=document.getElementById('marginBig');
+    mb.className='margin-big';
+    if(marginPct<45) mb.classList.add('danger');
+    else if(marginPct<55) mb.classList.add('warning');
+
+    // Breakdown bars
+    const totalSeg=totalBahan+totalPkg+ohPerCup+wasteAmount||1;
+    updateBars(
+      (totalBahan/totalSeg)*100,
+      (totalPkg/totalSeg)*100,
+      (ohPerCup/totalSeg)*100,
+      (wasteAmount/totalSeg)*100
+    );
+
+    // Recommendations
+    updateRecs(hpp);
+
+    // Monthly projection
+    document.getElementById('projCup').textContent=targetCup.toLocaleString('id');
+    document.getElementById('projOmset').textContent='Rp '+Math.round(price*targetCup).toLocaleString('id');
+    document.getElementById('projHPP').textContent='Rp '+Math.round(hpp*targetCup).toLocaleString('id');
+    document.getElementById('projOH').textContent='Rp '+Math.round(totalOH).toLocaleString('id');
+    const netProfit=(profit*targetCup)-totalOH;
+    document.getElementById('projNet').textContent='Rp '+Math.round(netProfit).toLocaleString('id');
+    document.getElementById('projNet').style.color=netProfit>=0?'var(--green)':'var(--red)';
+  };
+
+  function updateBars(pBahan,pPkg,pOH,pWaste){
+    document.getElementById('barBahan').style.width=pBahan+'%';
+    document.getElementById('barPkg').style.width=pPkg+'%';
+    document.getElementById('barOH').style.width=pOH+'%';
+    document.getElementById('barWaste').style.width=pWaste+'%';
+    document.getElementById('pctBahan').textContent=pBahan.toFixed(1)+'%';
+    document.getElementById('pctPkg').textContent=pPkg.toFixed(1)+'%';
+    document.getElementById('pctOH').textContent=pOH.toFixed(1)+'%';
+    document.getElementById('pctWaste').textContent=pWaste.toFixed(1)+'%';
+  }
+
+  function updateRecs(hpp){
+    const margins=[{pct:50,label:'Margin 50%'},{pct:60,label:'Margin 60%'},{pct:65,label:'Margin 65%',rec:true},{pct:70,label:'Margin 70%'}];
+    document.getElementById('recGrid').innerHTML=margins.map(m=>{
+      const price=Math.ceil(hpp/(1-m.pct/100)/500)*500;
+      const profit=price-Math.round(hpp);
+      return `<div class="rec-card${m.rec?' recommended':''}">
+        ${m.rec?'<div class="rec-badge">Rekomendasi</div>':''}
+        <div class="rec-label">${m.label}</div>
+        <div class="rec-price">Rp ${price.toLocaleString('id')}</div>
+        <div class="rec-profit">Profit: Rp ${profit.toLocaleString('id')}/cup</div>
+      </div>`;
     }).join('');
   }
 
-  window.saveBahanPrice = function(id, price) {
-    bahanPrices[id] = price;
-    // Update cost cell
-    const recipe = selectedMenu?.recipe || [];
-    const r      = recipe.find(x=>x.ingredientId===id);
-    if(r) {
-      const cost = document.getElementById('cost_'+id);
-      if(cost) cost.textContent = price ? 'Rp '+Math.round(price*r.amount).toLocaleString('id') : '—';
-    }
-    calcHPP();
-  };
-
-  // ── PACKAGING ──
-  function renderPkgRows() {
-    const wrap = document.getElementById('pkgRows');
-    wrap.innerHTML = pkgRows.map((p,idx) => `
-      <div class="pkg-row">
-        <div>
-          <label>Nama Item</label>
-          <input type="text" value="${p.name}" placeholder="cth: Cup 12oz"
-            oninput="updatePkg(${idx},'name',this.value)"/>
-        </div>
-        <div>
-          <label>Harga (Rp)</label>
-          <input class="hpp-input" type="number" value="${p.price}" placeholder="0"
-            oninput="updatePkg(${idx},'price',+this.value)"/>
-        </div>
-        <button class="btn-remove-pkg" onclick="removePkg(${idx})"><i class="fa-solid fa-xmark"></i></button>
-      </div>`).join('');
-    calcHPP();
-  }
-
-  window.addPkgRow    = function() { pkgRows.push({name:'',price:0}); renderPkgRows(); };
-  window.removePkg    = function(idx) { pkgRows.splice(idx,1); renderPkgRows(); };
-  window.updatePkg    = function(idx,field,val) { pkgRows[idx][field]=val; calcHPP(); };
-
-  // ── CALC HPP ──
-  function calcHPP() {
-    if(!selectedMenu) return;
-    const recipe = selectedMenu.recipe || [];
-
-    // Total bahan
-    let totalBahan = 0;
-    for(const r of recipe) {
-      const price = bahanPrices[r.ingredientId] || 0;
-      totalBahan += price * r.amount;
-    }
-
-    // Total packaging
-    const totalPkg = pkgRows.reduce((s,p)=>s+(+p.price||0),0);
-
-    // Total HPP
-    const totalHPP = totalBahan + totalPkg;
-
-    document.getElementById('totalBahan').textContent = 'Rp '+Math.round(totalBahan).toLocaleString('id');
-    document.getElementById('totalPkg').textContent   = 'Rp '+Math.round(totalPkg).toLocaleString('id');
-
-    renderResult(totalHPP, totalBahan, totalPkg);
-  }
-
-  function renderResult(hpp, bahan, pkg) {
-    const card = document.getElementById('resultCard');
-
-    if(hpp <= 0) {
-      card.innerHTML = `<div class="empty-hpp">
-        <i class="fa-solid fa-calculator"></i>
-        Isi harga bahan untuk melihat kalkulasi HPP.
-      </div>`;
-      return;
-    }
-
-    // Rekomendasi harga: margin 50%, 60%, 65% (recommended), 70%
-    const margins = [
-      {pct:50, label:'Margin 50%'},
-      {pct:60, label:'Margin 60%'},
-      {pct:65, label:'Margin 65%', rec:true},
-      {pct:70, label:'Margin 70%'},
-    ];
-
-    // Breakdown %
-    const pctBahan = hpp>0?Math.round(bahan/hpp*100):0;
-    const pctPkg   = hpp>0?Math.round(pkg/hpp*100):0;
-
-    const currentPrice = selectedMenu.price || 0;
-    const currentMargin = currentPrice > 0 ? Math.round((1 - hpp/currentPrice)*100) : null;
-
-    card.innerHTML = `
-      <h2 style="margin-bottom:16px">📊 Hasil Kalkulasi</h2>
-
-      <div class="hpp-summary">
-        <div class="hpp-summary-row"><span>Biaya bahan baku</span><span>Rp ${Math.round(bahan).toLocaleString('id')}</span></div>
-        <div class="hpp-summary-row"><span>Packaging</span><span>Rp ${Math.round(pkg).toLocaleString('id')}</span></div>
-        <div class="hpp-summary-row total"><span>Total HPP / cup</span><span>Rp ${Math.round(hpp).toLocaleString('id')}</span></div>
-      </div>
-
-      <!-- Breakdown bar -->
-      <div class="breakdown-bar">
-        <div class="breakdown-seg" style="width:${pctBahan}%;background:var(--accent)"></div>
-        <div class="breakdown-seg" style="width:${pctPkg}%;background:var(--yellow)"></div>
-      </div>
-      <div class="breakdown-legend">
-        <div class="breakdown-dot"><span style="background:var(--accent)"></span>Bahan ${pctBahan}%</div>
-        <div class="breakdown-dot"><span style="background:var(--yellow)"></span>Packaging ${pctPkg}%</div>
-      </div>
-
-      ${currentPrice ? `
-      <div style="margin-top:16px;padding:12px;background:#111;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">Harga jual saat ini</div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:18px;font-weight:600">Rp ${currentPrice.toLocaleString('id')}</span>
-          <span class="badge ${currentMargin>=50?'badge-green':currentMargin>=30?'badge-yellow':'badge-red'}">
-            Margin ${currentMargin}%
-          </span>
-        </div>
-        ${currentMargin < 50 ? `<div style="font-size:11px;color:var(--red);margin-top:6px">
-          ⚠️ Margin di bawah 50% — pertimbangkan menaikkan harga</div>` : ''}
-      </div>` : ''}
-
-      <div style="margin-top:16px;margin-bottom:10px;font-size:13px;font-weight:600;color:var(--text-dim)">
-        Rekomendasi Harga Jual
-      </div>
-      <div class="result-grid">
-        ${margins.map(m => {
-          const price = Math.ceil(hpp / (1 - m.pct/100) / 500) * 500; // round up ke 500
-          return `<div class="result-card${m.rec?' recommended':''}">
-            ${m.rec?`<div class="result-rec-badge">Rekomendasi</div>`:''}
-            <div class="result-margin">${m.label}</div>
-            <div class="result-price">Rp ${price.toLocaleString('id')}</div>
-            <div class="result-margin-val">Profit: Rp ${(price-Math.round(hpp)).toLocaleString('id')}/cup</div>
-          </div>`;
-        }).join('')}
-      </div>
-
-      <div style="margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.6">
-        * Harga dibulatkan ke kelipatan Rp 500 terdekat ke atas.<br>
-        * HPP belum termasuk biaya overhead (sewa, gaji, listrik café).
-      </div>
-    `;
-  }
-
-  function toast(msg,type='') {
-    const t=document.getElementById('toast');
-    t.textContent=msg; t.className=`toast ${type} show`;
-    setTimeout(()=>t.classList.remove('show'),3000);
-  }
-
   // Mobile layout
-  function checkLayout() {
-    const layout = document.getElementById('mainLayout');
-    if(window.innerWidth <= 640) {
-      layout.style.gridTemplateColumns = '1fr';
-    } else if(window.innerWidth <= 1024) {
-      layout.style.gridTemplateColumns = '1fr 300px';
+  function checkLayout(){
+    const layout=document.getElementById('simGrid');
+    if(window.innerWidth<=640){
+      layout.style.gridTemplateColumns='1fr';
+    } else if(window.innerWidth<=1024){
+      layout.style.gridTemplateColumns='1fr 320px';
     } else {
-      layout.style.gridTemplateColumns = '1fr 380px';
+      layout.style.gridTemplateColumns='1fr 380px';
     }
   }
   checkLayout();
-  window.addEventListener('resize', checkLayout);
+  window.addEventListener('resize',checkLayout);
 
-  document.getElementById('btnLogout').addEventListener('click',
-    ()=>signOut(auth).then(()=>location.href="login.html"));
+  function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}
+  document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
 </script>
 <script src="nav-scroll.js"></script>
 </body>
