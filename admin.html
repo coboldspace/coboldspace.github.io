@@ -495,7 +495,15 @@
     wrap.innerHTML=recipeRows.map((r,idx)=>{
       const ing=ingredientsData.find(i=>i.id===r.ingredientId);
       const ingOptions=ingredientsData.map(i=>`<option value="${i.id}"${i.id===r.ingredientId?' selected':''}>${i.name} (${i.unit})</option>`).join('');
-      const cost=r.costPerUnit||0;
+      // Auto-calculate cost per unit from inventory
+      let costPerUnit=0;
+      if(ing){
+        const hargaBeli=ing.hargaBeli||0;
+        const multiplier=ing.unitMultiplier||1;
+        costPerUnit=multiplier>0?hargaBeli/multiplier:0;
+      }
+      // Use saved cost if manually overridden, otherwise use inventory
+      const cost=r.costPerUnit||costPerUnit;
       const total=cost*r.amount;
       return `<div class="recipe-row">
         <div>
@@ -512,7 +520,8 @@
         </div>
         <div>
           <label>Harga/Unit</label>
-          <input type="number" value="${cost}" min="0" oninput="changeRecipeCost(${idx},+this.value)"/>
+          <input type="number" value="${cost>0?Math.round(cost):''}" min="0" step="1" oninput="changeRecipeCost(${idx},+this.value)" style="${ing?'border-color:rgba(176,137,104,0.3);background:rgba(176,137,104,0.05)':''}"/>
+          ${ing?`<div style="font-size:10px;color:var(--accent);margin-top:3px"><i class="fa-solid fa-box"></i> dari inventory: Rp ${Math.round(costPerUnit).toLocaleString('id')}/${ing.unit}</div>`:''}
         </div>
         <div>
           <label>Biaya</label>
@@ -533,8 +542,12 @@
     const ing=ingredientsData.find(i=>i.id===id);
     recipeRows[idx].ingredientId=id;
     recipeRows[idx].unit=ing?.unit||'';
-    // Auto-fill cost from inventory if available
-    recipeRows[idx].costPerUnit=ing?.costPerUnit||ing?.lastPrice||0;
+    // Auto-calculate cost per unit from inventory: hargaBeli / unitMultiplier
+    if(ing){
+      const hargaBeli=ing.hargaBeli||0;
+      const multiplier=ing.unitMultiplier||1;
+      recipeRows[idx].costPerUnit=multiplier>0?hargaBeli/multiplier:0;
+    }
     renderRecipeRows();
   };
   window.changeRecipeQty=function(idx,val){ recipeRows[idx].amount=val; renderRecipeRows(); };
@@ -687,8 +700,17 @@
     const marginRp=price-hpp;
     const marginPct=price>0?((marginRp/price)*100):0;
 
-    // Filter empty rows
-    const cleanRecipe=recipeRows.filter(r=>r.ingredientId&&r.amount>0);
+    // Filter empty rows and enrich with costPerUnit & unit from inventory
+    const cleanRecipe=recipeRows.filter(r=>r.ingredientId&&r.amount>0).map(r=>{
+      const ing=ingredientsData.find(i=>i.id===r.ingredientId);
+      return{
+        ingredientId:r.ingredientId,
+        name:ing?.name||r.name||'',
+        amount:r.amount,
+        unit:r.unit||ing?.unit||'',
+        costPerUnit:r.costPerUnit||0
+      };
+    });
     const cleanPkg=pkgRows.filter(p=>p.name&&p.price>0);
 
     btn.disabled=true;btn.textContent='Menyimpan...';
