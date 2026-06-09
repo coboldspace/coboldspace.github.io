@@ -38,6 +38,8 @@
     .btn-add-ingredient { width:100%; padding:8px; background:none; border:1px dashed var(--border); border-radius:7px; color:var(--text-dim); font-family:'Inter',sans-serif; font-size:13px; cursor:pointer; transition:.2s; margin-top:4px; }
     .btn-add-ingredient:hover { border-color:var(--accent); color:var(--accent); }
     .btn-remove-recipe { background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; padding:0 4px; }
+    .hpp-debug { font-size:10px; color:var(--text-dim); margin-top:4px; font-family:monospace; }
+    .hpp-no-price { color:var(--yellow); font-size:11px; }
 
     @media (max-width:640px) {
       .card-head { flex-direction:column; align-items:flex-start; }
@@ -206,50 +208,57 @@
     <h2 id="hppModalTitle">HPP Menu</h2>
     <input type="hidden" id="hppMenuId"/>
 
-    <div style="margin-bottom:16px">
-      <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em">Bahan Baku (auto dari Resep & Inventory)</label>
-      <div id="hppBahanList" style="background:#111;border-radius:9px;padding:12px;margin-top:6px;max-height:160px;overflow-y:auto">
-        <p style="font-size:12px;color:var(--text-dim);margin:0">Belum ada resep. Atur resep di Inventori terlebih dahulu.</p>
-      </div>
-      <div style="text-align:right;font-size:13px;margin-top:8px;color:var(--text-dim)">
-        Total Bahan: <strong id="hppTotalBahan" style="color:var(--text-main)">Rp 0</strong>
-      </div>
+    <div id="hppLoading" style="display:none;padding:20px;text-align:center;color:var(--text-dim)">
+      <i class="fa-solid fa-spinner fa-spin"></i> Memuat data inventory...
     </div>
 
-    <div style="margin-bottom:16px">
-      <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em">Overhead Operasional (per porsi)</label>
-      <div id="hppOverheadList" style="margin-top:6px"></div>
-      <button class="btn-add-ingredient" onclick="addOverheadRow()" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Tambah Overhead</button>
-      <div style="text-align:right;font-size:13px;margin-top:8px;color:var(--text-dim)">
-        Total Overhead: <strong id="hppTotalOverhead" style="color:var(--text-main)">Rp 0</strong>
+    <div id="hppContent">
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em">Bahan Baku (auto dari Resep & Inventory)</label>
+        <div id="hppBahanList" style="background:#111;border-radius:9px;padding:12px;margin-top:6px;max-height:160px;overflow-y:auto">
+          <p style="font-size:12px;color:var(--text-dim);margin:0">Belum ada resep. Atur resep di Inventori terlebih dahulu.</p>
+        </div>
+        <div id="hppBahanDebug" class="hpp-debug"></div>
+        <div style="text-align:right;font-size:13px;margin-top:8px;color:var(--text-dim)">
+          Total Bahan: <strong id="hppTotalBahan" style="color:var(--text-main)">Rp 0</strong>
+        </div>
       </div>
-    </div>
 
-    <div class="hpp-summary-box">
-      <div class="hpp-summary-line"><span>HPP Bahan</span><strong id="sumBahan">Rp 0</strong></div>
-      <div class="hpp-summary-line"><span>Overhead</span><strong id="sumOverhead">Rp 0</strong></div>
-      <div class="hpp-grand"><span>HPP Total</span><span id="sumGrand">Rp 0</span></div>
-    </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em">Overhead Operasional (per porsi)</label>
+        <div id="hppOverheadList" style="margin-top:6px"></div>
+        <button class="btn-add-ingredient" onclick="addOverheadRow()" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Tambah Overhead</button>
+        <div style="text-align:right;font-size:13px;margin-top:8px;color:var(--text-dim)">
+          Total Overhead: <strong id="hppTotalOverhead" style="color:var(--text-main)">Rp 0</strong>
+        </div>
+      </div>
 
-    <div class="form-row-2">
+      <div class="hpp-summary-box">
+        <div class="hpp-summary-line"><span>HPP Bahan</span><strong id="sumBahan">Rp 0</strong></div>
+        <div class="hpp-summary-line"><span>Overhead</span><strong id="sumOverhead">Rp 0</strong></div>
+        <div class="hpp-grand"><span>HPP Total</span><span id="sumGrand">Rp 0</span></div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Margin Keuntungan (%)</label>
+          <input type="number" id="hppMargin" value="50" min="0" step="1" oninput="calculateHPP()"/>
+        </div>
+        <div class="form-group">
+          <label>Harga Rekomendasi</label>
+          <input type="text" id="hppRekomendasi" readonly style="background:#1a1a1a;color:var(--accent);font-weight:600"/>
+        </div>
+      </div>
+
       <div class="form-group">
-        <label>Margin Keuntungan (%)</label>
-        <input type="number" id="hppMargin" value="50" min="0" step="1" oninput="calculateHPP()"/>
+        <label>Harga Jual Final (Rp)</label>
+        <input type="number" id="hppFinal" placeholder="22000" min="0" step="1" oninput="checkHppWarning()"/>
       </div>
-      <div class="form-group">
-        <label>Harga Rekomendasi</label>
-        <input type="text" id="hppRekomendasi" readonly style="background:#1a1a1a;color:var(--accent);font-weight:600"/>
+
+      <div id="hppWarning" style="display:none;margin-bottom:12px" class="warning-text">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Harga jual di bawah HPP! Anda akan rugi Rp <span id="hppRugi">0</span> per porsi.</span>
       </div>
-    </div>
-
-    <div class="form-group">
-      <label>Harga Jual Final (Rp)</label>
-      <input type="number" id="hppFinal" placeholder="22000" min="0" step="1" oninput="checkHppWarning()"/>
-    </div>
-
-    <div id="hppWarning" style="display:none;margin-bottom:12px" class="warning-text">
-      <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>Harga jual di bawah HPP! Anda akan rugi Rp <span id="hppRugi">0</span> per porsi.</span>
     </div>
 
     <div class="modal-footer">
@@ -298,6 +307,8 @@
     }
 
     await Promise.all([loadMenu(),loadOrders(),loadIngredients()]);
+    console.log('[INIT] Ingredients loaded:', ingredientsData.length, 'items');
+    console.log('[INIT] Sample ingredient:', ingredientsData[0]);
     renderMenuTable(); renderTransaksi(); renderHPP();
     document.getElementById('loadingOverlay').style.display='none';
   });
@@ -313,6 +324,7 @@
   async function loadIngredients(){
     const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
     ingredientsData=s.docs.map(d=>({id:d.id,...d.data()}));
+    console.log('[LOAD] Ingredients:', ingredientsData.map(i => ({name:i.name, hargaBeli:i.hargaBeli, unitMultiplier:i.unitMultiplier, unit:i.unit})));
   }
 
   window.showTab=function(id,btn){
@@ -371,11 +383,19 @@
     let total=0;
     const items=recipe.map(r=>{
       const ing=ingredientsData.find(i=>i.id===r.ingredientId);
-      if(!ing) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0};
-      const multiplier=ing.unitMultiplier||1000;
-      const hargaSatuan=(ing.hargaBeli||0)/multiplier;
-      const subtotal=hargaSatuan*(r.amount||0);
-      total+=subtotal;
+      if(!ing) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Bahan tidak ditemukan di inventory'};
+
+      const hargaBeli = Number(ing.hargaBeli) || 0;
+      const unitMultiplier = Number(ing.unitMultiplier) || 1000;
+
+      if(hargaBeli <= 0) {
+        return {name:ing.name,amount:r.amount||0,unit:ing.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${ing.name} belum diisi (Rp 0)`};
+      }
+
+      const hargaSatuan = hargaBeli / unitMultiplier;
+      const subtotal = hargaSatuan * (r.amount || 0);
+      total += subtotal;
+
       return {name:ing.name,amount:r.amount||0,unit:ing.unit,hargaSatuan,subtotal};
     });
     return {items,total};
@@ -410,32 +430,64 @@
     }).join('');
   };
 
-  window.openHppModal=function(id){
+  window.openHppModal=async function(id){
+    // Force reload ingredients kalau kosong
+    if(!ingredientsData.length){
+      console.log('[HPP] Ingredients empty, reloading...');
+      await loadIngredients();
+    }
+
     const m=menuData.find(x=>x.id===id);
     if(!m)return;
     hppCurrentMenu=m;
     document.getElementById('hppMenuId').value=id;
     document.getElementById('hppModalTitle').textContent=`HPP: ${m.name}`;
 
+    console.log('[HPP] Opening modal for:', m.name);
+    console.log('[HPP] Recipe:', m.recipe);
+    console.log('[HPP] Ingredients count:', ingredientsData.length);
+
+    // Render bahan dari recipe
     const recipe=m.recipe||[];
     const {items,total}=calculateBahanCost(recipe);
     const bahanList=document.getElementById('hppBahanList');
+    const debugEl=document.getElementById('hppBahanDebug');
+
     if(!recipe.length){
       bahanList.innerHTML=`<p style="font-size:12px;color:var(--text-dim);margin:0">Belum ada resep. Atur resep di Inventori terlebih dahulu.</p>`;
+      debugEl.textContent='';
     }else{
-      bahanList.innerHTML=items.map(it=>`<div class="hpp-bahan-item">
-        <span>${it.name} · ${it.amount} ${it.unit}</span>
-        <span>Rp ${Math.round(it.subtotal).toLocaleString('id')}</span>
-      </div>`).join('');
+      bahanList.innerHTML=items.map(it=>{
+        if(it.warning){
+          return `<div class="hpp-bahan-item">
+            <span>${it.name} · ${it.amount} ${it.unit}</span>
+            <span class="hpp-no-price">${it.warning}</span>
+          </div>`;
+        }
+        return `<div class="hpp-bahan-item">
+          <span>${it.name} · ${it.amount} ${it.unit}</span>
+          <span>Rp ${Math.round(it.subtotal).toLocaleString('id')} <span style="font-size:10px;color:var(--text-dim)">(@Rp ${Math.round(it.hargaSatuan).toLocaleString('id')}/${it.unit})</span></span>
+        </div>`;
+      }).join('');
+
+      // Show debug info
+      const warnings=items.filter(i=>i.warning);
+      if(warnings.length){
+        debugEl.innerHTML=warnings.map(w=>`<div style="color:var(--yellow)">⚠️ ${w.warning}</div>`).join('');
+      }else{
+        debugEl.textContent=`Debug: ${ingredientsData.length} bahan di-load, ${recipe.length} bahan di-resep`;
+      }
     }
     document.getElementById('hppTotalBahan').textContent='Rp '+Math.round(total).toLocaleString('id');
     document.getElementById('sumBahan').textContent='Rp '+Math.round(total).toLocaleString('id');
 
+    // Overhead
     const hppData=m.hpp||{};
     hppOverheadItems=(hppData.overheadItems&&hppData.overheadItems.length)?[...hppData.overheadItems]:[];
     if(!hppOverheadItems.length) hppOverheadItems=[{nama:'',biaya:0}];
     renderOverheadList();
 
+    // Margin & final
     document.getElementById('hppMargin').value=hppData.margin||50;
     document.getElementById('hppFinal').value=m.price||'';
 
