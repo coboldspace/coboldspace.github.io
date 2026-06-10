@@ -295,7 +295,7 @@
       .cart-float { display: none !important; }
     }
   </style>
-
+<base target="_blank">
 </head>
 <body>
 
@@ -413,6 +413,7 @@
   };
   const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
   let currentUser=null, menuItems=[], ingredients=[], cart=[], orderType='dine-in', activeCat='Semua';
+  let dataLoaded = false;
 
   onAuthStateChanged(auth, async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -422,14 +423,21 @@
     if(role!=='kasir'&&role!=='admin'){location.href="login.html";return;}
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
     if(role==='admin') document.body.classList.add('is-admin');
+
+    // Load both menu and ingredients first
     await Promise.all([loadMenu(), loadIngredients()]);
+    dataLoaded = true;
+
+    // Now render menu with ingredients data ready
+    buildPills();
+    renderMenu();
+
     document.getElementById('loadingOverlay').style.display='none';
   });
 
   async function loadMenu(){
     const snap=await getDocs(query(collection(db,"menu"),orderBy("category")));
     menuItems=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.available!==false);
-    buildPills(); renderMenu();
   }
 
   async function loadIngredients(){
@@ -458,6 +466,11 @@
   }
 
   window.renderMenu=function(){
+    if(!dataLoaded){
+      document.getElementById('menuGrid').innerHTML='<div class="menu-empty">Memuat data...</div>';
+      return;
+    }
+
     const q=document.getElementById('searchInput').value.toLowerCase();
     const grid=document.getElementById('menuGrid');
     const list=menuItems.filter(m=>(activeCat==='Semua'||m.category===activeCat)&&(!q||m.name.toLowerCase().includes(q)));
@@ -514,6 +527,8 @@
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     const tableNo=document.getElementById('tableNo').value;
     const notes=document.getElementById('orderNotes')?.value||'';
+
+    // KASIR TIDAK LIHAT HPP/PROFIT - hanya total dan item
     document.getElementById('confirmItems').innerHTML=`
       ${cart.map(c=>`<div class="confirm-item"><span>${c.name} ×${c.qty}</span><span>Rp ${(c.price*c.qty).toLocaleString('id')}</span></div>`).join('')}
       <div class="confirm-item"><span>Tipe</span><span>${orderType==='dine-in'?`Dine-in (Meja ${tableNo||'—'})`:'Takeaway'}</span></div>
@@ -559,12 +574,27 @@
       const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
       const tableNo=document.getElementById('tableNo').value;
       const notes=document.getElementById('orderNotes')?.value||'';
+
+      // HPP & profit dihitung dan disimpan ke Firestore (untuk laporan admin)
+      // tapi TIDAK DITAMPILKAN ke kasir
+      let totalHPP = 0;
+      const orderItems = cart.map(c=>{
+        const m = menuItems.find(x => x.id === c.id);
+        const itemHPP = m && m.hpp ? m.hpp.total : 0;
+        totalHPP += itemHPP * c.qty;
+        return {id:c.id,name:c.name,price:c.price,qty:c.qty};
+      });
+
       await addDoc(collection(db,"orders"),{
-        items:cart.map(c=>({id:c.id,name:c.name,price:c.price,qty:c.qty})),
-        total,type:orderType,tableNo:orderType==='dine-in'?tableNo:null,
+        items:orderItems,
+        total,
+        hpp:totalHPP,           // ← disimpan untuk admin (hidden dari kasir)
+        profit:total-totalHPP,   // ← disimpan untuk admin (hidden dari kasir)
+        type:orderType,tableNo:orderType==='dine-in'?tableNo:null,
         notes:notes||null,status:"pending",
         kasirUid:currentUser.uid,kasirName:currentUser.name,createdAt:serverTimestamp()
       });
+
       for(const ci of cart){
         const md=await getDoc(doc(db,"menu",ci.id));
         for(const r of(md.data()?.recipe||[])){
