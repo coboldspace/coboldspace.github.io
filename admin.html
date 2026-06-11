@@ -51,6 +51,7 @@
     }
   </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -484,7 +485,7 @@
     // Overhead
     const hppData=m.hpp||{};
     hppOverheadItems=(hppData.overheadItems&&hppData.overheadItems.length)?[...hppData.overheadItems]:[];
-    if(!hppOverheadItems.length) hppOverheadItems=[{nama:'',biaya:0}];
+    if(!hppOverheadItems.length) hppOverheadItems=[{nama:'Biaya Operasional',biaya:0}];
     renderOverheadList();
 
     // Margin & final
@@ -500,8 +501,8 @@
   function renderOverheadList(){
     const el=document.getElementById('hppOverheadList');
     el.innerHTML=hppOverheadItems.map((o,idx)=>`<div class="overhead-row">
-      <input type="text" placeholder="Nama overhead" value="${o.nama||''}" onchange="updateOverhead(${idx},'nama',this.value)"/>
-      <input type="number" placeholder="Biaya" value="${o.biaya||0}" min="0" onchange="updateOverhead(${idx},'biaya',parseFloat(this.value)||0)"/>
+      <input type="text" placeholder="" value="${o.nama||''}" onchange="updateOverhead(${idx},'nama',this.value)"/>
+      <input type="number" placeholder="" value="${o.biaya||0}" min="0" onchange="updateOverhead(${idx},'biaya',parseFloat(this.value)||0)"/>
       <button class="btn-remove-recipe" onclick="removeOverhead(${idx})"><i class="fa-solid fa-xmark"></i></button>
     </div>`).join('');
   }
