@@ -294,8 +294,55 @@
       .pos-tabs { display: none; }
       .cart-float { display: none !important; }
     }
+  
+    /* ── ORDER PANEL TABS ── */
+    .order-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .order-tab {
+      flex: 1; padding: 10px;
+      text-align: center; font-size: 12px; font-weight: 600;
+      color: var(--text-dim); background: none; border: none;
+      border-bottom: 2px solid transparent; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: 0.2s;
+    }
+    .order-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .order-tab .tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--accent); color: white; border-radius: 8px;
+      font-size: 10px; margin-left: 4px; font-weight: 600;
+    }
+    .order-tab-content { display: none; flex: 1; overflow-y: auto; min-height: 0; }
+    .order-tab-content.active { display: block; }
+    .order-tab-content#tabContentAktif { padding: 12px 18px; }
+    .order-tab-content#tabContentRiwayat { padding: 0; }
+
+    /* Riwayat item */
+    .riwayat-item { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .riwayat-item:last-child { border-bottom: none; }
+    .riwayat-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .riwayat-name { font-size: 13px; font-weight: 600; }
+    .riwayat-time { font-size: 11px; color: var(--text-dim); }
+    .riwayat-items { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+    .riwayat-total { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+    .btn-selesai {
+      width: 100%; padding: 8px;
+      background: var(--green); color: white; border: none;
+      border-radius: 8px; font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-selesai:hover { opacity: 0.85; }
+    .btn-selesai:disabled { opacity: 0.4; cursor: default; }
+    .riwayat-empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 36px 18px; font-style: italic; }
+    .riwayat-done { font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 4px; }
+
+    @media (max-width: 640px) {
+      .order-tab-content#tabContentAktif { padding: 12px 14px; }
+      .riwayat-item { padding: 12px 14px; }
+    }
+
   </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -368,14 +415,36 @@
         <input type="text" id="tableNo" placeholder="contoh: 5"/>
       </div>
     </div>
-    <div class="order-items" id="orderItems">
-      <div class="order-empty">Pilih menu untuk memulai.</div>
+
+    <!-- TABS -->
+    <div class="order-tabs">
+      <button class="order-tab active" onclick="switchOrderTab('aktif')" id="tabAktif">
+        🛒 Pesanan Aktif
+      </button>
+      <button class="order-tab" onclick="switchOrderTab('riwayat')" id="tabRiwayat">
+        📜 Riwayat <span class="tab-badge" id="riwayatBadge" style="display:none">0</span>
+      </button>
     </div>
-    <div class="order-notes">
+
+    <!-- TAB: PESANAN AKTIF -->
+    <div class="order-tab-content active" id="tabContentAktif">
+      <div class="order-items" id="orderItems" style="padding:0">
+        <div class="order-empty">Pilih menu untuk memulai.</div>
+      </div>
+    </div>
+
+    <!-- TAB: RIWAYAT -->
+    <div class="order-tab-content" id="tabContentRiwayat">
+      <div id="riwayatList">
+        <div class="riwayat-empty">Belum ada pesanan hari ini.</div>
+      </div>
+    </div>
+
+    <div class="order-notes" id="orderNotesWrap">
       <label>Catatan</label>
       <textarea id="orderNotes" placeholder="Less sugar, extra hot..."></textarea>
     </div>
-    <div class="order-foot">
+    <div class="order-foot" id="orderFootWrap">
       <div class="total-row">
         <span class="total-label">Total</span>
         <span class="total-value" id="totalValue">Rp 0</span>
@@ -503,7 +572,8 @@
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     document.getElementById('totalValue').textContent='Rp '+total.toLocaleString('id');
     document.getElementById('btnPay').disabled=cart.length===0;
-    document.getElementById('orderItems').innerHTML=cart.length
+    const orderItems = document.getElementById('orderItems');
+    orderItems.innerHTML=cart.length
       ?cart.map(c=>`<div class="order-item">
           <div class="oi-info"><div class="oi-name">${c.name}</div><div class="oi-price">Rp ${(c.price*c.qty).toLocaleString('id')}</div></div>
           <div class="qty-ctrl">
@@ -614,6 +684,101 @@
     btn.disabled=false;btn.textContent='Konfirmasi';
   };
 
+  let todayOrders = [];
+
+  // ── ORDER TAB SWITCH ──
+  window.switchOrderTab = function(tab) {
+    const tabAktif = document.getElementById('tabAktif');
+    const tabRiwayat = document.getElementById('tabRiwayat');
+    const contentAktif = document.getElementById('tabContentAktif');
+    const contentRiwayat = document.getElementById('tabContentRiwayat');
+    const notesWrap = document.getElementById('orderNotesWrap');
+    const footWrap = document.getElementById('orderFootWrap');
+
+    if (tab === 'aktif') {
+      tabAktif.classList.add('active');
+      tabRiwayat.classList.remove('active');
+      contentAktif.classList.add('active');
+      contentRiwayat.classList.remove('active');
+      notesWrap.style.display = '';
+      footWrap.style.display = '';
+    } else {
+      tabAktif.classList.remove('active');
+      tabRiwayat.classList.add('active');
+      contentAktif.classList.remove('active');
+      contentRiwayat.classList.add('active');
+      notesWrap.style.display = 'none';
+      footWrap.style.display = 'none';
+      loadTodayOrders();
+    }
+  };
+
+  // ── LOAD TODAY ORDERS ──
+  async function loadTodayOrders() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
+    todayOrders = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(o => {
+        const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds || 0) * 1000);
+        return ts >= startOfDay && o.status === 'pending';
+      });
+    renderRiwayat();
+  }
+
+  function renderRiwayat() {
+    const el = document.getElementById('riwayatList');
+    const badge = document.getElementById('riwayatBadge');
+
+    if (todayOrders.length === 0) {
+      el.innerHTML = '<div class="riwayat-empty">Belum ada pesanan hari ini.</div>';
+      badge.style.display = 'none';
+      return;
+    }
+
+    badge.style.display = 'inline-flex';
+    badge.textContent = todayOrders.length;
+
+    el.innerHTML = todayOrders.map(o => {
+      const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds || 0) * 1000);
+      const timeStr = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const itemsStr = (o.items || []).map(i => `${i.name} ×${i.qty}`).join(', ');
+      const typeLabel = o.type === 'dine-in' ? `Dine-in #${o.tableNo || '?'}` : 'Takeaway';
+
+      return `<div class="riwayat-item" id="riwayat-${o.id}">
+        <div class="riwayat-top">
+          <span class="riwayat-name">${typeLabel}</span>
+          <span class="riwayat-time">${timeStr}</span>
+        </div>
+        <div class="riwayat-items">${itemsStr}</div>
+        <div class="riwayat-total">Rp ${(o.total || 0).toLocaleString('id')}</div>
+        <button class="btn-selesai" onclick="markDone('${o.id}', this)">✓ Tandai Selesai</button>
+      </div>`;
+    }).join('');
+  }
+
+  window.markDone = async function(id, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+    try {
+      await updateDoc(doc(db, "orders", id), { status: "done" });
+      // Remove from list visually
+      const item = document.getElementById('riwayat-' + id);
+      if (item) {
+        item.innerHTML = `<div class="riwayat-done"><i class="fa-solid fa-check-circle"></i> Pesanan selesai</div>`;
+        item.style.opacity = '0.6';
+      }
+      showToast('✓ Pesanan selesai', 'success');
+      // Refresh count
+      setTimeout(() => loadTodayOrders(), 500);
+    } catch (e) {
+      showToast('Gagal: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '✓ Tandai Selesai';
+    }
+  };
+
   function showToast(msg,type=''){
     const t=document.getElementById('toast');
     t.textContent=msg;t.className=`toast ${type} show`;
@@ -641,6 +806,8 @@
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
       cartFloat.classList.add('hidden');
+      // Reset order tab ke aktif saat buka panel
+      switchOrderTab('aktif');
     }
   };
 
