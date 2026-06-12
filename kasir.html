@@ -254,45 +254,14 @@
       .order-notes { display: none; }
       .order-head { padding: 12px 14px; }
       .order-foot { padding: 12px 14px; }
-      .cart-float {
-        position: fixed;
-        bottom: calc(var(--bn-total) + 8px);
-        left: 16px;
-        right: 16px;
-        background: var(--card-bg);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 10px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 700;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      }
-      .cart-float.hidden { display: none; }
-      .cart-float-total { font-size: 14px; color: var(--text-dim); }
-      .cart-float-total span { color: var(--accent); font-weight: 600; font-size: 18px; }
-      .cart-float-btn {
-        background: var(--accent);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 16px;
-        font-family: 'Inter', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-      }
     }
     @media (max-width: 1024px) and (min-width: 641px) {
       .order-panel { width: 260px; }
       .menu-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
       .pos-tabs { display: none; }
-      .cart-float { display: none !important; }
     }
     @media (min-width: 641px) {
       .pos-tabs { display: none; }
-      .cart-float { display: none !important; }
     }
   
     /* ── ORDER PANEL TABS ── */
@@ -384,11 +353,7 @@
   </button>
 </div>
 
-<!-- FLOATING CART (mobile only) -->
-<div class="cart-float hidden" id="cartFloat">
-  <div class="cart-float-total">Total: <span id="cartFloatTotal">Rp 0</span></div>
-  <button class="cart-float-btn" onclick="switchTab('order')">Lihat Pesanan</button>
-</div>
+
 
 <!-- POS -->
 <div class="pos-wrap">
@@ -792,39 +757,29 @@
     const orderPanel = document.getElementById('orderPanel');
     const tabMenu = document.getElementById('tabMenu');
     const tabOrder = document.getElementById('tabOrder');
-    const cartFloat = document.getElementById('cartFloat');
 
     if (tab === 'menu') {
       menuPanel.classList.add('active');
       orderPanel.classList.remove('active');
       tabMenu.classList.add('active');
       tabOrder.classList.remove('active');
-      if (cart.length > 0) cartFloat.classList.remove('hidden');
     } else {
       menuPanel.classList.remove('active');
       orderPanel.classList.add('active');
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
-      cartFloat.classList.add('hidden');
       // Reset order tab ke aktif saat buka panel
       switchOrderTab('aktif');
     }
   };
 
   function updateCartFloat() {
-    const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
     const badge = document.getElementById('tabBadge');
-    const cartFloat = document.getElementById('cartFloat');
-    const cartFloatTotal = document.getElementById('cartFloatTotal');
-
     if (cart.length > 0) {
       badge.style.display = 'inline-flex';
       badge.textContent = cart.reduce((s, c) => s + c.qty, 0);
-      cartFloat.classList.remove('hidden');
-      cartFloatTotal.textContent = 'Rp ' + total.toLocaleString('id');
     } else {
       badge.style.display = 'none';
-      cartFloat.classList.add('hidden');
     }
   }
 </script>
