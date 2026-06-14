@@ -1,229 +1,392 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Cobold POS — Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-  <link rel="stylesheet" href="pos.css"/>
-  <style>
-    #btnLogoutMobile { padding: 8px 14px; font-size: 13px; font-weight: 600; }
-    #btnLogoutMobile:hover { background: rgba(255,95,95,0.1); }
-    @media (max-width: 640px) {
-      #btnLogoutMobile { padding: 9px 11px; }
-      #btnLogoutMobile .logout-label { display: none; }
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>co.bold space — Slow Bar</title>
+  <meta name="description" content="Slow bar. Seduh pelan, nikmati ruang." />
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+<base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
-<div id="loadingOverlay">COBOLD POS</div>
+  <!-- CURSOR -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-trail" id="cursorTrail"></div>
 
-<!-- SIDEBAR (desktop & tablet) -->
-<div class="sidebar">
-  <div class="logo">Cobold POS</div>
-  <nav class="nav-menu">
-    <a href="dashboard.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
-    <a href="kasir.html"     class="nav-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
-    <a href="admin.html"     class="nav-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
-    <a href="inventory.html" class="nav-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
-    <a href="roasting.html"  class="nav-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
-    <a href="hpp.html"       class="nav-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
+  <!-- DESKTOP NAV -->
+  <nav class="nav" id="navbar">
+    <a href="#" class="nav-logo">co<span class="dot">.</span>bold</a>
+    <ul class="nav-links">
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+    <a href="#visit" class="nav-cta">Find Us</a>
   </nav>
-  <button class="btn-logout" id="btnLogout">LOGOUT</button>
-</div>
 
-<!-- BOTTOM NAV (mobile) -->
-<nav class="bottom-nav">
-  <div class="bn-bar">
-    <a href="dashboard.html" class="bn-item active"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
-    <a href="kasir.html"     class="bn-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
-    <a href="admin.html"     class="bn-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
-    <a href="inventory.html" class="bn-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
-    <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
-    <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
-  </div>
-</nav>
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <div class="grain"></div>
+      <div class="hero-circle c1"></div>
+      <div class="hero-circle c2"></div>
+    </div>
 
-<!-- MAIN CONTENT -->
-<div class="main-content">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:8px">
-    <div>
-      <h1 style="font-size:24px;font-weight:600;margin-bottom:4px">Dashboard</h1>
-      <div class="header-sub" id="userInfo">Memuat...</div>
-      <div class="header-date" style="margin-top:4px" id="dateWrap">
-        <i class="fa-solid fa-calendar"></i> <span id="currentDate"></span>
+    <div class="hero-content">
+      <p class="hero-eyebrow reveal">est. 2026</p>
+      <h1 class="hero-title reveal">
+        <span class="line">Seduh</span>
+        <span class="line italic">Pelan.</span>
+        <span class="line">Nikmati Ruang.</span>
+      </h1>
+      <p class="hero-sub reveal">
+        Slow bar. Kopi manual brew, ruang tenang, dan waktu yang berjalan sesuai iramamu.
+      </p>
+      <div class="hero-actions reveal">
+        <a href="#visit" class="btn btn-primary">Lokasi</a>
       </div>
     </div>
-    <!-- Logout pojok kanan atas, mobile = icon only -->
-    <button id="btnLogoutMobile" onclick="doLogout()"
-      style="background:none;border:1px solid #444;color:#ff5f5f;
-             border-radius:8px;font-family:'Inter',sans-serif;cursor:pointer;
-             display:flex;align-items:center;gap:6px;
-             transition:background 0.2s;flex-shrink:0">
-      <i class="fa-solid fa-right-from-bracket"></i>
-      <span class="logout-label">Logout</span>
-    </button>
-  </div>
 
-  <!-- Alert stok rendah -->
-  <div class="alert-low" id="alertLow">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <div>
-      <div class="alert-low-title">Peringatan Stok Rendah</div>
-      <div class="alert-low-body" id="alertLowBody"></div>
+    <div class="hero-scroll">
+      <span>scroll</span>
+      <div class="scroll-line"></div>
     </div>
-  </div>
+  </section>
 
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <h3>Pendapatan Hari Ini</h3>
-      <div class="value" id="statRevToday">Rp 0</div>
-      <div class="value-sub" id="statOrdToday">0 transaksi</div>
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="about-inner container">
+      <div class="about-text reveal">
+        <p class="label">About</p>
+        <h2>Ruang untuk<br /><em>berhenti sejenak.</em></h2>
+        <p class="body-text">
+          co.bold space adalah slow bar. Kami seduh kopi satu per satu, tidak buru-buru.
+          Ruang ini buat kamu yang butuh jeda — kerja, baca, atau sekadar duduk diam.
+        </p>
+        <p class="body-text">
+          Datang sendiri atau bawa teman. Tidak ada yang perlu dipaksakan.
+        </p>
+      </div>
+      <!--
+      <div class="about-visual reveal">
+        <div class="about-img-frame">
+          <div class="about-img-placeholder">
+            <div class="coffee-icon">
+              <div class="cup"></div>
+              <div class="steam s1"></div>
+              <div class="steam s2"></div>
+              <div class="steam s3"></div>
+            </div>
+          </div>
+          <div class="about-badge">Since<br /><strong>2026</strong></div>
+        </div>
+        <div class="about-stats">
+          <div class="stat">
+            <span class="stat-num" data-target="24">0</span><span>+</span>
+            <p>Menu</p>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-target="3">0</span><span>K+</span>
+            <p>Tamu</p>
+          </div>
+        </div>
+      </div>
+        -->
     </div>
-    <div class="stat-card">
-      <h3>Pendapatan Bulan Ini</h3>
-      <div class="value" id="statRevMonth">Rp 0</div>
-      <div class="value-sub" id="statOrdMonth">0 transaksi</div>
+  </section>
+
+  <!-- MENU (hidden) -->
+<!-- MENU
+  <section class="menu" id="menu">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">Menu</p>
+        <h2>What We Serve</h2>
+        <p class="section-sub">Kopi manual brew, espresso, dan bites.</p>
+      </div>
+
+      <div class="menu-tabs reveal">
+        <button class="tab-btn active" data-tab="espresso">Espresso</button>
+        <button class="tab-btn" data-tab="manual">Manual Brew</button>
+        <button class="tab-btn" data-tab="signature">Signature</button>
+        <button class="tab-btn" data-tab="food">Bites</button>
+      </div>
+
+      <div class="menu-grid" id="menuGrid">
+
+        Espresso
+        <div class="menu-tab-content active" data-content="espresso">
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Espresso</h3>
+              <p>Single origin, dark roast. Intens.</p>
+            </div>
+            <span class="menu-price">25K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Americano</h3>
+              <p>Espresso + air panas. Bold, clean.</p>
+            </div>
+            <span class="menu-price">28K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cappuccino</h3>
+              <p>Espresso, steamed milk, foam.</p>
+            </div>
+            <span class="menu-price">32K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Flat White</h3>
+              <p>Double ristretto, microfoam.</p>
+            </div>
+            <span class="menu-price">35K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cortado</h3>
+              <p>Espresso dan warm milk. Balance.</p>
+            </div>
+            <span class="menu-price">30K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Long Black</h3>
+              <p>Crema di atas hot water. Aroma penuh.</p>
+            </div>
+            <span class="menu-price">28K</span>
+          </div>
+        </div>
+
+        Manual Brew
+        <div class="menu-tab-content" data-content="manual">
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>V60 Pour Over</h3>
+              <p>Proses lambat, hasil presisi.</p>
+            </div>
+            <span class="menu-price">38K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Chemex</h3>
+              <p>Clean cup, clarity penuh.</p>
+            </div>
+            <span class="menu-price">40K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>AeroPress</h3>
+              <p>Versatile, intense.</p>
+            </div>
+            <span class="menu-price">35K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cold Brew</h3>
+              <p>Diseduh 18 jam. Smooth, dark.</p>
+            </div>
+            <span class="menu-price">40K</span>
+          </div>
+        </div>
+
+        Signature
+        <div class="menu-tab-content" data-content="signature">
+          <div class="menu-item reveal featured">
+            <div class="menu-badge">Best Seller</div>
+            <div class="menu-item-info">
+              <h3>co.bold Black</h3>
+              <p>Espresso, dark chocolate, sea salt.</p>
+            </div>
+            <span class="menu-price">45K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Midnight Latte</h3>
+              <p>Charcoal oat milk, vanilla.</p>
+            </div>
+            <span class="menu-price">48K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Golden Hour</h3>
+              <p>Turmeric, coconut milk, madu.</p>
+            </div>
+            <span class="menu-price">45K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Ristretto Tonic</h3>
+              <p>Double ristretto, tonic water.</p>
+            </div>
+            <span class="menu-price">42K</span>
+          </div>
+        </div>
+
+        Food
+        <div class="menu-tab-content" data-content="food">
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Butter Croissant</h3>
+              <p>Renyah, lembut. Panggang pagi.</p>
+            </div>
+            <span class="menu-price">28K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Dark Choco Banana Cake</h3>
+              <p>Moist, intense.</p>
+            </div>
+            <span class="menu-price">35K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Avocado Toast</h3>
+              <p>Sourdough, smashed avo, chili flakes.</p>
+            </div>
+            <span class="menu-price">45K</span>
+          </div>
+          <div class="menu-item reveal">
+            <div class="menu-item-info">
+              <h3>Cheese Scone</h3>
+              <p>Gurih, flaky.</p>
+            </div>
+            <span class="menu-price">30K</span>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <div class="stat-card">
-      <h3>Menu Aktif</h3>
-      <div class="value" id="statMenu">0</div>
-      <div class="value-sub">item tersedia</div>
+  </section>
+
+   -->
+<!-- GALLERY (hidden) -->
+<!-- GALLERY
+  <section class="gallery" id="gallery">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="label">The Space</p>
+        <h2>Feel the Vibe</h2>
+      </div>
     </div>
-    <div class="stat-card">
-      <h3>Total Transaksi</h3>
-      <div class="value" id="statTotal">0</div>
-      <div class="value-sub">all time</div>
+    <div class="gallery-grid reveal">
+      <div class="gallery-item g1">
+        <div class="gallery-placeholder"><span>Interior</span></div>
+        <div class="gallery-overlay"><p>Main Hall</p></div>
+      </div>
+      <div class="gallery-item g2">
+        <div class="gallery-placeholder"><span>Bar</span></div>
+        <div class="gallery-overlay"><p>The Bar</p></div>
+      </div>
+      <div class="gallery-item g3">
+        <div class="gallery-placeholder"><span>Coffee</span></div>
+        <div class="gallery-overlay"><p>Craft Brew</p></div>
+      </div>
+      <div class="gallery-item g4">
+        <div class="gallery-placeholder"><span>Corner</span></div>
+        <div class="gallery-overlay"><p>The Corner</p></div>
+      </div>
+      <div class="gallery-item g5">
+        <div class="gallery-placeholder"><span>Night</span></div>
+        <div class="gallery-overlay"><p>After Hours</p></div>
+      </div>
     </div>
-  </div>
+    <p class="gallery-note reveal">Ganti placeholder dengan foto nyata</p>
+  </section>
 
-  <!-- Transaksi terbaru -->
-  <div class="card">
-    <h2>Transaksi Terbaru</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Waktu</th><th>Kasir</th><th>Tipe</th><th>Total</th><th>Status</th></tr></thead>
-        <tbody id="recentTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
-      </table>
+   -->
+<!-- VISIT -->
+  <section class="visit" id="visit">
+    <div class="container">
+      <div class="visit-grid">
+        <div class="visit-info reveal">
+          <p class="label">Visit</p>
+          <h2>Find Us<br /><em>Here.</em></h2>
+          <div class="visit-details">
+            <div class="visit-block">
+              <p class="visit-label">Lokasi</p>
+              <p class="visit-val"><a href="https://maps.app.goo.gl/G2jtULWkgBaigS8t5?g_st=ic" target="_blank">Sentraland boulevard, Parung Panjang, Kec. Parung Panjang, Kabupaten Bogor, Jawa Barat 16360</a></p>
+            </div>
+            <!--
+            <div class="visit-block">
+              <p class="visit-label">Jam Buka</p>
+              <div class="hours-grid">
+                <span>Senin – Jumat</span><span>07.00 – 22.00</span>
+                <span>Sabtu</span><span>08.00 – 23.00</span>
+                <span>Minggu</span><span>08.00 – 21.00</span>
+              </div>
+            </div>
+            <div class="visit-block">
+              <p class="visit-label">Kontak</p>
+              <p class="visit-val">+62 8XX XXXX XXXX</p>
+            </div>
+            -->
+            <div class="visit-block">
+              <p class="visit-label">Instagram</p>
+              <p class="visit-val"><a href="https://www.instagram.com/co.bold_space?igsh=MXE5NXMwbnIxZ2dwcQ%3D%3D&utm_source=qr" target="_blank">@co.bold_space</a></p>
+            </div>
+          </div>
+          <!--
+          <div class="visit-socials">
+            <a href="https://www.instagram.com/co.bold_space?igsh=MXE5NXMwbnIxZ2dwcQ%3D%3D&utm_source=qr" target="_blank" class="social-pill">Instagram</a>
+            <a href="#" class="social-pill">WhatsApp</a>
+            <a href="https://maps.app.goo.gl/G2jtULWkgBaigS8t5?g_st=ic" target="_blank" class="social-pill">Google Maps</a>
+          </div>
+          -->
+        </div>
+        <div class="visit-map reveal">
+          <iframe 
+            src="https://maps.google.com/maps?q=Sentraland+boulevard,+Parung+Panjang,+Kabupaten+Bogor,+Jawa+Barat+16360&z=15&output=embed"
+            width="100%" 
+            height="100%" 
+            style="border:0; filter: grayscale(30%) contrast(1.1);" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Status stok -->
-  <div class="card">
-    <h2>Status Stok Bahan</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Bahan Baku</th><th>Sisa</th><th>Status</th></tr></thead>
-        <tbody id="stockTbody"><tr><td colspan="3" class="empty-cell">Memuat...</td></tr></tbody>
-      </table>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo">co<span class="dot">.</span>bold</a>
+          <p>Seduh pelan, nikmati ruang.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#visit">Visit</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 co.bold space</p>
+        <p class="footer-craft">Slow bar</p>
+      </div>
     </div>
-  </div>
-</div><!-- /main-content -->
+  </footer>
 
-<script type="module">
-  import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy }
-    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <!-- MOILE BOTTOM NAV -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <a href="#home" class="mobile-nav-item active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Home</span>
+    </a>
+    <a href="#visit" class="mobile-nav-item">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+      <span>Visit</span>
+    </a>
+  </nav>
 
-  const fc = {
-    apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",
-    authDomain:"cobold-b0e8d.firebaseapp.com",
-    projectId:"cobold-b0e8d",
-    storageBucket:"cobold-b0e8d.firebasestorage.app",
-    messagingSenderId:"317072309656",
-    appId:"1:317072309656:web:803003d311f119e437bfed"
-  };
-  const app=initializeApp(fc), auth=getAuth(app), db=getFirestore(app);
-
-  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID',{
-    weekday:'long', year:'numeric', month:'long', day:'numeric'
-  });
-
-  onAuthStateChanged(auth, async(user) => {
-    if (!user) { location.href="login.html"; return; }
-    const snap = await getDoc(doc(db,"users",user.uid));
-    if (!snap.exists()) { await signOut(auth); location.href="login.html"; return; }
-    const { role, name } = snap.data();
-    document.getElementById('userInfo').textContent = (role==='admin'?'👑 Admin':'☕ Kasir')+': '+(name||user.email);
-
-    // Tampilkan nav admin
-    if (role === 'admin') {
-      document.body.classList.add('is-admin');
-    }
-
-    await loadData();
-    document.getElementById('loadingOverlay').style.display = 'none';
-  });
-
-  async function loadData() {
-    try {
-      // Orders
-      const oSnap  = await getDocs(query(collection(db,"orders"), orderBy("createdAt","desc")));
-      const orders = oSnap.docs.map(d=>({id:d.id,...d.data()}));
-      const now    = new Date();
-      const todayS = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const monthS = new Date(now.getFullYear(), now.getMonth(), 1);
-      let rt=0,ot=0,rm=0,om=0;
-      orders.filter(o=>o.status!=='cancelled').forEach(o=>{
-        const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds||0)*1000);
-        if(ts>=todayS){rt+=o.total||0;ot++;}
-        if(ts>=monthS){rm+=o.total||0;om++;}
-      });
-      document.getElementById('statRevToday').textContent = 'Rp '+rt.toLocaleString('id');
-      document.getElementById('statOrdToday').textContent = ot+' transaksi';
-      document.getElementById('statRevMonth').textContent = 'Rp '+rm.toLocaleString('id');
-      document.getElementById('statOrdMonth').textContent = om+' transaksi';
-      document.getElementById('statTotal').textContent    = orders.length;
-
-      // Recent 5
-      const tbody  = document.getElementById('recentTbody');
-      const recent = orders.slice(0,5);
-      tbody.innerHTML = recent.length ? recent.map(o=>{
-        const ts  = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds||0)*1000);
-        const cls = o.status==='done'?'badge-green':o.status==='cancelled'?'badge-red':'badge-yellow';
-        return `<tr>
-          <td>${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-          <td>${o.kasirName||'—'}</td>
-          <td>${o.type==='dine-in'?`Dine-in #${o.tableNo||'?'}`:'Takeaway'}</td>
-          <td>Rp ${(o.total||0).toLocaleString('id')}</td>
-          <td><span class="badge ${cls}">${o.status}</span></td>
-        </tr>`;
-      }).join('') : `<tr><td colspan="5" class="empty-cell">Belum ada transaksi.</td></tr>`;
-
-      // Menu count
-      const mSnap = await getDocs(collection(db,"menu"));
-      document.getElementById('statMenu').textContent = mSnap.docs.filter(d=>d.data().available!==false).length;
-
-      // Ingredients
-      const iSnap = await getDocs(collection(db,"ingredients"));
-      const ings  = iSnap.docs.map(d=>({id:d.id,...d.data()}));
-      const low   = ings.filter(i=>i.minStock>0 && i.stock<=i.minStock);
-
-      document.getElementById('stockTbody').innerHTML = ings.length ? ings.map(i=>{
-        const r   = i.minStock>0 ? i.stock/i.minStock : 2;
-        const cls = r<=0?'badge-red':r<=0.5?'badge-red':r<=1?'badge-yellow':'badge-green';
-        const lbl = r<=0?'HABIS':r<=0.5?'KRITIS':r<=1?'RENDAH':'AMAN';
-        return `<tr><td>${i.name}</td><td>${i.stock} ${i.unit}</td><td><span class="badge ${cls}">${lbl}</span></td></tr>`;
-      }).join('') : `<tr><td colspan="3" class="empty-cell">Belum ada data stok.</td></tr>`;
-
-      if (low.length) {
-        document.getElementById('alertLow').classList.add('show');
-        document.getElementById('alertLowBody').innerHTML = low.map(i=>`• ${i.name}: ${i.stock} ${i.unit}`).join('<br>');
-      }
-    } catch(e) { console.error(e); }
-  }
-
-  const doLogout = () => signOut(auth).then(() => location.href = "login.html");
-  window.doLogout = doLogout;
-  // Sidebar logout (desktop/tablet)
-  const sidebarLogout = document.getElementById('btnLogout');
-  if (sidebarLogout) sidebarLogout.addEventListener('click', doLogout);
-</script>
-<script src="nav-scroll.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
