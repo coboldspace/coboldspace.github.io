@@ -894,3 +894,37 @@ body:hover .cursor { opacity: 1; }
   .visit-grid { gap: 32px; }
   .visit-map { height: 280px; }
 }
+
+/* ─── VISIT LOGO ───────────────────────────────────────────── */
+.visit-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.visit-logo img {
+  max-width: 100%;
+  max-height: 350px;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+}
+
+
+/* ─── RESPONSIVE VISIT LOGO ───────────────────────────────── */
+@media (max-width: 1024px) {
+  .visit-logo {
+    padding: 24px;
+  }
+  .visit-logo img {
+    max-height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .visit-logo {
+    padding: 16px;
+  }
+  .visit-logo img {
+    max-height: 220px;
+  }
+}
