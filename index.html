@@ -234,7 +234,9 @@
     // Public read — no auth needed (Firestore rules must allow read)
     async function initFirebase() {
       try {
+        console.log('Fetching menu and ingredients...');
         await Promise.all([loadMenu(), loadIngredients()]);
+        console.log('Data loaded, rendering...');
         renderMenuUI();
       } catch (e) {
         console.error('Firebase error:', e);
@@ -245,8 +247,14 @@
     }
 
     async function loadMenu() {
+      console.log('Loading menu from Firestore...');
       const snap = await getDocs(query(collection(db, "menu"), orderBy("category")));
       menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.available !== false);
+      console.log('Menu items loaded:', menuItems.length);
+      if (menuItems.length === 0) {
+        console.warn('No menu items found, using fallback');
+        menuItems = fallbackMenu;
+      }
     }
 
     async function loadIngredients() {
