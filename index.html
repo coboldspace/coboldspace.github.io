@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="logo.png" />
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -75,7 +76,7 @@
           Datang sendiri atau bawa teman. Tidak ada yang perlu dipaksakan.
         </p>
       </div>
-      <div class="about-visual reveal">
+      <!-- <div class="about-visual reveal">
         <div class="about-img-frame">
           <div class="about-img-placeholder">
             <div class="coffee-icon">
@@ -97,7 +98,7 @@
             <p>Tamu</p>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
   </section>
 
@@ -193,13 +194,11 @@
     </a>
   </nav>
 
-  <!-- Firebase SDK (Anonymous auth for public read) -->
+  <!-- Firebase SDK (Public read, no auth required) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Same Firebase config as kasir.html
     const firebaseConfig = {
       apiKey: "AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",
       authDomain: "cobold-b0e8d.firebaseapp.com",
@@ -210,22 +209,38 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
     let menuItems = [];
     let ingredients = [];
     let activeCat = 'Semua';
 
-    // Anonymous sign-in for public read access
+    // Fallback static menu (shown if Firebase fails)
+    const fallbackMenu = [
+      { id: 'f1', name: 'Espresso', category: 'Espresso', price: 25000, description: 'Single origin, dark roast. Intens.', available: true },
+      { id: 'f2', name: 'Americano', category: 'Espresso', price: 28000, description: 'Espresso + air panas. Bold, clean.', available: true },
+      { id: 'f3', name: 'Cappuccino', category: 'Espresso', price: 32000, description: 'Espresso, steamed milk, foam.', available: true },
+      { id: 'f4', name: 'Flat White', category: 'Espresso', price: 35000, description: 'Double ristretto, microfoam.', available: true },
+      { id: 'f5', name: 'V60 Pour Over', category: 'Manual Brew', price: 38000, description: 'Proses lambat, hasil presisi.', available: true },
+      { id: 'f6', name: 'Chemex', category: 'Manual Brew', price: 40000, description: 'Clean cup, clarity penuh.', available: true },
+      { id: 'f7', name: 'Cold Brew', category: 'Manual Brew', price: 40000, description: 'Diseduh 18 jam. Smooth, dark.', available: true },
+      { id: 'f8', name: 'co.bold Black', category: 'Signature', price: 45000, description: 'Espresso, dark chocolate, sea salt.', available: true },
+      { id: 'f9', name: 'Midnight Latte', category: 'Signature', price: 48000, description: 'Charcoal oat milk, vanilla.', available: true },
+      { id: 'f10', name: 'Golden Hour', category: 'Signature', price: 45000, description: 'Turmeric, coconut milk, madu.', available: true },
+      { id: 'f11', name: 'Butter Croissant', category: 'Bites', price: 28000, description: 'Renyah, lembut. Panggang pagi.', available: true },
+      { id: 'f12', name: 'Dark Choco Banana Cake', category: 'Bites', price: 35000, description: 'Moist, intense.', available: true },
+    ];
+
+    // Public read — no auth needed (Firestore rules must allow read)
     async function initFirebase() {
       try {
-        await signInAnonymously(auth);
         await Promise.all([loadMenu(), loadIngredients()]);
         renderMenuUI();
       } catch (e) {
         console.error('Firebase error:', e);
-        showMenuError('Gagal memuat menu. Silakan refresh halaman.');
+        // Fallback: show static menu without stock check
+        menuItems = fallbackMenu;
+        renderMenuUI();
       }
     }
 
@@ -299,11 +314,6 @@
           </div>
         `;
       }).join('');
-    }
-
-    // Show error state
-    function showMenuError(msg) {
-      document.getElementById('menuLoading').innerHTML = `<p style="color:var(--red)">${msg}</p>`;
     }
 
     // Main render function
