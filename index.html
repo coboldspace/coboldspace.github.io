@@ -234,43 +234,32 @@
     // Public read — no auth needed (Firestore rules must allow read)
     async function initFirebase() {
       try {
-        console.log('Fetching menu and ingredients...');
         await Promise.all([loadMenu(), loadIngredients()]);
-        console.log('Data loaded, rendering...');
         renderMenuUI();
       } catch (e) {
         console.error('Firebase error:', e);
-        // Fallback: show static menu without stock check
         menuItems = fallbackMenu;
         renderMenuUI();
       }
     }
 
     async function loadMenu() {
-      console.log('Loading menu from Firestore...');
       const snap = await getDocs(query(collection(db, "menu"), orderBy("category")));
       menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.available !== false);
-      console.log('Menu items loaded:', menuItems.length);
-      if (menuItems.length === 0) {
-        console.warn('No menu items found, using fallback');
-        menuItems = fallbackMenu;
-      }
+      if (menuItems.length === 0) menuItems = fallbackMenu;
     }
 
     async function loadIngredients() {
-      const snap = await getDocs(query(collection(db, "ingredients"), orderBy("category")));
-      ingredients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      try {
+        const snap = await getDocs(query(collection(db, "ingredients"), orderBy("category")));
+        ingredients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (e) {
+        ingredients = []; // Optional for landing page
+      }
     }
 
-    // Check if menu item is available (landing page: check 'available' field only)
-    // Detailed stock check by recipe is done in kasir.html before ordering
-    function canMakeMenu(menuId) {
-      const m = menuItems.find(x => x.id === menuId);
-      // If explicitly marked unavailable, show out of stock
-      if (m && m.available === false) return false;
-      // Otherwise show as available (detailed stock check is kasir's job)
-      return true;
-    }
+    // Landing page only checks 'available' field.
+    // Detailed stock validation (recipe → ingredients) is done in kasir.html
 
     // Build category pills
     function buildPills() {
@@ -294,39 +283,38 @@
       const grid = document.getElementById('menuGrid');
       const list = menuItems.filter(m => activeCat === 'Semua' || m.category === activeCat);
 
-      console.log('Rendering grid, activeCat:', activeCat, 'items:', list.length);
-
       if (list.length === 0) {
         grid.innerHTML = '<div class="menu-empty">Menu tidak tersedia untuk kategori ini.</div>';
         return;
       }
 
       grid.innerHTML = list.map(m => {
-        const canMake = canMakeMenu(m.id);
-        const stockBadge = canMake
-          ? '<span class="stock-badge available">✓ Tersedia</span>'
-          : '<span class="stock-badge empty">✗ Stok habis</span>';
-        const disabledClass = canMake ? '' : ' disabled';
+        // Format price: 15000 → 15K, 12500 → 12.5K
+        const price = m.price || 0;
+        let priceStr;
+        if (price >= 1000) {
+          const thousands = price / 1000;
+          priceStr = Number.isInteger(thousands) ? thousands + 'K' : thousands.toFixed(1).replace(/\.0$/, '') + 'K';
+        } else {
+          priceStr = price.toString();
+        }
 
         return `
-          <div class="menu-item reveal visible${disabledClass}">
+          <div class="menu-item reveal visible">
             <div class="menu-item-info">
               <div class="menu-item-top">
                 <h3>${m.name}</h3>
-                ${stockBadge}
               </div>
               <p class="menu-item-desc">${m.description || m.category || ''}</p>
             </div>
-            <span class="menu-price">Rp ${(m.price || 0).toLocaleString('id')}</span>
+            <span class="menu-price">${priceStr}</span>
           </div>
         `;
       }).join('');
-      console.log('Grid rendered with', list.length, 'items');
     }
 
     // Main render function
     function renderMenuUI() {
-      console.log('renderMenuUI called, menuItems:', menuItems.length);
       document.getElementById('menuLoading').style.display = 'none';
       buildPills();
       document.getElementById('menuGrid').style.display = 'grid';
