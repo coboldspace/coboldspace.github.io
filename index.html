@@ -294,8 +294,10 @@
       const grid = document.getElementById('menuGrid');
       const list = menuItems.filter(m => activeCat === 'Semua' || m.category === activeCat);
 
+      console.log('Rendering grid, activeCat:', activeCat, 'items:', list.length);
+
       if (list.length === 0) {
-        grid.innerHTML = '<div class="menu-empty">Menu tidak tersedia.</div>';
+        grid.innerHTML = '<div class="menu-empty">Menu tidak tersedia untuk kategori ini.</div>';
         return;
       }
 
@@ -307,7 +309,7 @@
         const disabledClass = canMake ? '' : ' disabled';
 
         return `
-          <div class="menu-item reveal${disabledClass}">
+          <div class="menu-item reveal visible${disabledClass}">
             <div class="menu-item-info">
               <div class="menu-item-top">
                 <h3>${m.name}</h3>
@@ -319,10 +321,12 @@
           </div>
         `;
       }).join('');
+      console.log('Grid rendered with', list.length, 'items');
     }
 
     // Main render function
     function renderMenuUI() {
+      console.log('renderMenuUI called, menuItems:', menuItems.length);
       document.getElementById('menuLoading').style.display = 'none';
       buildPills();
       document.getElementById('menuGrid').style.display = 'grid';
