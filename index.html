@@ -247,25 +247,20 @@
     async function loadMenu() {
       const snap = await getDocs(query(collection(db, "menu"), orderBy("category")));
       menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.available !== false);
-      console.log('Menu loaded:', menuItems.length, menuItems.map(m => ({name: m.name, hasRecipe: !!m.recipe, recipeCount: m.recipe?.length || 0})));
     }
 
     async function loadIngredients() {
       const snap = await getDocs(query(collection(db, "ingredients"), orderBy("category")));
       ingredients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      console.log('Ingredients loaded:', ingredients.length, ingredients);
     }
 
-    // Check if menu item can be made (same logic as kasir.html)
+    // Check if menu item is available (landing page: check 'available' field only)
+    // Detailed stock check by recipe is done in kasir.html before ordering
     function canMakeMenu(menuId) {
       const m = menuItems.find(x => x.id === menuId);
-      if (!m || !m.recipe || !m.recipe.length) return true;
-      for (const r of m.recipe) {
-        if (!r.ingredientId || !r.amount) continue;
-        const ing = ingredients.find(i => i.id === r.ingredientId);
-        if (!ing) { console.log('Missing ingredient:', r.ingredientId, 'for', m.name); return false; }
-        if (ing.stock < r.amount) { console.log('Low stock:', ing.name, ing.stock, '<', r.amount, 'for', m.name); return false; }
-      }
+      // If explicitly marked unavailable, show out of stock
+      if (m && m.available === false) return false;
+      // Otherwise show as available (detailed stock check is kasir's job)
       return true;
     }
 
