@@ -263,7 +263,7 @@
     @media (min-width: 641px) {
       .pos-tabs { display: none; }
     }
-  
+
     /* ── ORDER PANEL TABS ── */
     .order-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .order-tab {
@@ -336,7 +336,7 @@
     <a href="dashboard.html" class="bn-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
     <a href="kasir.html"     class="bn-item active"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
     <a href="admin.html"     class="bn-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
-    <a href="inventory.html" class="bn-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="inventory.html" class="nav-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
     <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
     <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
@@ -351,8 +351,6 @@
     🛒 Pesanan <span class="tab-badge" id="tabBadge" style="display:none">0</span>
   </button>
 </div>
-
-
 
 <!-- POS -->
 <div class="pos-wrap">
@@ -445,7 +443,7 @@
     messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"
   };
   const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
-  let currentUser=null, menuItems=[], ingredients=[], cart=[], orderType='dine-in', activeCat='Semua';
+  let currentUser=null, menuItems=[], ingredients=[], finishedGoods=[], cart=[], orderType='dine-in', activeCat='Semua';
   let dataLoaded = false;
 
   onAuthStateChanged(auth, async(user)=>{
@@ -457,11 +455,10 @@
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
     if(role==='admin') document.body.classList.add('is-admin');
 
-    // Load both menu and ingredients first
-    await Promise.all([loadMenu(), loadIngredients()]);
+    // Load menu, ingredients, and finishedGoods
+    await Promise.all([loadMenu(), loadIngredients(), loadFinishedGoods()]);
     dataLoaded = true;
 
-    // Now render menu with ingredients data ready
     buildPills();
     renderMenu();
 
@@ -478,6 +475,11 @@
     ingredients=snap.docs.map(d=>({id:d.id,...d.data()}));
   }
 
+  async function loadFinishedGoods(){
+    const snap=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    finishedGoods=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
   function buildPills(){
     const cats=['Semua',...new Set(menuItems.map(m=>m.category).filter(Boolean))];
     document.getElementById('catPills').innerHTML=cats.map(c=>
@@ -486,9 +488,21 @@
   }
   window.setCat=function(c){activeCat=c;document.querySelectorAll('.cat-pill').forEach(b=>b.classList.toggle('active',b.textContent===c));renderMenu();};
 
+  // ── CEK STOK MENU ──
   function canMakeMenu(menuId){
     const m=menuItems.find(x=>x.id===menuId);
-    if(!m||!m.recipe||!m.recipe.length) return true;
+    if(!m) return true;
+
+    // Menu dari Bahan Jadi (finishedGoods)
+    if(m.sourceType === 'finishedGoods') {
+      if(!m.sourceId || !m.sourceAmount) return true;
+      const fg = finishedGoods.find(f => f.id === m.sourceId);
+      if(!fg) return false;
+      return fg.stock >= m.sourceAmount;
+    }
+
+    // Menu dari Bahan Baku (resep biasa)
+    if(!m.recipe||!m.recipe.length) return true;
     for(const r of m.recipe){
       if(!r.ingredientId||!r.amount) continue;
       const ing=ingredients.find(i=>i.id===r.ingredientId);
@@ -496,6 +510,34 @@
       if(ing.stock < r.amount) return false;
     }
     return true;
+  }
+
+  // ── AMBIL INFO STOK UNTUK TAMPILAN ──
+  function getStockInfo(menuId){
+    const m=menuItems.find(x=>x.id===menuId);
+    if(!m) return {canMake:true, text:''};
+
+    if(m.sourceType === 'finishedGoods') {
+      if(!m.sourceId || !m.sourceAmount) return {canMake:true, text:''};
+      const fg = finishedGoods.find(f => f.id === m.sourceId);
+      if(!fg) return {canMake:false, text:'<div class="menu-card-stock low"><i class="fa-solid fa-circle-xmark"></i> Stok habis</div>'};
+      const canMake = fg.stock >= m.sourceAmount;
+      if(!canMake) {
+        return {canMake:false, text:`<div class="menu-card-stock low"><i class="fa-solid fa-circle-xmark"></i> Stok habis (${fg.stock} ${fg.unit})</div>`};
+      }
+      return {canMake:true, text:`<div class="menu-card-stock">Stok: ${fg.stock} ${fg.unit}</div>`};
+    }
+
+    // Bahan baku
+    if(!m.recipe||!m.recipe.length) return {canMake:true, text:''};
+    for(const r of m.recipe){
+      if(!r.ingredientId||!r.amount) continue;
+      const ing=ingredients.find(i=>i.id===r.ingredientId);
+      if(!ing || ing.stock < r.amount) {
+        return {canMake:false, text:'<div class="menu-card-stock low"><i class="fa-solid fa-circle-xmark"></i> Stok habis</div>'};
+      }
+    }
+    return {canMake:true, text:''};
   }
 
   window.renderMenu=function(){
@@ -508,12 +550,13 @@
     const grid=document.getElementById('menuGrid');
     const list=menuItems.filter(m=>(activeCat==='Semua'||m.category===activeCat)&&(!q||m.name.toLowerCase().includes(q)));
     grid.innerHTML=list.length?list.map(m=>{
-      const canMake=canMakeMenu(m.id);
+      const stockInfo = getStockInfo(m.id);
+      const canMake = stockInfo.canMake;
       const disabledClass=canMake?'':' disabled';
       const onclick=canMake?`onclick="addToCart('${m.id}')"`:'';
-      const stockText=canMake?'':'<div class="menu-card-stock low"><i class="fa-solid fa-circle-xmark"></i> Stok habis</div>';
+      const stockText = stockInfo.text;
       return`<div class="menu-card${disabledClass}" ${onclick}>
-        <div class="menu-card-cat">${m.category||''}</div>
+        <div class="menu-card-cat">${m.category||''}${m.sourceType==='finishedGoods'?' · Jadi':''}</div>
         <div class="menu-card-name">${m.name}</div>
         <div class="menu-card-price">Rp ${(m.price||0).toLocaleString('id')}</div>
         ${stockText}
@@ -562,7 +605,6 @@
     const tableNo=document.getElementById('tableNo').value;
     const notes=document.getElementById('orderNotes')?.value||'';
 
-    // KASIR TIDAK LIHAT HPP/PROFIT - hanya total dan item
     document.getElementById('confirmItems').innerHTML=`
       ${cart.map(c=>`<div class="confirm-item"><span>${c.name} ×${c.qty}</span><span>Rp ${(c.price*c.qty).toLocaleString('id')}</span></div>`).join('')}
       <div class="confirm-item"><span>Tipe</span><span>${orderType==='dine-in'?`Dine-in (Meja ${tableNo||'—'})`:'Takeaway'}</span></div>
@@ -572,22 +614,35 @@
   };
   window.closeConfirm=function(){document.getElementById('confirmModal').classList.remove('show');};
 
-  // ── VALIDASI STOK ──
+  // ── VALIDASI STOK SEBELUM SUBMIT ──
   async function validateStock(){
-    const needed={};
     for(const ci of cart){
+      const m=menuItems.find(x=>x.id===ci.id);
+      if(!m) continue;
+
+      // Menu dari Bahan Jadi
+      if(m.sourceType === 'finishedGoods') {
+        if(!m.sourceId || !m.sourceAmount) continue;
+        const fg = finishedGoods.find(f => f.id === m.sourceId);
+        if(!fg) return {ok:false, msg:`Bahan jadi "${m.name}" tidak ditemukan`};
+        const needed = m.sourceAmount * ci.qty;
+        if(fg.stock < needed) {
+          return {ok:false, msg:`Stok "${m.name}" tidak cukup (tersisa ${fg.stock} ${fg.unit}, butuh ${needed} ${fg.unit})`};
+        }
+        continue;
+      }
+
+      // Menu dari Bahan Baku (resep)
       const md=await getDoc(doc(db,"menu",ci.id));
       const recipe=(md.data()?.recipe)||[];
       for(const r of recipe){
         if(!r.ingredientId||!r.amount) continue;
-        needed[r.ingredientId]=(needed[r.ingredientId]||0)+(r.amount*ci.qty);
-      }
-    }
-    for(const [ingId,amount] of Object.entries(needed)){
-      const ing=ingredients.find(i=>i.id===ingId);
-      if(!ing) return {ok:false, msg:`Bahan tidak ditemukan di inventory`};
-      if(ing.stock < amount){
-        return {ok:false, msg:`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${amount} ${ing.unit})`};
+        const ing=ingredients.find(i=>i.id===r.ingredientId);
+        if(!ing) return {ok:false, msg:`Bahan tidak ditemukan di inventory`};
+        const needed = r.amount * ci.qty;
+        if(ing.stock < needed){
+          return {ok:false, msg:`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${needed} ${ing.unit})`};
+        }
       }
     }
     return {ok:true};
@@ -609,8 +664,6 @@
       const tableNo=document.getElementById('tableNo').value;
       const notes=document.getElementById('orderNotes')?.value||'';
 
-      // HPP & profit dihitung dan disimpan ke Firestore (untuk laporan admin)
-      // tapi TIDAK DITAMPILKAN ke kasir
       let totalHPP = 0;
       const orderItems = cart.map(c=>{
         const m = menuItems.find(x => x.id === c.id);
@@ -622,24 +675,61 @@
       await addDoc(collection(db,"orders"),{
         items:orderItems,
         total,
-        hpp:totalHPP,           // ← disimpan untuk admin (hidden dari kasir)
-        profit:total-totalHPP,   // ← disimpan untuk admin (hidden dari kasir)
+        hpp:totalHPP,
+        profit:total-totalHPP,
         type:orderType,tableNo:orderType==='dine-in'?tableNo:null,
         notes:notes||null,status:"pending",
         kasirUid:currentUser.uid,kasirName:currentUser.name,createdAt:serverTimestamp()
       });
 
+      // KURANGI STOK
       for(const ci of cart){
+        const m=menuItems.find(x=>x.id===ci.id);
+        if(!m) continue;
+
+        // Menu dari Bahan Jadi
+        if(m.sourceType === 'finishedGoods') {
+          if(!m.sourceId || !m.sourceAmount) continue;
+          const deductAmount = m.sourceAmount * ci.qty;
+          await updateDoc(doc(db,"finishedGoods",m.sourceId),{stock:increment(-deductAmount)});
+          const fg = finishedGoods.find(f => f.id === m.sourceId);
+          await addDoc(collection(db,"stockLogs"),{
+            type:'finishedGoods',
+            itemId:m.sourceId,
+            itemName:fg?.name||m.name,
+            unit:fg?.unit||'pcs',
+            change:-deductAmount,
+            note:`Order: ${m.name} ×${ci.qty}`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
+          continue;
+        }
+
+        // Menu dari Bahan Baku
         const md=await getDoc(doc(db,"menu",ci.id));
         for(const r of(md.data()?.recipe||[])){
           if(!r.ingredientId||!r.amount)continue;
-          await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-(r.amount*ci.qty))});
+          const deductAmount = r.amount * ci.qty;
+          await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-deductAmount)});
           const ig=await getDoc(doc(db,"ingredients",r.ingredientId));
-          await addDoc(collection(db,"stockLogs"),{ingredientId:r.ingredientId,ingredientName:ig.data()?.name||'',unit:ig.data()?.unit||'',change:-(r.amount*ci.qty),note:`Order: ${ci.name} ×${ci.qty}`,byName:currentUser.name,createdAt:serverTimestamp()});
+          await addDoc(collection(db,"stockLogs"),{
+            type:'ingredient',
+            ingredientId:r.ingredientId,
+            ingredientName:ig.data()?.name||'',
+            unit:ig.data()?.unit||'',
+            change:-deductAmount,
+            note:`Order: ${ci.name} ×${ci.qty}`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
         }
       }
-      // Refresh ingredients setelah decrement untuk update UI
-      await loadIngredients(); renderMenu();
+
+      // Refresh data setelah order
+      await Promise.all([loadIngredients(), loadFinishedGoods()]);
+      renderMenu();
+
       closeConfirm(); clearCart();
       document.getElementById('tableNo').value='';
       if(document.getElementById('orderNotes')) document.getElementById('orderNotes').value='';
@@ -727,14 +817,12 @@
     btn.textContent = 'Menyimpan...';
     try {
       await updateDoc(doc(db, "orders", id), { status: "done" });
-      // Remove from list visually
       const item = document.getElementById('riwayat-' + id);
       if (item) {
         item.innerHTML = `<div class="riwayat-done"><i class="fa-solid fa-check-circle"></i> Pesanan selesai</div>`;
         item.style.opacity = '0.6';
       }
       showToast('✓ Pesanan selesai', 'success');
-      // Refresh count
       setTimeout(() => loadTodayOrders(), 500);
     } catch (e) {
       showToast('Gagal: ' + e.message, 'error');
@@ -767,7 +855,6 @@
       orderPanel.classList.add('active');
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
-      // Reset order tab ke aktif saat buka panel
       switchOrderTab('aktif');
     }
   };
