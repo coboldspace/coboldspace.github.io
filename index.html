@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="logo.png" />
 
+<base target="_blank">
 </head>
 <body>
 
@@ -244,7 +245,9 @@
 
     async function loadMenu() {
       const snap = await getDocs(query(collection(db, "menu"), orderBy("category")));
-      menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.available !== false);
+      menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .filter(m => m.available !== false)
+        .sort((a, b) => a.name.localeCompare(b.name));
       if (menuItems.length === 0) menuItems = fallbackMenu;
     }
 
