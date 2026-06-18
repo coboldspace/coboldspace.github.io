@@ -441,7 +441,7 @@
     const unit=document.getElementById('prodUnit').value;
     document.querySelectorAll('.prod-unit-label').forEach(el=>el.textContent=unit);
   };
-  window.calcHPP=function(){
+  function calcHPP(){
     let totalBahan=0;
     const unit=document.getElementById('prodUnit').value;
     document.querySelectorAll('.prod-unit-label').forEach(el=>el.textContent=unit);
@@ -466,6 +466,8 @@
 
     return {totalBahan,overhead,hppTotal,hargaJual};
   }
+
+  window.calcHPP = calcHPP;
 
   window.renderProducts=function(){
     const q=document.getElementById('searchProd').value.toLowerCase();
