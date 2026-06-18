@@ -41,6 +41,23 @@
     .hpp-debug { font-size:10px; color:var(--text-dim); margin-top:4px; font-family:monospace; }
     .hpp-no-price { color:var(--yellow); font-size:11px; }
 
+    /* Source type selector */
+    .source-toggle { display:flex; gap:8px; margin-bottom:16px; }
+    .source-btn {
+      flex:1; padding:10px; border-radius:8px; border:1px solid var(--border);
+      background:none; color:var(--text-dim); font-family:'Inter',sans-serif;
+      font-size:13px; cursor:pointer; transition:.2s; text-align:center;
+    }
+    .source-btn.active { background:#222; border-color:var(--accent); color:var(--text-main); }
+    .source-btn i { display:block; font-size:18px; margin-bottom:4px; }
+    .source-section { display:none; }
+    .source-section.active { display:block; }
+    .fg-select-row { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .fg-select-row select { flex:2; background:#111; border:1px solid var(--border); border-radius:7px; padding:8px 10px; color:var(--text-main); font-family:'Inter',sans-serif; font-size:13px; outline:none; }
+    .fg-select-row input { flex:1; background:#111; border:1px solid var(--border); border-radius:7px; padding:8px 10px; color:var(--text-main); font-family:'Inter',sans-serif; font-size:13px; outline:none; }
+    .fg-info { font-size:12px; color:var(--text-dim); background:#111; border-radius:7px; padding:10px; margin-bottom:12px; }
+    .fg-info strong { color:var(--accent); }
+
     @media (max-width:640px) {
       .card-head { flex-direction:column; align-items:flex-start; }
       .card-head .btn-primary { width:100%; justify-content:center; }
@@ -103,8 +120,8 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Tersedia</th><th>Aksi</th></tr></thead>
-          <tbody id="menuTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
+          <thead><tr><th>Nama</th><th>Kategori</th><th>Sumber</th><th>Harga</th><th>Tersedia</th><th>Aksi</th></tr></thead>
+          <tbody id="menuTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -189,6 +206,40 @@
         </select>
       </div>
     </div>
+
+    <!-- SOURCE TYPE TOGGLE -->
+    <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:block">Sumber Stok</label>
+    <div class="source-toggle">
+      <button class="source-btn active" id="srcIng" onclick="setSourceType('ingredients')">
+        <i class="fa-solid fa-flask"></i>
+        Bahan Baku
+      </button>
+      <button class="source-btn" id="srcFg" onclick="setSourceType('finishedGoods')">
+        <i class="fa-solid fa-bottle-water"></i>
+        Bahan Jadi
+      </button>
+    </div>
+
+    <!-- BAHAN BAKU SECTION -->
+    <div class="source-section active" id="secSrcIngredients">
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px">Stok akan dikurangi dari bahan baku sesuai resep di tab Inventori.</p>
+    </div>
+
+    <!-- BAHAN JADI SECTION -->
+    <div class="source-section" id="secSrcFinishedGoods">
+      <div class="form-group">
+        <label>Pilih Bahan Jadi</label>
+        <select id="mFgId" onchange="updateFgInfo()">
+          <option value="">-- Pilih bahan jadi --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Jumlah per Order</label>
+        <input type="number" id="mFgAmount" placeholder="1" min="0.01" step="0.01" value="1"/>
+      </div>
+      <div class="fg-info" id="fgInfo" style="display:none"></div>
+    </div>
+
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
         <input type="checkbox" id="mAvail" checked style="accent-color:var(--accent);width:16px;height:16px"/>
@@ -290,8 +341,9 @@
 
   const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
   const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
-  let menuData=[],ordersData=[],ingredientsData=[],activeOrderId=null;
+  let menuData=[],ordersData=[],ingredientsData=[],finishedGoodsData=[],activeOrderId=null;
   let hppOverheadItems=[], hppCurrentMenu=null;
+  let currentSourceType = 'ingredients';
 
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -306,8 +358,9 @@
       return;
     }
 
-    await Promise.all([loadMenu(),loadOrders(),loadIngredients()]);
+    await Promise.all([loadMenu(),loadOrders(),loadIngredients(),loadFinishedGoods()]);
     console.log('[INIT] Ingredients loaded:', ingredientsData.length, 'items');
+    console.log('[INIT] Finished goods loaded:', finishedGoodsData.length, 'items');
     console.log('[INIT] Sample ingredient:', ingredientsData[0]);
     renderMenuTable(); renderTransaksi(); renderHPP();
     document.getElementById('loadingOverlay').style.display='none';
@@ -326,6 +379,10 @@
     ingredientsData=s.docs.map(d=>({id:d.id,...d.data()}));
     console.log('[LOAD] Ingredients:', ingredientsData.map(i => ({name:i.name, hargaBeli:i.hargaBeli, unitMultiplier:i.unitMultiplier, unit:i.unit})));
   }
+  async function loadFinishedGoods(){
+    const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    finishedGoodsData=s.docs.map(d=>({id:d.id,...d.data()}));
+  }
 
   window.showTab=function(id,btn){
     document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -335,25 +392,93 @@
     if(id==='hpp') renderHPP();
   };
 
-  // ── MENU (existing) ──
+  // ── SOURCE TYPE TOGGLE ──
+  window.setSourceType=function(type){
+    currentSourceType = type;
+    document.getElementById('srcIng').classList.toggle('active', type === 'ingredients');
+    document.getElementById('srcFg').classList.toggle('active', type === 'finishedGoods');
+    document.getElementById('secSrcIngredients').classList.toggle('active', type === 'ingredients');
+    document.getElementById('secSrcFinishedGoods').classList.toggle('active', type === 'finishedGoods');
+  };
+
+  function populateFgSelect(){
+    const sel = document.getElementById('mFgId');
+    sel.innerHTML = '<option value="">-- Pilih bahan jadi --</option>' + 
+      finishedGoodsData.map(f => `<option value="${f.id}">${f.name} (${f.stock} ${f.unit})</option>`).join('');
+  }
+
+  window.updateFgInfo=function(){
+    const id = document.getElementById('mFgId').value;
+    const info = document.getElementById('fgInfo');
+    if(!id){info.style.display='none';return;}
+    const f = finishedGoodsData.find(x => x.id === id);
+    if(!f){info.style.display='none';return;}
+    info.style.display='block';
+    info.innerHTML = `
+      <strong>${f.name}</strong> · Stok: ${f.stock} ${f.unit} · Min: ${f.minStock||0} ${f.unit}<br>
+      <span style="font-size:11px">Bahan baku: ${(f.ingredients||[]).map(i => {
+        const ing = ingredientsData.find(x => x.id === i.ingredientId);
+        return ing ? `${ing.name} ${i.amount}${ing.unit}` : '(dihapus)';
+      }).join(', ') || 'Belum diatur'}</span>
+    `;
+  };
+
+  // ── MENU ──
   window.renderMenuTable=function(){
     const q=document.getElementById('menuSearch').value.toLowerCase();
     const list=menuData.filter(m=>!q||m.name.toLowerCase().includes(q));
-    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>`<tr>
+    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>{
+      const sourceLabel = m.sourceType === 'finishedGoods' 
+        ? `<span class="badge badge-accent" title="Bahan Jadi"><i class="fa-solid fa-bottle-water"></i> Jadi</span>`
+        : `<span class="badge badge-green" title="Bahan Baku"><i class="fa-solid fa-flask"></i> Baku</span>`;
+      return`<tr>
       <td><strong>${m.name}</strong></td>
       <td><span class="badge badge-accent">${m.category||'—'}</span></td>
+      <td>${sourceLabel}</td>
       <td>Rp ${(m.price||0).toLocaleString('id')}</td>
       <td><label class="avail-toggle"><input type="checkbox" ${m.available!==false?'checked':''} onchange="toggleAvail('${m.id}',this.checked)"/> ${m.available!==false?'Ya':'Tidak'}</label></td>
       <td><button class="btn-sm" onclick="openMenuModal('${m.id}')">Edit</button><button class="btn-sm danger" onclick="deleteMenu('${m.id}')">Hapus</button></td>
-    </tr>`).join(''):`<tr><td colspan="5" class="empty-cell">Tidak ada menu.</td></tr>`;
+    </tr>`;
+    }).join(''):`<tr><td colspan="6" class="empty-cell">Tidak ada menu.</td></tr>`;
   };
+
   window.openMenuModal=function(id){
+    populateFgSelect();
     document.getElementById('menuEditId').value=id||'';
-    if(id){const m=menuData.find(x=>x.id===id);document.getElementById('menuModalTitle').textContent='Edit Menu';document.getElementById('mName').value=m.name;document.getElementById('mPrice').value=m.price;document.getElementById('mCategory').value=m.category||'Lainnya';document.getElementById('mAvail').checked=m.available!==false;}
-    else{document.getElementById('menuModalTitle').textContent='Tambah Menu';document.getElementById('mName').value='';document.getElementById('mPrice').value='';document.getElementById('mAvail').checked=true;}
+    if(id){
+      const m=menuData.find(x=>x.id===id);
+      document.getElementById('menuModalTitle').textContent='Edit Menu';
+      document.getElementById('mName').value=m.name;
+      document.getElementById('mPrice').value=m.price;
+      document.getElementById('mCategory').value=m.category||'Lainnya';
+      document.getElementById('mAvail').checked=m.available!==false;
+
+      // Set source type
+      if(m.sourceType === 'finishedGoods'){
+        setSourceType('finishedGoods');
+        document.getElementById('mFgId').value=m.sourceId||'';
+        document.getElementById('mFgAmount').value=m.sourceAmount||1;
+        updateFgInfo();
+      } else {
+        setSourceType('ingredients');
+        document.getElementById('mFgId').value='';
+        document.getElementById('mFgAmount').value=1;
+        document.getElementById('fgInfo').style.display='none';
+      }
+    }else{
+      document.getElementById('menuModalTitle').textContent='Tambah Menu';
+      document.getElementById('mName').value='';
+      document.getElementById('mPrice').value='';
+      document.getElementById('mAvail').checked=true;
+      setSourceType('ingredients');
+      document.getElementById('mFgId').value='';
+      document.getElementById('mFgAmount').value=1;
+      document.getElementById('fgInfo').style.display='none';
+    }
     document.getElementById('menuModal').classList.add('show');
   };
   window.closeMenuModal=function(){document.getElementById('menuModal').classList.remove('show');};
+
   window.submitMenu=async function(){
     const btn=document.getElementById('menuSaveBtn');
     const id=document.getElementById('menuEditId').value;
@@ -361,15 +486,40 @@
     const price=parseFloat(document.getElementById('mPrice').value);
     const category=document.getElementById('mCategory').value;
     const available=document.getElementById('mAvail').checked;
+
     if(!name||isNaN(price)){toast('Nama dan harga wajib diisi.','error');return;}
+
+    let data = {name, price, category, available};
+
+    // Add source type info
+    if(currentSourceType === 'finishedGoods'){
+      const fgId = document.getElementById('mFgId').value;
+      const fgAmount = parseFloat(document.getElementById('mFgAmount').value);
+      if(!fgId){toast('Pilih bahan jadi terlebih dahulu.','error');return;}
+      if(isNaN(fgAmount) || fgAmount <= 0){toast('Jumlah per order tidak valid.','error');return;}
+      data.sourceType = 'finishedGoods';
+      data.sourceId = fgId;
+      data.sourceAmount = fgAmount;
+      // Clear recipe if switching to finished goods
+      data.recipe = [];
+    } else {
+      data.sourceType = 'ingredients';
+      data.sourceId = null;
+      data.sourceAmount = null;
+    }
+
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      if(id)await updateDoc(doc(db,"menu",id),{name,price,category,available});
-      else await addDoc(collection(db,"menu"),{name,price,category,available,createdAt:serverTimestamp()});
+      if(id){
+        await updateDoc(doc(db,"menu",id), data);
+      } else {
+        await addDoc(collection(db,"menu"), {...data, createdAt:serverTimestamp()});
+      }
       await loadMenu();renderMenuTable();renderHPP();closeMenuModal();toast('✓ Menu disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan';
   };
+
   window.toggleAvail=async function(id,val){try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
   window.deleteMenu=async function(id){
     const m=menuData.find(x=>x.id===id);
@@ -415,9 +565,10 @@
       const profit=price-total;
       const profitClass=profit>=0?'profit-positive':'profit-negative';
       const warn=hpp.total&&price>0&&price < total?`<span class="hpp-badge-warn">Rugi!</span>`:'';
+      const sourceIcon = m.sourceType === 'finishedGoods' ? '<i class="fa-solid fa-bottle-water" style="font-size:10px;color:var(--accent);margin-right:4px"></i>' : '';
 
       return `<tr>
-        <td><strong>${m.name}</strong>${warn}</td>
+        <td><strong>${sourceIcon}${m.name}</strong>${warn}</td>
         <td><span class="badge badge-accent">${m.category||'—'}</span></td>
         <td>Rp ${Math.round(bahan).toLocaleString('id')}</td>
         <td>Rp ${Math.round(overhead).toLocaleString('id')}</td>
@@ -431,7 +582,6 @@
   };
 
   window.openHppModal=async function(id){
-    // Force reload ingredients kalau kosong
     if(!ingredientsData.length){
       console.log('[HPP] Ingredients empty, reloading...');
       await loadIngredients();
@@ -470,7 +620,6 @@
         </div>`;
       }).join('');
 
-      // Show debug info
       const warnings=items.filter(i=>i.warning);
       if(warnings.length){
         debugEl.innerHTML=warnings.map(w=>`<div style="color:var(--yellow)">⚠️ ${w.warning}</div>`).join('');
