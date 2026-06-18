@@ -75,6 +75,7 @@
     }
   </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -691,7 +692,19 @@
     if(!menuItems.length){grid.innerHTML=`<p style="color:var(--text-dim);font-size:14px">Belum ada menu.</p>`;return;}
     grid.innerHTML=menuItems.map(m=>{
       const r=m.recipe||[];
-      const rows=r.length?r.map(x=>{const ing=ingredients.find(i=>i.id===x.ingredientId);return`<div class="recipe-item"><span class="recipe-item-name">${ing?ing.name:'(dihapus)'}</span><span class="recipe-item-amount">${x.amount} ${ing?ing.unit:''}</span></div>`;}).join(''):`<div class="recipe-empty">Belum ada resep</div>`;
+      const rows=r.length?r.map(x=>{
+        let itemName='(dihapus)', itemUnit='';
+        if(x.ingredientId?.startsWith('prod_')){
+          const prodId=x.ingredientId.replace('prod_','');
+          const prod=products.find(p=>p.id===prodId);
+          if(prod){itemName=prod.name;itemUnit=prod.unit;}
+        } else {
+          const ingId=x.ingredientId?.startsWith('ing_')?x.ingredientId.replace('ing_',''):x.ingredientId;
+          const ing=ingredients.find(i=>i.id===ingId||i.id===x.ingredientId);
+          if(ing){itemName=ing.name;itemUnit=ing.unit;}
+        }
+        return`<div class="recipe-item"><span class="recipe-item-name">${itemName}</span><span class="recipe-item-amount">${x.amount} ${itemUnit}</span></div>`;
+      }).join(''):`<div class="recipe-empty">Belum ada resep</div>`;
       return`<div class="recipe-card"><div class="recipe-card-head"><div><div class="recipe-name">${m.name}</div><div class="recipe-cat">${m.category||''}</div></div><button class="btn-sm" onclick="openRecipeModal('${m.id}')">Edit Resep</button></div>${rows}</div>`;
     }).join('');
   };
@@ -706,13 +719,36 @@
   window.addRecipeRow=function(){recipeRows.push({ingredientId:ingredients[0]?.id||'',amount:0});renderRecipeEditor();};
   function renderRecipeEditor(){
     const ed=document.getElementById('recipeEditor');
-    if(!ingredients.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku dulu.</p>`;return;}
+    if(!ingredients.length && !products.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku atau produk dulu.</p>`;return;}
+
+    // Build options with optgroups
+    let optionsHtml = '';
+    if(ingredients.length){
+      optionsHtml += `<optgroup label="Bahan Baku">${ingredients.map(i=>`<option value="ing_${i.id}">${i.name} (${i.unit})</option>`).join('')}</optgroup>`;
+    }
+    if(products.length){
+      optionsHtml += `<optgroup label="Produk Jadi">${products.map(p=>`<option value="prod_${p.id}">${p.name} (${p.unit})</option>`).join('')}</optgroup>`;
+    }
+
     ed.innerHTML=recipeRows.map((r,idx)=>{
-      const ing=ingredients.find(i=>i.id===r.ingredientId);
+      // Determine type and find item
+      let item, itemType, selectValue;
+      if(r.ingredientId?.startsWith('prod_')){
+        itemType = 'prod';
+        const prodId = r.ingredientId.replace('prod_','');
+        item = products.find(p=>p.id===prodId);
+        selectValue = r.ingredientId;
+      } else {
+        itemType = 'ing';
+        const ingId = r.ingredientId?.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+        item = ingredients.find(i=>i.id===ingId || i.id===r.ingredientId);
+        selectValue = item ? (r.ingredientId?.startsWith('ing_') ? r.ingredientId : 'ing_' + r.ingredientId) : '';
+      }
+
       return`<div class="recipe-editor-item">
-        <select onchange="updateRecipeRow(${idx},'ingredientId',this.value)">${ingredients.map(i=>`<option value="${i.id}"${i.id===r.ingredientId?' selected':''}>${i.name}</option>`).join('')}</select>
+        <select onchange="updateRecipeRow(${idx},'ingredientId',this.value)">${optionsHtml.replace(new RegExp('value="' + selectValue + '"'), 'value="' + selectValue + '" selected')}</select>
         <input type="number" value="${r.amount}" min="0" step="0.01" placeholder="Jml" onchange="updateRecipeRow(${idx},'amount',parseFloat(this.value))"/>
-        <span class="unit-label">${ing?ing.unit:''}</span>
+        <span class="unit-label">${item?item.unit:''}</span>
         <button class="btn-remove-recipe" onclick="removeRecipeRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
       </div>`;
     }).join('');
