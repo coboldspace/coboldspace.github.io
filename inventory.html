@@ -37,14 +37,44 @@
     .btn-remove-recipe { background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; padding:0 4px; }
     .btn-add-ingredient { width:100%; padding:8px; background:none; border:1px dashed var(--border); border-radius:7px; color:var(--text-dim); font-family:'Inter',sans-serif; font-size:13px; cursor:pointer; transition:.2s; margin-top:4px; }
     .btn-add-ingredient:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* Product Grid */
+    .prod-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }
+    .prod-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px; position:relative; }
+    .prod-card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .prod-card-name { font-weight:600; font-size:15px; }
+    .prod-card-cat { font-size:11px; color:var(--accent); margin-top:2px; }
+    .prod-stock-row { display:flex; align-items:center; gap:8px; margin:10px 0; }
+    .prod-stock-bar { flex:1; height:5px; background:#2a2a2a; border-radius:5px; overflow:hidden; }
+    .prod-stock-fill { height:100%; border-radius:5px; transition:width .3s; }
+    .prod-stock-text { font-size:12px; color:var(--text-dim); white-space:nowrap; }
+    .prod-price-row { display:flex; justify-content:space-between; font-size:12px; margin:8px 0; padding:8px 0; border-top:1px solid #1a1a1a; border-bottom:1px solid #1a1a1a; }
+    .prod-price-row span:first-child { color:var(--text-dim); }
+    .prod-price-row span:last-child { color:var(--accent); font-weight:600; }
+    .prod-ingredients { background:#111; border-radius:8px; padding:10px; margin-top:10px; }
+    .prod-ing-title { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+    .prod-ing-item { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:var(--text-dim); }
+    .prod-ing-item span:last-child { color:var(--text-main); font-weight:500; }
+    .prod-actions { display:flex; gap:6px; margin-top:12px; }
+    .prod-actions .btn-sm { flex:1; justify-content:center; }
+    .prod-empty { color:var(--text-dim); font-size:14px; text-align:center; padding:30px 0; }
+    .prod-badge { position:absolute; top:12px; right:12px; font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
+
+    /* HPP Preview in modal */
+    .hpp-preview { background:#111; border-radius:9px; padding:12px; margin:12px 0; }
+    .hpp-line { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; color:var(--text-dim); }
+    .hpp-line strong { color:var(--text-main); }
+    .hpp-total { display:flex; justify-content:space-between; font-size:14px; font-weight:600; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); color:var(--accent); }
+
     @media(max-width:640px){
       .recipe-grid { grid-template-columns:1fr; }
+      .prod-grid { grid-template-columns:1fr; }
       .card-head { flex-direction:column; align-items:flex-start; }
       .card-head .btn-primary { width:100%; justify-content:center; }
       .form-row-2 { grid-template-columns:1fr; }
     }
   </style>
-
+<base target="_blank">
 </head>
 <body>
 
@@ -78,8 +108,11 @@
 
 <div class="main-content">
   <div class="header">
-    <div><h1>Inventori</h1><div class="header-sub">Kelola stok bahan baku dan resep menu.</div></div>
-    <button class="btn-primary" onclick="openIngModal()"><i class="fa-solid fa-plus"></i> Tambah Bahan</button>
+    <div><h1>Inventori</h1><div class="header-sub">Kelola stok bahan baku, produk jadi, resep menu, dan riwayat.</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="openProdModal()"><i class="fa-solid fa-plus"></i> Produk</button>
+      <button class="btn-primary" onclick="openIngModal()"><i class="fa-solid fa-plus"></i> Bahan</button>
+    </div>
   </div>
 
   <!-- Alert -->
@@ -93,11 +126,12 @@
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('stok',this)">📦 Stok Bahan</button>
+    <button class="tab-btn"        onclick="switchTab('produk',this)">🥤 Produk</button>
     <button class="tab-btn"        onclick="switchTab('resep',this)">📋 Resep Menu</button>
     <button class="tab-btn"        onclick="switchTab('log',this)">📜 Riwayat</button>
   </div>
 
-  <!-- STOK -->
+  <!-- STOK BAHAN -->
   <div class="section active" id="tab-stok">
     <div class="card">
       <div class="card-head">
@@ -112,6 +146,16 @@
     </div>
   </div>
 
+  <!-- PRODUK -->
+  <div class="section" id="tab-produk">
+    <div class="card">
+      <div class="card-head">
+        <input class="search-input" type="text" id="searchProd" placeholder="Cari produk..." oninput="renderProducts()" style="width:200px"/>
+      </div>
+      <div class="prod-grid" id="prodGrid"><p class="prod-empty">Memuat produk...</p></div>
+    </div>
+  </div>
+
   <!-- RESEP -->
   <div class="section" id="tab-resep">
     <div class="recipe-grid" id="recipeGrid"><p style="color:var(--text-dim);font-size:14px">Memuat resep...</p></div>
@@ -122,15 +166,15 @@
     <div class="card">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Waktu</th><th>Bahan</th><th>Perubahan</th><th>Keterangan</th><th>Oleh</th></tr></thead>
-          <tbody id="logTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
+          <thead><tr><th>Waktu</th><th>Tipe</th><th>Item</th><th>Perubahan</th><th>Keterangan</th><th>Oleh</th></tr></thead>
+          <tbody id="logTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL BAHAN -->
+<!-- MODAL BAHAN BAKU -->
 <div class="modal-overlay" id="ingModal">
   <div class="modal">
     <h2 id="ingModalTitle">Tambah Bahan</h2>
@@ -159,7 +203,7 @@
   </div>
 </div>
 
-<!-- MODAL RESTOCK -->
+<!-- MODAL RESTOCK BAHAN BAKU -->
 <div class="modal-overlay" id="restockModal">
   <div class="modal" style="max-width:360px">
     <h2>Tambah Stok</h2>
@@ -177,7 +221,69 @@
   </div>
 </div>
 
-<!-- MODAL RESEP -->
+<!-- MODAL PRODUK -->
+<div class="modal-overlay" id="prodModal">
+  <div class="modal" style="max-width:520px">
+    <h2 id="prodModalTitle">Tambah Produk</h2>
+    <input type="hidden" id="prodEditId"/>
+    <div class="form-group"><label>Nama Produk</label><input type="text" id="prodName" placeholder="cth: Kopi Susu Gula Aren"/></div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Kategori</label>
+        <select id="prodCat"><option>Minuman Literan</option><option>Minuman Botolan</option><option>Sauce/Syrup</option><option>Lainnya</option></select>
+      </div>
+      <div class="form-group"><label>Satuan</label>
+        <select id="prodUnit"><option value="L">Liter (L)</option><option value="ml">Mililiter (ml)</option><option value="btl">Botol (btl)</option><option value="pcs">Pieces (pcs)</option></select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Stok Awal</label><input type="number" id="prodStock" placeholder="0" min="0" step="0.01"/></div>
+      <div class="form-group"><label>Stok Minimum</label><input type="number" id="prodMin" placeholder="0" min="0" step="0.01"/></div>
+    </div>
+
+    <div style="margin-top:16px">
+      <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:block">Bahan Baku (per 1 ${unit})</label>
+      <div id="prodEditor"></div>
+      <button class="btn-add-ingredient" onclick="addProdRow()"><i class="fa-solid fa-plus"></i> Tambah Bahan</button>
+    </div>
+
+    <div class="form-row-2" style="margin-top:12px">
+      <div class="form-group"><label>Overhead per <span class="prod-unit-label">L</span> (Rp)</label><input type="number" id="prodOverhead" placeholder="0" min="0" step="1" value="0" oninput="calcHPP()"/></div>
+      <div class="form-group"><label>Margin Keuntungan (%)</label><input type="number" id="prodMargin" placeholder="50" min="0" step="1" value="50" oninput="calcHPP()"/></div>
+    </div>
+
+    <div class="hpp-preview" id="hppPreview">
+      <div class="hpp-line"><span>HPP Bahan</span><strong id="hppBahan">Rp 0</strong></div>
+      <div class="hpp-line"><span>Overhead</span><strong id="hppOverhead">Rp 0</strong></div>
+      <div class="hpp-total"><span>HPP Total</span><span id="hppTotal">Rp 0</span></div>
+      <div class="hpp-total" style="border-top:none;margin-top:4px;padding-top:0;color:var(--green)"><span>Harga Jual</span><span id="hppJual">Rp 0</span></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeProdModal()">Batal</button>
+      <button class="btn-modal-confirm" id="prodSaveBtn" onclick="submitProd()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESTOCK PRODUK -->
+<div class="modal-overlay" id="prodRestockModal">
+  <div class="modal" style="max-width:360px">
+    <h2>Tambah Stok Produk</h2>
+    <input type="hidden" id="prodRestockId"/>
+    <div class="restock-info">
+      <div class="ri-name" id="prodRestockName">—</div>
+      <div class="ri-stock" id="prodRestockCurrent">Stok saat ini: —</div>
+    </div>
+    <div class="form-group"><label>Jumlah Penambahan</label><input type="number" id="prodRestockAmt" placeholder="0" min="0.01" step="0.01"/></div>
+    <div class="form-group"><label>Keterangan</label><input type="text" id="prodRestockNote" placeholder="Produksi batch baru"/></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeProdRestock()">Batal</button>
+      <button class="btn-modal-confirm" id="prodRestockSaveBtn" onclick="submitProdRestock()">Tambah Stok</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESEP MENU -->
 <div class="modal-overlay" id="recipeModal">
   <div class="modal">
     <h2 id="recipeModalTitle">Edit Resep</h2>
@@ -197,12 +303,12 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, increment }
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, increment, writeBatch }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
   const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
-  let currentUser=null,ingredients=[],menuItems=[],stockLogs=[],recipeRows=[];
+  let currentUser=null,ingredients=[],menuItems=[],stockLogs=[],recipeRows=[],products=[],prodRows=[];
 
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -216,30 +322,37 @@
       return;
     }
     currentUser={uid:user.uid,name:snap.data().name||user.email};
-    await Promise.all([loadIngredients(),loadMenu(),loadLogs()]);
-    renderIngredients();renderRecipes();renderLogs();checkAlerts();
+    await Promise.all([loadIngredients(),loadMenu(),loadLogs(),loadProducts()]);
+    renderIngredients();renderProducts();renderRecipes();renderLogs();checkAlerts();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
   async function loadIngredients(){const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));ingredients=s.docs.map(d=>({id:d.id,...d.data()}));}
   async function loadMenu(){const s=await getDocs(query(collection(db,"menu"),orderBy("category")));menuItems=s.docs.map(d=>({id:d.id,...d.data()}));}
-  async function loadLogs(){const s=await getDocs(query(collection(db,"stockLogs"),orderBy("createdAt","desc")));stockLogs=s.docs.map(d=>({id:d.id,...d.data()})).slice(0,50);}
+  async function loadLogs(){const s=await getDocs(query(collection(db,"stockLogs"),orderBy("createdAt","desc")));stockLogs=s.docs.map(d=>({id:d.id,...d.data()})).slice(0,80);}
+  async function loadProducts(){const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));products=s.docs.map(d=>({id:d.id,...d.data()}));}
 
   window.switchTab=function(tab,btn){
-    ['stok','resep','log'].forEach(t=>document.getElementById('tab-'+t).classList.remove('active'));
+    ['stok','produk','resep','log'].forEach(t=>document.getElementById('tab-'+t).classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.getElementById('tab-'+tab).classList.add('active');
     btn.classList.add('active');
+    if(tab==='produk')renderProducts();
     if(tab==='resep')renderRecipes();
     if(tab==='log')renderLogs();
   };
 
+  // ── ALERTS ──
   function checkAlerts(){
-    const low=ingredients.filter(i=>i.minStock>0&&i.stock<=i.minStock);
-    if(!low.length)return;
+    const lowIng=ingredients.filter(i=>i.minStock>0&&i.stock<=i.minStock);
+    const lowProd=products.filter(p=>p.minStock>0&&p.stock<=p.minStock);
+    const allLow=[...lowIng.map(i=>`• ${i.name}: ${i.stock} ${i.unit}`),...lowProd.map(p=>`• ${p.name}: ${p.stock} ${p.unit} (produk)`)];
+    if(!allLow.length){document.getElementById('alertLow').classList.remove('show');return;}
     document.getElementById('alertLow').classList.add('show');
-    document.getElementById('alertBody').innerHTML=low.map(i=>`• ${i.name}: ${i.stock} ${i.unit}`).join('<br>');
+    document.getElementById('alertBody').innerHTML=allLow.join('<br>');
   }
+
+  // ── BAHAN BAKU (existing, unchanged) ──
   function getStatus(i){if(!i.minStock||i.minStock<=0)return'aman';const r=i.stock/i.minStock;return r<=0.5?'kritis':r<=1?'rendah':'aman';}
   function barW(i){if(!i.minStock||i.minStock<=0)return 80;return Math.min(100,Math.round((i.stock/(i.minStock*2))*100));}
 
@@ -314,12 +427,284 @@
     try{
       const i=ingredients.find(x=>x.id===id);
       await updateDoc(doc(db,"ingredients",id),{stock:increment(amt)});
-      await addDoc(collection(db,"stockLogs"),{ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()});
+      await addDoc(collection(db,"stockLogs"),{type:'ingredient',ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()});
       await loadIngredients();await loadLogs();renderIngredients();renderLogs();checkAlerts();closeRestock();toast(`✓ +${amt} ${i.unit} ditambahkan`,'success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Tambah Stok';
   };
 
+  // ── PRODUK (FINISHED GOODS) ──
+  function getProdStatus(p){if(!p.minStock||p.minStock<=0)return'aman';const r=p.stock/p.minStock;return r<=0.5?'kritis':r<=1?'rendah':'aman';}
+  function prodBarW(p){if(!p.minStock||p.minStock<=0)return 80;return Math.min(100,Math.round((p.stock/(p.minStock*2))*100));}
+
+  function calcHPP(){
+    let totalBahan=0;
+    const unit=document.getElementById('prodUnit').value;
+    document.querySelectorAll('.prod-unit-label').forEach(el=>el.textContent=unit);
+
+    for(const r of prodRows){
+      if(!r.ingredientId||!r.amount)continue;
+      const ing=ingredients.find(i=>i.id===r.ingredientId);
+      if(!ing||!ing.hargaBeli||!ing.unitMultiplier)continue;
+      const hargaSatuan=ing.hargaBeli/ing.unitMultiplier;
+      totalBahan+=hargaSatuan*r.amount;
+    }
+
+    const overhead=parseFloat(document.getElementById('prodOverhead').value)||0;
+    const margin=parseFloat(document.getElementById('prodMargin').value)||0;
+    const hppTotal=totalBahan+overhead;
+    const hargaJual=Math.ceil(hppTotal*(1+margin/100)/1000)*1000;
+
+    document.getElementById('hppBahan').textContent='Rp '+Math.round(totalBahan).toLocaleString('id');
+    document.getElementById('hppOverhead').textContent='Rp '+Math.round(overhead).toLocaleString('id');
+    document.getElementById('hppTotal').textContent='Rp '+Math.round(hppTotal).toLocaleString('id');
+    document.getElementById('hppJual').textContent='Rp '+hargaJual.toLocaleString('id');
+
+    return {totalBahan,overhead,hppTotal,hargaJual};
+  }
+
+  window.renderProducts=function(){
+    const q=document.getElementById('searchProd').value.toLowerCase();
+    const list=products.filter(p=>!q||p.name.toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q));
+    const grid=document.getElementById('prodGrid');
+    if(!list.length){grid.innerHTML=`<p class="prod-empty">Tidak ada produk ditemukan.</p>`;return;}
+    grid.innerHTML=list.map(p=>{
+      const st=getProdStatus(p),pct=prodBarW(p);
+      const cls={kritis:'badge-red',rendah:'badge-yellow',aman:'badge-green'}[st];
+      const fillCls={kritis:'fill-kritis',rendah:'fill-rendah',aman:'fill-aman'}[st];
+      const ings=p.ingredients||[];
+      const ingRows=ings.length?ings.map(x=>{
+        const ing=ingredients.find(i=>i.id===x.ingredientId);
+        return `<div class="prod-ing-item"><span>${ing?ing.name:'(dihapus)'}</span><span>${x.amount} ${ing?ing.unit:''}</span></div>`;
+      }).join(''):`<div class="prod-ing-item" style="font-style:italic">Belum ada bahan baku</div>`;
+
+      return `<div class="prod-card">
+        <span class="prod-badge ${cls}">${st.toUpperCase()}</span>
+        <div class="prod-card-head">
+          <div>
+            <div class="prod-card-name">${p.name}</div>
+            <div class="prod-card-cat">${p.category||'—'}</div>
+          </div>
+        </div>
+        <div class="prod-stock-row">
+          <div class="prod-stock-bar"><div class="prod-stock-fill ${fillCls}" style="width:${pct}%"></div></div>
+          <span class="prod-stock-text"><strong>${p.stock}</strong> ${p.unit} / min ${p.minStock||0}</span>
+        </div>
+        <div class="prod-price-row">
+          <span>HPP: Rp ${Math.round(p.hppTotal||0).toLocaleString('id')}</span>
+          <span>Jual: Rp ${Math.round(p.hargaJual||0).toLocaleString('id')}</span>
+        </div>
+        <div class="prod-ingredients">
+          <div class="prod-ing-title">Bahan Baku per 1 ${p.unit}</div>
+          ${ingRows}
+        </div>
+        <div class="prod-actions">
+          <button class="btn-sm" style="color:var(--green);border-color:rgba(34,197,94,.3)" onclick="openProdRestock('${p.id}')">+ Stok</button>
+          <button class="btn-sm" onclick="openProdModal('${p.id}')">Edit</button>
+          <button class="btn-sm danger" onclick="deleteProd('${p.id}')">Hapus</button>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  window.openProdModal=function(id){
+    document.getElementById('prodEditId').value=id||'';
+    if(id){
+      const p=products.find(x=>x.id===id);
+      document.getElementById('prodModalTitle').textContent='Edit Produk';
+      document.getElementById('prodName').value=p.name;
+      document.getElementById('prodCat').value=p.category||'Minuman Literan';
+      document.getElementById('prodUnit').value=p.unit;
+      document.getElementById('prodStock').value=p.stock;
+      document.getElementById('prodMin').value=p.minStock||0;
+      document.getElementById('prodOverhead').value=p.overhead||0;
+      document.getElementById('prodMargin').value=p.margin||50;
+      prodRows=(p.ingredients||[]).map(r=>({ingredientId:r.ingredientId,amount:r.amount}));
+    }else{
+      document.getElementById('prodModalTitle').textContent='Tambah Produk';
+      document.getElementById('prodName').value='';
+      document.getElementById('prodStock').value='';
+      document.getElementById('prodMin').value='';
+      document.getElementById('prodOverhead').value=0;
+      document.getElementById('prodMargin').value=50;
+      prodRows=[];
+    }
+    renderProdEditor();calcHPP();
+    document.getElementById('prodModal').classList.add('show');
+  };
+  window.closeProdModal=function(){document.getElementById('prodModal').classList.remove('show');};
+
+  function renderProdEditor(){
+    const ed=document.getElementById('prodEditor');
+    if(!ingredients.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku dulu di tab Stok Bahan.</p>`;return;}
+    ed.innerHTML=prodRows.map((r,idx)=>{
+      const ing=ingredients.find(i=>i.id===r.ingredientId);
+      return`<div class="recipe-editor-item">
+        <select onchange="updateProdRow(${idx},'ingredientId',this.value)">${ingredients.map(i=>`<option value="${i.id}"${i.id===r.ingredientId?' selected':''}>${i.name}</option>`).join('')}</select>
+        <input type="number" value="${r.amount}" min="0" step="0.01" placeholder="Jml" onchange="updateProdRow(${idx},'amount',parseFloat(this.value))"/>
+        <span class="unit-label">${ing?ing.unit:''}</span>
+        <button class="btn-remove-recipe" onclick="removeProdRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
+      </div>`;
+    }).join('');
+  }
+  window.addProdRow=function(){prodRows.push({ingredientId:ingredients[0]?.id||'',amount:0});renderProdEditor();calcHPP();};
+  window.updateProdRow=function(idx,field,val){prodRows[idx][field]=val;if(field==='ingredientId')renderProdEditor();calcHPP();};
+  window.removeProdRow=function(idx){prodRows.splice(idx,1);renderProdEditor();calcHPP();};
+
+  window.submitProd=async function(){
+    const btn=document.getElementById('prodSaveBtn');
+    const id=document.getElementById('prodEditId').value;
+    const name=document.getElementById('prodName').value.trim();
+    const category=document.getElementById('prodCat').value;
+    const unit=document.getElementById('prodUnit').value;
+    const stock=parseFloat(document.getElementById('prodStock').value);
+    const minStock=parseFloat(document.getElementById('prodMin').value)||0;
+    const overhead=parseFloat(document.getElementById('prodOverhead').value)||0;
+    const margin=parseFloat(document.getElementById('prodMargin').value)||0;
+    const validIngredients=prodRows.filter(r=>r.ingredientId&&r.amount>0);
+
+    if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');return;}
+    if(!validIngredients.length){toast('Tambahkan minimal 1 bahan baku.','error');return;}
+
+    // Hitung HPP
+    let totalBahan=0;
+    for(const r of validIngredients){
+      const ing=ingredients.find(i=>i.id===r.ingredientId);
+      if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
+      totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
+    }
+    const hppTotal=totalBahan+overhead;
+    const hargaJual=Math.ceil(hppTotal*(1+margin/100)/1000)*1000;
+
+    btn.disabled=true;btn.textContent='Menyimpan...';
+    try{
+      const batch=writeBatch(db);
+
+      if(id){
+        // Edit: update produk, tapi ga kurangin stok bahan baku lagi
+        await updateDoc(doc(db,"finishedGoods",id),{
+          name,category,unit,stock,minStock,overhead,margin,
+          hppBahan:totalBahan,hppTotal,hargaJual,
+          ingredients:validIngredients
+        });
+      }else{
+        // Tambah baru: kurangin stok bahan baku + buat produk
+        for(const r of validIngredients){
+          const ing=ingredients.find(i=>i.id===r.ingredientId);
+          const deduct=r.amount*stock;
+          if(ing.stock<deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
+          batch.update(doc(db,"ingredients",r.ingredientId),{stock:increment(-deduct)});
+        }
+
+        const prodRef=doc(collection(db,"finishedGoods"));
+        batch.set(prodRef,{
+          name,category,unit,stock,minStock,overhead,margin,
+          hppBahan:totalBahan,hppTotal,hargaJual,
+          ingredients:validIngredients,
+          createdAt:serverTimestamp()
+        });
+
+        // Log stok bahan baku
+        for(const r of validIngredients){
+          const ing=ingredients.find(i=>i.id===r.ingredientId);
+          const logRef=doc(collection(db,"stockLogs"));
+          batch.set(logRef,{
+            type:'ingredient',
+            ingredientId:r.ingredientId,
+            ingredientName:ing.name,
+            unit:ing.unit,
+            change:-(r.amount*stock),
+            note:`Produksi: ${name} ${stock}${unit}`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
+        }
+
+        await batch.commit();
+      }
+
+      await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
+      renderIngredients();renderProducts();renderLogs();checkAlerts();
+      closeProdModal();
+      toast(id?'✓ Produk diupdate':'✓ Produk dibuat','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Simpan';
+  };
+
+  window.deleteProd=async function(id){
+    const p=products.find(x=>x.id===id);if(!confirm(`Hapus "${p?.name}"?`))return;
+    try{await deleteDoc(doc(db,"finishedGoods",id));await loadProducts();renderProducts();checkAlerts();toast('Produk dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
+  };
+
+  window.openProdRestock=function(id){
+    const p=products.find(x=>x.id===id);
+    document.getElementById('prodRestockId').value=id;
+    document.getElementById('prodRestockName').textContent=p.name;
+    document.getElementById('prodRestockCurrent').textContent=`Stok saat ini: ${p.stock} ${p.unit}`;
+    document.getElementById('prodRestockAmt').value='';document.getElementById('prodRestockNote').value='';
+    document.getElementById('prodRestockModal').classList.add('show');
+  };
+  window.closeProdRestock=function(){document.getElementById('prodRestockModal').classList.remove('show');};
+  window.submitProdRestock=async function(){
+    const btn=document.getElementById('prodRestockSaveBtn');
+    const id=document.getElementById('prodRestockId').value;
+    const amt=parseFloat(document.getElementById('prodRestockAmt').value);
+    const note=document.getElementById('prodRestockNote').value.trim()||'Produksi batch';
+    if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');return;}
+
+    const p=products.find(x=>x.id===id);
+    const validIngredients=(p.ingredients||[]).filter(r=>r.ingredientId&&r.amount>0);
+
+    btn.disabled=true;btn.textContent='Menyimpan...';
+    try{
+      const batch=writeBatch(db);
+
+      // Kurangin stok bahan baku
+      for(const r of validIngredients){
+        const ing=ingredients.find(i=>i.id===r.ingredientId);
+        const deduct=r.amount*amt;
+        if(ing.stock<deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+        batch.update(doc(db,"ingredients",r.ingredientId),{stock:increment(-deduct)});
+
+        const logRef=doc(collection(db,"stockLogs"));
+        batch.set(logRef,{
+          type:'ingredient',
+          ingredientId:r.ingredientId,
+          ingredientName:ing.name,
+          unit:ing.unit,
+          change:-deduct,
+          note:`Produksi: ${p.name} +${amt}${p.unit}`,
+          byName:currentUser.name,
+          createdAt:serverTimestamp()
+        });
+      }
+
+      // Tambah stok produk
+      batch.update(doc(db,"finishedGoods",id),{stock:increment(amt)});
+
+      // Log produk
+      const prodLogRef=doc(collection(db,"stockLogs"));
+      batch.set(prodLogRef,{
+        type:'finishedGoods',
+        itemId:id,
+        itemName:p.name,
+        unit:p.unit,
+        change:amt,
+        note:note,
+        byName:currentUser.name,
+        createdAt:serverTimestamp()
+      });
+
+      await batch.commit();
+      await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
+      renderIngredients();renderProducts();renderLogs();checkAlerts();
+      closeProdRestock();
+      toast(`✓ +${amt} ${p.unit} ditambahkan`,'success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Tambah Stok';
+  };
+
+  // ── RESEP MENU (existing, unchanged) ──
   window.renderRecipes=function(){
     const grid=document.getElementById('recipeGrid');
     if(!menuItems.length){grid.innerHTML=`<p style="color:var(--text-dim);font-size:14px">Belum ada menu.</p>`;return;}
@@ -363,18 +748,22 @@
     btn.disabled=false;btn.textContent='Simpan Resep';
   };
 
+  // ── LOGS ──
   function renderLogs(){
     document.getElementById('logTbody').innerHTML=stockLogs.length?stockLogs.map(l=>{
       const isPos=l.change>0;const col=isPos?'var(--green)':'var(--red)';
       const ts=l.createdAt?.toDate?l.createdAt.toDate():new Date((l.createdAt?.seconds||0)*1000);
+      const tipe=l.type==='finishedGoods'?'🥤 Produk':'📦 Bahan';
+      const itemName=l.itemName||l.ingredientName||'—';
       return`<tr>
         <td style="font-size:12px;color:var(--text-dim)">${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
-        <td>${l.ingredientName}</td>
+        <td><span class="badge ${l.type==='finishedGoods'?'badge-accent':'badge-green'}">${tipe}</span></td>
+        <td>${itemName}</td>
         <td style="color:${col};font-weight:600">${isPos?'+':''}${l.change} ${l.unit}</td>
         <td style="font-size:12px;color:var(--text-dim)">${l.note||'—'}</td>
         <td style="font-size:12px;color:var(--text-dim)">${l.byName||'—'}</td>
       </tr>`;
-    }).join(''):`<tr><td colspan="5" class="empty-cell">Belum ada riwayat.</td></tr>`;
+    }).join(''):`<tr><td colspan="6" class="empty-cell">Belum ada riwayat.</td></tr>`;
   }
 
   function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}
