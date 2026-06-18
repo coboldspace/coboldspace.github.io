@@ -74,7 +74,7 @@
       .form-row-2 { grid-template-columns:1fr; }
     }
   </style>
-<base target="_blank">
+
 </head>
 <body>
 
@@ -232,7 +232,7 @@
         <select id="prodCat"><option>Minuman Literan</option><option>Minuman Botolan</option><option>Sauce/Syrup</option><option>Lainnya</option></select>
       </div>
       <div class="form-group"><label>Satuan</label>
-        <select id="prodUnit"><option value="L">Liter (L)</option><option value="ml">Mililiter (ml)</option><option value="btl">Botol (btl)</option><option value="pcs">Pieces (pcs)</option></select>
+        <select id="prodUnit" onchange="updateProdUnitLabels()"><option value="ml">Mililiter (ml)</option><option value="L">Liter (L)</option><option value="btl">Botol (btl)</option><option value="pcs">Pieces (pcs)</option></select>
       </div>
     </div>
     <div class="form-row-2">
@@ -437,7 +437,11 @@
   function getProdStatus(p){if(!p.minStock||p.minStock<=0)return'aman';const r=p.stock/p.minStock;return r<=0.5?'kritis':r<=1?'rendah':'aman';}
   function prodBarW(p){if(!p.minStock||p.minStock<=0)return 80;return Math.min(100,Math.round((p.stock/(p.minStock*2))*100));}
 
-  function calcHPP(){
+  window.updateProdUnitLabels=function(){
+    const unit=document.getElementById('prodUnit').value;
+    document.querySelectorAll('.prod-unit-label').forEach(el=>el.textContent=unit);
+  };
+  window.calcHPP=function(){
     let totalBahan=0;
     const unit=document.getElementById('prodUnit').value;
     document.querySelectorAll('.prod-unit-label').forEach(el=>el.textContent=unit);
@@ -495,7 +499,7 @@
           <span>Jual: Rp ${Math.round(p.hargaJual||0).toLocaleString('id')}</span>
         </div>
         <div class="prod-ingredients">
-          <div class="prod-ing-title">Bahan Baku per 1 ${p.unit}</div>
+          <div class="prod-ing-title">Bahan Baku per 1 ' + p.unit + '</div>
           ${ingRows}
         </div>
         <div class="prod-actions">
