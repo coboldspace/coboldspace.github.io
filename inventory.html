@@ -73,9 +73,28 @@
       .card-head .btn-primary { width:100%; justify-content:center; }
       .form-row-2 { grid-template-columns:1fr; }
     }
-  </style>
+  
+    /* Modal fixes - override pos.css */
+    .modal-overlay {
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+    }
+    .modal {
+      max-width: 520px !important;
+      width: 100% !important;
+      max-height: 85vh !important;
+      transform: translateY(0) !important;
+    }
+    .modal-overlay.show .modal {
+      transform: translateY(0) !important;
+    }
+    /* Recipe modal specific */
+    #recipeModal .modal {
+      max-width: 520px !important;
+    }
+</style>
 
-<base target="_blank">
 </head>
 <body>
 
@@ -286,7 +305,7 @@
 
 <!-- MODAL RESEP MENU -->
 <div class="modal-overlay" id="recipeModal">
-  <div class="modal">
+  <div class="modal" style="max-width:520px;width:100%">
     <h2 id="recipeModalTitle">Edit Resep</h2>
     <input type="hidden" id="recipeMenuId"/>
     <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Bahan baku per 1 porsi menu ini.</p>
