@@ -594,39 +594,14 @@
           ingredients:validIngredients
         });
       }else{
-        // Tambah baru: kurangin stok bahan baku + buat produk
-        for(const r of validIngredients){
-          const ing=ingredients.find(i=>i.id===r.ingredientId);
-          const deduct=r.amount*stock;
-          if(ing.stock<deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-          batch.update(doc(db,"ingredients",r.ingredientId),{stock:increment(-deduct)});
-        }
-
-        const prodRef=doc(collection(db,"finishedGoods"));
-        batch.set(prodRef,{
+        // Tambah baru: buat produk (stok awal cuma inisialisasi, tidak kurangi bahan baku)
+        // Bahan baku dikurangi saat restock/produksi via + Stok, bukan saat pembuatan produk
+        await addDoc(collection(db,"finishedGoods"),{
           name,category,unit,stock,minStock,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients,
           createdAt:serverTimestamp()
         });
-
-        // Log stok bahan baku
-        for(const r of validIngredients){
-          const ing=ingredients.find(i=>i.id===r.ingredientId);
-          const logRef=doc(collection(db,"stockLogs"));
-          batch.set(logRef,{
-            type:'ingredient',
-            ingredientId:r.ingredientId,
-            ingredientName:ing.name,
-            unit:ing.unit,
-            change:-(r.amount*stock),
-            note:`Produksi: ${name} ${stock}${unit}`,
-            byName:currentUser.name,
-            createdAt:serverTimestamp()
-          });
-        }
-
-        await batch.commit();
       }
 
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
