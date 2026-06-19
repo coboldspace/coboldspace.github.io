@@ -445,7 +445,7 @@
     messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"
   };
   const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
-  let currentUser=null, menuItems=[], ingredients=[], cart=[], orderType='dine-in', activeCat='Semua';
+  let currentUser=null, menuItems=[], ingredients=[], products=[], cart=[], orderType='dine-in', activeCat='Semua';
   let dataLoaded = false;
 
   onAuthStateChanged(auth, async(user)=>{
@@ -457,8 +457,8 @@
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
     if(role==='admin') document.body.classList.add('is-admin');
 
-    // Load both menu and ingredients first
-    await Promise.all([loadMenu(), loadIngredients()]);
+    // Load menu, ingredients, and products
+    await Promise.all([loadMenu(), loadIngredients(), loadProducts()]);
     dataLoaded = true;
 
     // Now render menu with ingredients data ready
@@ -477,6 +477,10 @@
     const snap=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
     ingredients=snap.docs.map(d=>({id:d.id,...d.data()}));
   }
+  async function loadProducts(){
+    const snap=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    products=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
 
   function buildPills(){
     const cats=['Semua',...new Set(menuItems.map(m=>m.category).filter(Boolean))];
@@ -491,9 +495,27 @@
     if(!m||!m.recipe||!m.recipe.length) return true;
     for(const r of m.recipe){
       if(!r.ingredientId||!r.amount) continue;
-      const ing=ingredients.find(i=>i.id===r.ingredientId);
-      if(!ing) return false;
-      if(ing.stock < r.amount) return false;
+
+      // Check if it's a product (finished good) with prod_ prefix
+      if(r.ingredientId.startsWith('prod_')){
+        const prodId = r.ingredientId.replace('prod_','');
+        const prod = products.find(p=>p.id===prodId);
+        if(!prod) return false;
+        if(prod.stock < r.amount) return false;
+      }
+      // Check if it's an ingredient with ing_ prefix
+      else if(r.ingredientId.startsWith('ing_')){
+        const ingId = r.ingredientId.replace('ing_','');
+        const ing = ingredients.find(i=>i.id===ingId);
+        if(!ing) return false;
+        if(ing.stock < r.amount) return false;
+      }
+      // Legacy: no prefix (backward compatibility)
+      else {
+        const ing = ingredients.find(i=>i.id===r.ingredientId);
+        if(!ing) return false;
+        if(ing.stock < r.amount) return false;
+      }
     }
     return true;
   }
@@ -574,22 +596,48 @@
 
   // ── VALIDASI STOK ──
   async function validateStock(){
-    const needed={};
+    const neededIng={};   // ingredients needed
+    const neededProd={};  // products needed
+
     for(const ci of cart){
       const md=await getDoc(doc(db,"menu",ci.id));
       const recipe=(md.data()?.recipe)||[];
       for(const r of recipe){
         if(!r.ingredientId||!r.amount) continue;
-        needed[r.ingredientId]=(needed[r.ingredientId]||0)+(r.amount*ci.qty);
+
+        if(r.ingredientId.startsWith('prod_')){
+          const prodId = r.ingredientId.replace('prod_','');
+          neededProd[prodId]=(neededProd[prodId]||0)+(r.amount*ci.qty);
+        }
+        else if(r.ingredientId.startsWith('ing_')){
+          const ingId = r.ingredientId.replace('ing_','');
+          neededIng[ingId]=(neededIng[ingId]||0)+(r.amount*ci.qty);
+        }
+        else {
+          // Legacy: no prefix = ingredient
+          neededIng[r.ingredientId]=(neededIng[r.ingredientId]||0)+(r.amount*ci.qty);
+        }
       }
     }
-    for(const [ingId,amount] of Object.entries(needed)){
+
+    // Validate ingredients
+    for(const [ingId,amount] of Object.entries(neededIng)){
       const ing=ingredients.find(i=>i.id===ingId);
       if(!ing) return {ok:false, msg:`Bahan tidak ditemukan di inventory`};
       if(ing.stock < amount){
         return {ok:false, msg:`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${amount} ${ing.unit})`};
       }
     }
+
+    // Validate products
+    for(const [prodId,amount] of Object.entries(neededProd)){
+      const prod=products.find(p=>p.id===prodId);
+      if(!prod) return {ok:false, msg:`Produk tidak ditemukan di inventory`};
+      if(prod.stock < amount){
+        return {ok:false, msg:`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${amount} ${prod.unit})`};
+      }
+    }
+
     return {ok:true};
   }
 
@@ -633,13 +681,59 @@
         const md=await getDoc(doc(db,"menu",ci.id));
         for(const r of(md.data()?.recipe||[])){
           if(!r.ingredientId||!r.amount)continue;
-          await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-(r.amount*ci.qty))});
-          const ig=await getDoc(doc(db,"ingredients",r.ingredientId));
-          await addDoc(collection(db,"stockLogs"),{ingredientId:r.ingredientId,ingredientName:ig.data()?.name||'',unit:ig.data()?.unit||'',change:-(r.amount*ci.qty),note:`Order: ${ci.name} ×${ci.qty}`,byName:currentUser.name,createdAt:serverTimestamp()});
+
+          // Deduct from products (finished goods)
+          if(r.ingredientId.startsWith('prod_')){
+            const prodId = r.ingredientId.replace('prod_','');
+            await updateDoc(doc(db,"finishedGoods",prodId),{stock:increment(-(r.amount*ci.qty))});
+            const prod=await getDoc(doc(db,"finishedGoods",prodId));
+            await addDoc(collection(db,"stockLogs"),{
+              type:'finishedGoods',
+              itemId:prodId,
+              itemName:prod.data()?.name||'',
+              unit:prod.data()?.unit||'',
+              change:-(r.amount*ci.qty),
+              note:`Order: ${ci.name} ×${ci.qty}`,
+              byName:currentUser.name,
+              createdAt:serverTimestamp()
+            });
+          }
+          // Deduct from ingredients (raw materials)
+          else if(r.ingredientId.startsWith('ing_')){
+            const ingId = r.ingredientId.replace('ing_','');
+            await updateDoc(doc(db,"ingredients",ingId),{stock:increment(-(r.amount*ci.qty))});
+            const ig=await getDoc(doc(db,"ingredients",ingId));
+            await addDoc(collection(db,"stockLogs"),{
+              type:'ingredient',
+              ingredientId:ingId,
+              ingredientName:ig.data()?.name||'',
+              unit:ig.data()?.unit||'',
+              change:-(r.amount*ci.qty),
+              note:`Order: ${ci.name} ×${ci.qty}`,
+              byName:currentUser.name,
+              createdAt:serverTimestamp()
+            });
+          }
+          // Legacy: no prefix = ingredient
+          else {
+            await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-(r.amount*ci.qty))});
+            const ig=await getDoc(doc(db,"ingredients",r.ingredientId));
+            await addDoc(collection(db,"stockLogs"),{
+              type:'ingredient',
+              ingredientId:r.ingredientId,
+              ingredientName:ig.data()?.name||'',
+              unit:ig.data()?.unit||'',
+              change:-(r.amount*ci.qty),
+              note:`Order: ${ci.name} ×${ci.qty}`,
+              byName:currentUser.name,
+              createdAt:serverTimestamp()
+            });
+          }
         }
       }
-      // Refresh ingredients setelah decrement untuk update UI
-      await loadIngredients(); renderMenu();
+      // Refresh data setelah decrement untuk update UI
+      await Promise.all([loadIngredients(), loadProducts()]);
+      renderMenu();
       closeConfirm(); clearCart();
       document.getElementById('tableNo').value='';
       if(document.getElementById('orderNotes')) document.getElementById('orderNotes').value='';
