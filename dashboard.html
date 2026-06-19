@@ -10,12 +10,32 @@
   <style>
     #btnLogoutMobile { padding: 8px 14px; font-size: 13px; font-weight: 600; }
     #btnLogoutMobile:hover { background: rgba(255,95,95,0.1); }
+    .report-tabs { display: flex; gap: 6px; }
+    .report-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .report-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .report-tab.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+    .admin-report-section { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 640px) {
       #btnLogoutMobile { padding: 9px 11px; }
       #btnLogoutMobile .logout-label { display: none; }
+      .report-tabs { width: 100%; }
+      .report-tab { flex: 1; text-align: center; }
     }
   </style>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<base target="_blank">
 </head>
 <body>
 
@@ -101,6 +121,70 @@
     </div>
   </div>
 
+  <!-- LAPORAN ADMIN-ONLY -->
+  <div class="admin-report-section" id="adminReportSection" style="display:none">
+
+    <!-- Chart Penjualan -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <h2>📊 Laporan Penjualan</h2>
+        <div class="report-tabs">
+          <button class="report-tab active" onclick="switchReportTab('daily',this)">Harian</button>
+          <button class="report-tab" onclick="switchReportTab('weekly',this)">Mingguan</button>
+          <button class="report-tab" onclick="switchReportTab('monthly',this)">Bulanan</button>
+        </div>
+      </div>
+      <div class="chart-container" style="position:relative;height:300px;width:100%">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Margin & Overhead Cards -->
+    <div class="stats-grid" style="margin-top:16px">
+      <div class="stat-card">
+        <h3>Margin Harian</h3>
+        <div class="value" id="marginDaily">Rp 0</div>
+        <div class="value-sub" id="marginDailyPct">0%</div>
+      </div>
+      <div class="stat-card">
+        <h3>Margin Mingguan</h3>
+        <div class="value" id="marginWeekly">Rp 0</div>
+        <div class="value-sub" id="marginWeeklyPct">0%</div>
+      </div>
+      <div class="stat-card">
+        <h3>Margin Bulanan</h3>
+        <div class="value" id="marginMonthly">Rp 0</div>
+        <div class="value-sub" id="marginMonthlyPct">0%</div>
+      </div>
+      <div class="stat-card">
+        <h3>Overhead Harian</h3>
+        <div class="value" id="overheadDaily">Rp 0</div>
+        <div class="value-sub">biaya operasional</div>
+      </div>
+      <div class="stat-card">
+        <h3>Overhead Mingguan</h3>
+        <div class="value" id="overheadWeekly">Rp 0</div>
+        <div class="value-sub">biaya operasional</div>
+      </div>
+      <div class="stat-card">
+        <h3>Overhead Bulanan</h3>
+        <div class="value" id="overheadMonthly">Rp 0</div>
+        <div class="value-sub">biaya operasional</div>
+      </div>
+    </div>
+
+    <!-- Tabel Detail Margin per Menu -->
+    <div class="card" style="margin-top:16px">
+      <h2>💰 Detail Margin per Menu (Bulan Ini)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Menu</th><th>Terjual</th><th>Pendapatan</th><th>HPP</th><th>Margin</th><th>%</th></tr></thead>
+          <tbody id="marginDetailTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Transaksi terbaru -->
   <div class="card">
     <h2>Transaksi Terbaru</h2>
@@ -151,25 +235,29 @@
     const { role, name } = snap.data();
     document.getElementById('userInfo').textContent = (role==='admin'?'👑 Admin':'☕ Kasir')+': '+(name||user.email);
 
-    // Tampilkan nav admin
+    // Tampilkan nav admin dan laporan admin
     if (role === 'admin') {
       document.body.classList.add('is-admin');
+      document.getElementById('adminReportSection').style.display = 'block';
     }
 
     await loadData();
     document.getElementById('loadingOverlay').style.display = 'none';
   });
 
+  let salesChart = null;
+  let allOrders = [];
+
   async function loadData() {
     try {
       // Orders
       const oSnap  = await getDocs(query(collection(db,"orders"), orderBy("createdAt","desc")));
-      const orders = oSnap.docs.map(d=>({id:d.id,...d.data()}));
+      allOrders = oSnap.docs.map(d=>({id:d.id,...d.data()}));
       const now    = new Date();
       const todayS = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const monthS = new Date(now.getFullYear(), now.getMonth(), 1);
       let rt=0,ot=0,rm=0,om=0;
-      orders.filter(o=>o.status!=='cancelled').forEach(o=>{
+      allOrders.filter(o=>o.status!=='cancelled').forEach(o=>{
         const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds||0)*1000);
         if(ts>=todayS){rt+=o.total||0;ot++;}
         if(ts>=monthS){rm+=o.total||0;om++;}
@@ -178,11 +266,11 @@
       document.getElementById('statOrdToday').textContent = ot+' transaksi';
       document.getElementById('statRevMonth').textContent = 'Rp '+rm.toLocaleString('id');
       document.getElementById('statOrdMonth').textContent = om+' transaksi';
-      document.getElementById('statTotal').textContent    = orders.length;
+      document.getElementById('statTotal').textContent    = allOrders.length;
 
       // Recent 5
       const tbody  = document.getElementById('recentTbody');
-      const recent = orders.slice(0,5);
+      const recent = allOrders.slice(0,5);
       tbody.innerHTML = recent.length ? recent.map(o=>{
         const ts  = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds||0)*1000);
         const cls = o.status==='done'?'badge-green':o.status==='cancelled'?'badge-red':'badge-yellow';
@@ -215,7 +303,393 @@
         document.getElementById('alertLow').classList.add('show');
         document.getElementById('alertLowBody').innerHTML = low.map(i=>`• ${i.name}: ${i.stock} ${i.unit}`).join('<br>');
       }
+
+      // Load admin reports if admin
+      const userSnap = await getDoc(doc(db,"users",auth.currentUser.uid));
+      if (userSnap.exists() && userSnap.data().role === 'admin') {
+        await loadAdminReports();
+      }
     } catch(e) { console.error(e); }
+  }
+
+  // ── ADMIN REPORTS ──
+  async function loadAdminReports() {
+    // Load menu data first for accurate overhead calculation
+    await loadMenuData();
+
+    const doneOrders = allOrders.filter(o => o.status === 'done');
+
+    // Daily chart (last 7 days)
+    renderDailyChart(doneOrders);
+
+    // Calculate margins & overhead
+    calculateMargins(doneOrders);
+
+    // Detail margin per menu
+    renderMarginDetail(doneOrders);
+  }
+
+  function getOrderDate(o) {
+    return o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds||0)*1000);
+  }
+
+  function renderDailyChart(orders) {
+    const days = [];
+    const labels = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      days.push(d);
+      labels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }));
+    }
+
+    const data = days.map(day => {
+      const start = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+      const end = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+      return orders.filter(o => {
+        const ts = getOrderDate(o);
+        return ts >= start && ts < end;
+      }).reduce((s, o) => s + (o.total || 0), 0);
+    });
+
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (salesChart) salesChart.destroy();
+
+    salesChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Penjualan (Rp)',
+          data: data,
+          backgroundColor: 'rgba(210, 160, 110, 0.7)',
+          borderColor: 'rgba(210, 160, 110, 1)',
+          borderWidth: 1,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Rp ' + context.raw.toLocaleString('id');
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#888',
+              callback: function(value) {
+                return 'Rp ' + (value / 1000).toFixed(0) + 'k';
+              }
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            ticks: { color: '#888' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  function renderWeeklyChart(orders) {
+    const weeks = [];
+    const labels = [];
+    const now = new Date();
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (now.getDay() + i * 7));
+      weeks.push(weekStart);
+      labels.push('Minggu ' + (4 - i));
+    }
+
+    const data = weeks.map((weekStart, idx) => {
+      const weekEnd = idx < weeks.length - 1 ? weeks[idx + 1] : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      return orders.filter(o => {
+        const ts = getOrderDate(o);
+        return ts >= weekStart && ts < weekEnd;
+      }).reduce((s, o) => s + (o.total || 0), 0);
+    });
+
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (salesChart) salesChart.destroy();
+
+    salesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Penjualan (Rp)',
+          data: data,
+          backgroundColor: 'rgba(210, 160, 110, 0.15)',
+          borderColor: 'rgba(210, 160, 110, 1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: 'rgba(210, 160, 110, 1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Rp ' + context.raw.toLocaleString('id');
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#888',
+              callback: function(value) {
+                return 'Rp ' + (value / 1000).toFixed(0) + 'k';
+              }
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            ticks: { color: '#888' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  function renderMonthlyChart(orders) {
+    const months = [];
+    const labels = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(d);
+      labels.push(d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }));
+    }
+
+    const data = months.map((monthStart, idx) => {
+      const monthEnd = idx < months.length - 1 ? months[idx + 1] : new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      return orders.filter(o => {
+        const ts = getOrderDate(o);
+        return ts >= monthStart && ts < monthEnd;
+      }).reduce((s, o) => s + (o.total || 0), 0);
+    });
+
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (salesChart) salesChart.destroy();
+
+    salesChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Penjualan (Rp)',
+          data: data,
+          backgroundColor: 'rgba(210, 160, 110, 0.7)',
+          borderColor: 'rgba(210, 160, 110, 1)',
+          borderWidth: 1,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Rp ' + context.raw.toLocaleString('id');
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#888',
+              callback: function(value) {
+                return 'Rp ' + (value / 1000).toFixed(0) + 'k';
+              }
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+          },
+          x: {
+            ticks: { color: '#888' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  window.switchReportTab = function(period, btn) {
+    document.querySelectorAll('.report-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const doneOrders = allOrders.filter(o => o.status === 'done');
+    if (period === 'daily') renderDailyChart(doneOrders);
+    else if (period === 'weekly') renderWeeklyChart(doneOrders);
+    else if (period === 'monthly') renderMonthlyChart(doneOrders);
+  };
+
+  let menuDataCache = [];
+
+  async function loadMenuData() {
+    const snap = await getDocs(collection(db, "menu"));
+    menuDataCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  function calculateMargins(orders) {
+    const now = new Date();
+
+    // Daily
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const todayOrders = orders.filter(o => {
+      const ts = getOrderDate(o);
+      return ts >= todayStart && ts < todayEnd;
+    });
+
+    // Weekly
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    const weekOrders = orders.filter(o => {
+      const ts = getOrderDate(o);
+      return ts >= weekStart;
+    });
+
+    // Monthly
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthOrders = orders.filter(o => {
+      const ts = getOrderDate(o);
+      return ts >= monthStart;
+    });
+
+    // Calculate for each period using ACTUAL overhead from menu data
+    const calcPeriod = (ords) => {
+      let revenue = 0, hppTotal = 0, overheadTotal = 0, bahanTotal = 0;
+
+      ords.forEach(o => {
+        revenue += (o.total || 0);
+        hppTotal += (o.hpp || 0);
+
+        // Calculate actual overhead from menu data
+        (o.items || []).forEach(item => {
+          const menu = menuDataCache.find(m => m.id === item.id);
+          if (menu && menu.hpp) {
+            const qty = item.qty || 1;
+            // overhead per porsi * qty
+            const itemOverhead = (menu.hpp.overhead || 0) * qty;
+            overheadTotal += itemOverhead;
+            // bahan = hpp total - overhead
+            const itemHpp = (menu.hpp.total || 0) * qty;
+            bahanTotal += (itemHpp - itemOverhead);
+          }
+        });
+      });
+
+      const profit = revenue - hppTotal;
+      const marginPct = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0;
+
+      return { revenue, hpp: hppTotal, profit, marginPct, overhead: overheadTotal, bahan: bahanTotal };
+    };
+
+    const daily = calcPeriod(todayOrders);
+    const weekly = calcPeriod(weekOrders);
+    const monthly = calcPeriod(monthOrders);
+
+    // Update DOM
+    document.getElementById('marginDaily').textContent = 'Rp ' + Math.round(daily.profit).toLocaleString('id');
+    document.getElementById('marginDailyPct').textContent = daily.marginPct + '%';
+    document.getElementById('marginDailyPct').className = 'value-sub ' + (daily.profit >= 0 ? 'profit-positive' : 'profit-negative');
+
+    document.getElementById('marginWeekly').textContent = 'Rp ' + Math.round(weekly.profit).toLocaleString('id');
+    document.getElementById('marginWeeklyPct').textContent = weekly.marginPct + '%';
+    document.getElementById('marginWeeklyPct').className = 'value-sub ' + (weekly.profit >= 0 ? 'profit-positive' : 'profit-negative');
+
+    document.getElementById('marginMonthly').textContent = 'Rp ' + Math.round(monthly.profit).toLocaleString('id');
+    document.getElementById('marginMonthlyPct').textContent = monthly.marginPct + '%';
+    document.getElementById('marginMonthlyPct').className = 'value-sub ' + (monthly.profit >= 0 ? 'profit-positive' : 'profit-negative');
+
+    document.getElementById('overheadDaily').textContent = 'Rp ' + Math.round(daily.overhead).toLocaleString('id');
+    document.getElementById('overheadWeekly').textContent = 'Rp ' + Math.round(weekly.overhead).toLocaleString('id');
+    document.getElementById('overheadMonthly').textContent = 'Rp ' + Math.round(monthly.overhead).toLocaleString('id');
+  }
+
+  function renderMarginDetail(orders) {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthOrders = orders.filter(o => {
+      const ts = getOrderDate(o);
+      return ts >= monthStart;
+    });
+
+    // Aggregate by menu using actual menu data for accurate HPP breakdown
+    const menuStats = {};
+    monthOrders.forEach(o => {
+      (o.items || []).forEach(item => {
+        if (!menuStats[item.id]) {
+          menuStats[item.id] = { name: item.name, qty: 0, revenue: 0, hpp: 0, overhead: 0, bahan: 0 };
+        }
+        const qty = item.qty || 1;
+        menuStats[item.id].qty += qty;
+        menuStats[item.id].revenue += (item.price || 0) * qty;
+
+        // Get actual HPP data from menu
+        const menu = menuDataCache.find(m => m.id === item.id);
+        if (menu && menu.hpp) {
+          const itemHppTotal = (menu.hpp.total || 0) * qty;
+          const itemOverhead = (menu.hpp.overhead || 0) * qty;
+          const itemBahan = itemHppTotal - itemOverhead;
+          menuStats[item.id].hpp += itemHppTotal;
+          menuStats[item.id].overhead += itemOverhead;
+          menuStats[item.id].bahan += itemBahan;
+        } else {
+          // Fallback: estimate from order hpp proportion
+          const itemTotal = (item.price || 0) * qty;
+          const orderTotal = o.total || 1;
+          const itemHppShare = o.hpp ? (o.hpp * (itemTotal / orderTotal)) : 0;
+          menuStats[item.id].hpp += itemHppShare;
+        }
+      });
+    });
+
+    const tbody = document.getElementById('marginDetailTbody');
+    const rows = Object.values(menuStats).sort((a, b) => b.revenue - a.revenue);
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Belum ada data penjualan bulan ini.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const margin = r.revenue - r.hpp;
+      const marginPct = r.revenue > 0 ? ((margin / r.revenue) * 100).toFixed(1) : 0;
+      const cls = margin >= 0 ? 'profit-positive' : 'profit-negative';
+      return `<tr>
+        <td><strong>${r.name}</strong></td>
+        <td>${r.qty}</td>
+        <td>Rp ${Math.round(r.revenue).toLocaleString('id')}</td>
+        <td>Rp ${Math.round(r.hpp).toLocaleString('id')}</td>
+        <td class="${cls}">Rp ${Math.round(margin).toLocaleString('id')}</td>
+        <td class="${cls}">${marginPct}%</td>
+      </tr>`;
+    }).join('');
   }
 
   const doLogout = () => signOut(auth).then(() => location.href = "login.html");
