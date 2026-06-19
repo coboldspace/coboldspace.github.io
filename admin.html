@@ -290,7 +290,7 @@
 
   const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
   const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
-  let menuData=[],ordersData=[],ingredientsData=[],activeOrderId=null;
+  let menuData=[],ordersData=[],ingredientsData=[],productsData=[],activeOrderId=null;
   let hppOverheadItems=[], hppCurrentMenu=null;
 
   onAuthStateChanged(auth,async(user)=>{
@@ -306,7 +306,7 @@
       return;
     }
 
-    await Promise.all([loadMenu(),loadOrders(),loadIngredients()]);
+    await Promise.all([loadMenu(),loadOrders(),loadIngredients(),loadProducts()]);
     console.log('[INIT] Ingredients loaded:', ingredientsData.length, 'items');
     console.log('[INIT] Sample ingredient:', ingredientsData[0]);
     renderMenuTable(); renderTransaksi(); renderHPP();
@@ -325,6 +325,11 @@
     const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
     ingredientsData=s.docs.map(d=>({id:d.id,...d.data()}));
     console.log('[LOAD] Ingredients:', ingredientsData.map(i => ({name:i.name, hargaBeli:i.hargaBeli, unitMultiplier:i.unitMultiplier, unit:i.unit})));
+  }
+  async function loadProducts(){
+    const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    productsData=s.docs.map(d=>({id:d.id,...d.data()}));
+    console.log('[LOAD] Products:', productsData.map(p => ({name:p.name, hargaJual:p.hargaJual, hppTotal:p.hppTotal, unit:p.unit})));
   }
 
   window.showTab=function(id,btn){
@@ -382,21 +387,76 @@
     if(!recipe||!recipe.length) return {items:[],total:0};
     let total=0;
     const items=recipe.map(r=>{
-      const ing=ingredientsData.find(i=>i.id===r.ingredientId);
-      if(!ing) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Bahan tidak ditemukan di inventory'};
+      let item, itemType, hargaSatuan, unitMultiplier;
 
-      const hargaBeli = Number(ing.hargaBeli) || 0;
-      const unitMultiplier = Number(ing.unitMultiplier) || 1000;
+      // Check if it's a product (finished good) with prod_ prefix
+      if(r.ingredientId?.startsWith('prod_')){
+        const prodId = r.ingredientId.replace('prod_','');
+        item = productsData.find(p=>p.id===prodId);
+        itemType = 'product';
+        if(!item) return {name:'(produk tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Produk tidak ditemukan di inventory'};
 
-      if(hargaBeli <= 0) {
-        return {name:ing.name,amount:r.amount||0,unit:ing.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${ing.name} belum diisi (Rp 0)`};
+        // Use hppTotal as cost basis for finished goods
+        const hppTotal = Number(item.hppTotal) || 0;
+        const stock = Number(item.stock) || 1;
+        // Cost per unit = HPP Total / stock (if stock > 0), otherwise use hppTotal as is
+        hargaSatuan = stock > 0 ? hppTotal / stock : hppTotal;
+        unitMultiplier = 1; // Already calculated per unit
+
+        if(hppTotal <= 0) {
+          return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`HPP ${item.name} belum dihitung (Rp 0)`};
+        }
+      }
+      // Check if it's an ingredient with ing_ prefix
+      else if(r.ingredientId?.startsWith('ing_')){
+        const ingId = r.ingredientId.replace('ing_','');
+        item = ingredientsData.find(i=>i.id===ingId);
+        itemType = 'ingredient';
+        if(!item) return {name:'(bahan tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Bahan tidak ditemukan di inventory'};
+
+        const hargaBeli = Number(item.hargaBeli) || 0;
+        unitMultiplier = Number(item.unitMultiplier) || 1000;
+
+        if(hargaBeli <= 0) {
+          return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
+        }
+
+        hargaSatuan = hargaBeli / unitMultiplier;
+      }
+      // Legacy: no prefix (backward compatibility)
+      else {
+        item = ingredientsData.find(i=>i.id===r.ingredientId);
+        itemType = 'ingredient';
+        if(!item) {
+          // Try products as fallback for legacy data
+          item = productsData.find(p=>p.id===r.ingredientId);
+          itemType = 'product';
+          if(!item) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Item tidak ditemukan di inventory'};
+
+          const hppTotal = Number(item.hppTotal) || 0;
+          const stock = Number(item.stock) || 1;
+          hargaSatuan = stock > 0 ? hppTotal / stock : hppTotal;
+          unitMultiplier = 1;
+
+          if(hppTotal <= 0) {
+            return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`HPP ${item.name} belum dihitung (Rp 0)`};
+          }
+        } else {
+          const hargaBeli = Number(item.hargaBeli) || 0;
+          unitMultiplier = Number(item.unitMultiplier) || 1000;
+
+          if(hargaBeli <= 0) {
+            return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
+          }
+
+          hargaSatuan = hargaBeli / unitMultiplier;
+        }
       }
 
-      const hargaSatuan = hargaBeli / unitMultiplier;
       const subtotal = hargaSatuan * (r.amount || 0);
       total += subtotal;
 
-      return {name:ing.name,amount:r.amount||0,unit:ing.unit,hargaSatuan,subtotal};
+      return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan,subtotal};
     });
     return {items,total};
   }
@@ -578,7 +638,7 @@
   };
 
   window.recalculateAllHPP=async function(){
-    await loadIngredients();
+    await Promise.all([loadIngredients(), loadProducts()]);
     let updated=0;
     for(const m of menuData){
       if(!m.recipe||!m.recipe.length) continue;
