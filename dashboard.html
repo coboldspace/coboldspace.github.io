@@ -24,6 +24,21 @@
     }
     .report-tab:hover { border-color: var(--accent); color: var(--accent); }
     .report-tab.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+    .chart-type-tabs { display: flex; gap: 6px; }
+    .chart-type-tab {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .chart-type-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .chart-type-tab.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
     .admin-report-section { animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 640px) {
@@ -35,7 +50,7 @@
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<base target="_blank">
+
 </head>
 <body>
 
@@ -97,8 +112,8 @@
     </div>
   </div>
 
-  <!-- Stats -->
-  <div class="stats-grid">
+  <!-- Stats (admin-only, will be moved inside report section via JS) -->
+  <div class="stats-grid" id="statsGrid" style="display:none">
     <div class="stat-card">
       <h3>Pendapatan Hari Ini</h3>
       <div class="value" id="statRevToday">Rp 0</div>
@@ -124,10 +139,19 @@
   <!-- LAPORAN ADMIN-ONLY -->
   <div class="admin-report-section" id="adminReportSection" style="display:none">
 
-    <!-- Chart Penjualan -->
+    <!-- Chart Section -->
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <h2>📊 Laporan Penjualan</h2>
+      <!-- Chart Type Toggle -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h2 id="chartTitle">📊 Laporan Penjualan</h2>
+        <div class="chart-type-tabs">
+          <button class="chart-type-tab active" onclick="switchChartType('sales',this)">Penjualan</button>
+          <button class="chart-type-tab" onclick="switchChartType('margin',this)">Margin</button>
+          <button class="chart-type-tab" onclick="switchChartType('overhead',this)">Overhead</button>
+        </div>
+      </div>
+      <!-- Period Toggle -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
         <div class="report-tabs">
           <button class="report-tab active" onclick="switchReportTab('daily',this)">Harian</button>
           <button class="report-tab" onclick="switchReportTab('weekly',this)">Mingguan</button>
@@ -136,6 +160,30 @@
       </div>
       <div class="chart-container" style="position:relative;height:300px;width:100%">
         <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Stats Grid (Pendapatan, Menu, Total) -->
+    <div class="stats-grid" style="margin-top:16px">
+      <div class="stat-card">
+        <h3>Pendapatan Hari Ini</h3>
+        <div class="value" id="statRevToday">Rp 0</div>
+        <div class="value-sub" id="statOrdToday">0 transaksi</div>
+      </div>
+      <div class="stat-card">
+        <h3>Pendapatan Bulan Ini</h3>
+        <div class="value" id="statRevMonth">Rp 0</div>
+        <div class="value-sub" id="statOrdMonth">0 transaksi</div>
+      </div>
+      <div class="stat-card">
+        <h3>Menu Aktif</h3>
+        <div class="value" id="statMenu">0</div>
+        <div class="value-sub">item tersedia</div>
+      </div>
+      <div class="stat-card">
+        <h3>Total Transaksi</h3>
+        <div class="value" id="statTotal">0</div>
+        <div class="value-sub">all time</div>
       </div>
     </div>
 
@@ -239,6 +287,9 @@
     if (role === 'admin') {
       document.body.classList.add('is-admin');
       document.getElementById('adminReportSection').style.display = 'block';
+    } else {
+      // Kasir: hide stats grid completely
+      document.getElementById('statsGrid').style.display = 'none';
     }
 
     await loadData();
@@ -247,6 +298,8 @@
 
   let salesChart = null;
   let allOrders = [];
+  let currentChartType = 'sales'; // 'sales' | 'margin' | 'overhead'
+  let currentPeriod = 'daily'; // 'daily' | 'weekly' | 'monthly' 
 
   async function loadData() {
     try {
@@ -346,11 +399,42 @@
     const data = days.map(day => {
       const start = new Date(day.getFullYear(), day.getMonth(), day.getDate());
       const end = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
-      return orders.filter(o => {
+      const dayOrders = orders.filter(o => {
         const ts = getOrderDate(o);
         return ts >= start && ts < end;
-      }).reduce((s, o) => s + (o.total || 0), 0);
+      });
+
+      if (currentChartType === 'sales') {
+        return dayOrders.reduce((s, o) => s + (o.total || 0), 0);
+      } else if (currentChartType === 'margin') {
+        return dayOrders.reduce((s, o) => s + ((o.total || 0) - (o.hpp || 0)), 0);
+      } else if (currentChartType === 'overhead') {
+        // Calculate actual overhead from menu data
+        let overhead = 0;
+        dayOrders.forEach(o => {
+          (o.items || []).forEach(item => {
+            const menu = menuDataCache.find(m => m.id === item.id);
+            if (menu && menu.hpp) {
+              overhead += (menu.hpp.overhead || 0) * (item.qty || 1);
+            }
+          });
+        });
+        return overhead;
+      }
+      return 0;
     });
+
+    const chartLabels = {
+      sales: 'Penjualan (Rp)',
+      margin: 'Margin (Rp)',
+      overhead: 'Overhead (Rp)'
+    };
+    const chartColors = {
+      sales: { bg: 'rgba(210, 160, 110, 0.7)', border: 'rgba(210, 160, 110, 1)' },
+      margin: { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgba(34, 197, 94, 1)' },
+      overhead: { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgba(239, 68, 68, 1)' }
+    };
+    const color = chartColors[currentChartType] || chartColors.sales;
 
     const ctx = document.getElementById('salesChart').getContext('2d');
     if (salesChart) salesChart.destroy();
@@ -360,10 +444,10 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'Penjualan (Rp)',
+          label: chartLabels[currentChartType] || chartLabels.sales,
           data: data,
-          backgroundColor: 'rgba(210, 160, 110, 0.7)',
-          borderColor: 'rgba(210, 160, 110, 1)',
+          backgroundColor: color.bg,
+          borderColor: color.border,
           borderWidth: 1,
           borderRadius: 6,
         }]
@@ -413,11 +497,41 @@
 
     const data = weeks.map((weekStart, idx) => {
       const weekEnd = idx < weeks.length - 1 ? weeks[idx + 1] : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      return orders.filter(o => {
+      const weekOrders = orders.filter(o => {
         const ts = getOrderDate(o);
         return ts >= weekStart && ts < weekEnd;
-      }).reduce((s, o) => s + (o.total || 0), 0);
+      });
+
+      if (currentChartType === 'sales') {
+        return weekOrders.reduce((s, o) => s + (o.total || 0), 0);
+      } else if (currentChartType === 'margin') {
+        return weekOrders.reduce((s, o) => s + ((o.total || 0) - (o.hpp || 0)), 0);
+      } else if (currentChartType === 'overhead') {
+        let overhead = 0;
+        weekOrders.forEach(o => {
+          (o.items || []).forEach(item => {
+            const menu = menuDataCache.find(m => m.id === item.id);
+            if (menu && menu.hpp) {
+              overhead += (menu.hpp.overhead || 0) * (item.qty || 1);
+            }
+          });
+        });
+        return overhead;
+      }
+      return 0;
     });
+
+    const chartLabels = {
+      sales: 'Penjualan (Rp)',
+      margin: 'Margin (Rp)',
+      overhead: 'Overhead (Rp)'
+    };
+    const chartColors = {
+      sales: { bg: 'rgba(210, 160, 110, 0.15)', border: 'rgba(210, 160, 110, 1)', point: 'rgba(210, 160, 110, 1)' },
+      margin: { bg: 'rgba(34, 197, 94, 0.15)', border: 'rgba(34, 197, 94, 1)', point: 'rgba(34, 197, 94, 1)' },
+      overhead: { bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 1)', point: 'rgba(239, 68, 68, 1)' }
+    };
+    const color = chartColors[currentChartType] || chartColors.sales;
 
     const ctx = document.getElementById('salesChart').getContext('2d');
     if (salesChart) salesChart.destroy();
@@ -427,15 +541,15 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'Penjualan (Rp)',
+          label: chartLabels[currentChartType] || chartLabels.sales,
           data: data,
-          backgroundColor: 'rgba(210, 160, 110, 0.15)',
-          borderColor: 'rgba(210, 160, 110, 1)',
+          backgroundColor: color.bg,
+          borderColor: color.border,
           borderWidth: 2,
           fill: true,
           tension: 0.4,
           pointRadius: 4,
-          pointBackgroundColor: 'rgba(210, 160, 110, 1)'
+          pointBackgroundColor: color.point
         }]
       },
       options: {
@@ -483,11 +597,41 @@
 
     const data = months.map((monthStart, idx) => {
       const monthEnd = idx < months.length - 1 ? months[idx + 1] : new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      return orders.filter(o => {
+      const monthOrders = orders.filter(o => {
         const ts = getOrderDate(o);
         return ts >= monthStart && ts < monthEnd;
-      }).reduce((s, o) => s + (o.total || 0), 0);
+      });
+
+      if (currentChartType === 'sales') {
+        return monthOrders.reduce((s, o) => s + (o.total || 0), 0);
+      } else if (currentChartType === 'margin') {
+        return monthOrders.reduce((s, o) => s + ((o.total || 0) - (o.hpp || 0)), 0);
+      } else if (currentChartType === 'overhead') {
+        let overhead = 0;
+        monthOrders.forEach(o => {
+          (o.items || []).forEach(item => {
+            const menu = menuDataCache.find(m => m.id === item.id);
+            if (menu && menu.hpp) {
+              overhead += (menu.hpp.overhead || 0) * (item.qty || 1);
+            }
+          });
+        });
+        return overhead;
+      }
+      return 0;
     });
+
+    const chartLabels = {
+      sales: 'Penjualan (Rp)',
+      margin: 'Margin (Rp)',
+      overhead: 'Overhead (Rp)'
+    };
+    const chartColors = {
+      sales: { bg: 'rgba(210, 160, 110, 0.7)', border: 'rgba(210, 160, 110, 1)' },
+      margin: { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgba(34, 197, 94, 1)' },
+      overhead: { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgba(239, 68, 68, 1)' }
+    };
+    const color = chartColors[currentChartType] || chartColors.sales;
 
     const ctx = document.getElementById('salesChart').getContext('2d');
     if (salesChart) salesChart.destroy();
@@ -497,10 +641,10 @@
       data: {
         labels: labels,
         datasets: [{
-          label: 'Penjualan (Rp)',
+          label: chartLabels[currentChartType] || chartLabels.sales,
           data: data,
-          backgroundColor: 'rgba(210, 160, 110, 0.7)',
-          borderColor: 'rgba(210, 160, 110, 1)',
+          backgroundColor: color.bg,
+          borderColor: color.border,
           borderWidth: 1,
           borderRadius: 6,
         }]
@@ -538,9 +682,29 @@
     });
   }
 
+  window.switchChartType = function(type, btn) {
+    document.querySelectorAll('.chart-type-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentChartType = type;
+
+    const titles = {
+      sales: '📊 Laporan Penjualan',
+      margin: '💰 Laporan Margin',
+      overhead: '🏭 Laporan Overhead'
+    };
+    document.getElementById('chartTitle').textContent = titles[type] || titles.sales;
+
+    // Re-render current period with new chart type
+    const doneOrders = allOrders.filter(o => o.status === 'done');
+    if (currentPeriod === 'daily') renderDailyChart(doneOrders);
+    else if (currentPeriod === 'weekly') renderWeeklyChart(doneOrders);
+    else if (currentPeriod === 'monthly') renderMonthlyChart(doneOrders);
+  };
+
   window.switchReportTab = function(period, btn) {
     document.querySelectorAll('.report-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    currentPeriod = period;
 
     const doneOrders = allOrders.filter(o => o.status === 'done');
     if (period === 'daily') renderDailyChart(doneOrders);
