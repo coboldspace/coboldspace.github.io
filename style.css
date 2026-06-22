@@ -186,9 +186,15 @@ button { cursor: none; background: none; border: none; font: inherit; }
   .theme-toggle.mobile-only {
     display: flex;
     position: fixed;
-    top: 16px;
-    right: 16px;
+    top: 20px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
     z-index: 1001;
+  }
+  .theme-toggle.mobile-only svg {
+    width: 16px;
+    height: 16px;
   }
   .nav-theme-toggle {
     display: none !important;
