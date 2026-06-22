@@ -12,9 +12,8 @@
 
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="logo.png" />
-<!-- <base target="_blank">
+
 <base target="_blank">
-<base target="_blank"> -->
 </head>
 <body>
 
@@ -26,6 +25,8 @@
   <nav class="nav" id="navbar">
     <a href="#" class="nav-logo">co<span class="dot">.</span>bold space</a>
     <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#menu">Menu</a></li>
       <li><a href="#visit">Visit</a></li>
     </ul>
     <a href="#visit" class="nav-cta">Find Us</a>
@@ -50,7 +51,8 @@
         Slow bar. Kopi manual brew, ruang tenang, dan waktu yang berjalan sesuai iramamu.
       </p>
       <div class="hero-actions reveal">
-        <a href="#visit" class="btn btn-primary">Lokasi</a>
+        <a href="#menu" class="btn btn-primary">Lihat Menu</a>
+        <a href="#visit" class="btn btn-ghost">Lokasi</a>
       </div>
     </div>
 
@@ -74,8 +76,7 @@
           Datang sendiri atau bawa teman. Tidak ada yang perlu dipaksakan.
         </p>
       </div>
-      <!--
-      <div class="about-visual reveal">
+      <!-- <div class="about-visual reveal">
         <div class="about-img-frame">
           <div class="about-img-placeholder">
             <div class="coffee-icon">
@@ -97,214 +98,38 @@
             <p>Tamu</p>
           </div>
         </div>
-      </div>
-        -->
+      </div> -->
     </div>
   </section>
 
-  <!-- MENU (hidden) -->
-<!-- MENU
+  <!-- MENU (READ-ONLY from Firebase) -->
   <section class="menu" id="menu">
     <div class="container">
       <div class="section-header reveal">
         <p class="label">Menu</p>
         <h2>What We Serve</h2>
-        <p class="section-sub">Kopi manual brew, espresso, dan bites.</p>
+        <p class="section-sub">Kopi manual brew, espresso, dan bites. Stok diperbarui real-time.</p>
       </div>
 
-      <div class="menu-tabs reveal">
-        <button class="tab-btn active" data-tab="espresso">Espresso</button>
-        <button class="tab-btn" data-tab="manual">Manual Brew</button>
-        <button class="tab-btn" data-tab="signature">Signature</button>
-        <button class="tab-btn" data-tab="food">Bites</button>
+      <!-- Loading state -->
+      <div id="menuLoading" class="menu-loading reveal">
+        <div class="loading-spinner"></div>
+        <p>Memuat menu...</p>
       </div>
 
-      <div class="menu-grid" id="menuGrid">
+      <!-- Category pills -->
+      <div class="menu-tabs reveal" id="menuTabs" style="display:none">
+        <!-- Pills injected by JS -->
+      </div>
 
-        Espresso
-        <div class="menu-tab-content active" data-content="espresso">
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Espresso</h3>
-              <p>Single origin, dark roast. Intens.</p>
-            </div>
-            <span class="menu-price">25K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Americano</h3>
-              <p>Espresso + air panas. Bold, clean.</p>
-            </div>
-            <span class="menu-price">28K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Cappuccino</h3>
-              <p>Espresso, steamed milk, foam.</p>
-            </div>
-            <span class="menu-price">32K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Flat White</h3>
-              <p>Double ristretto, microfoam.</p>
-            </div>
-            <span class="menu-price">35K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Cortado</h3>
-              <p>Espresso dan warm milk. Balance.</p>
-            </div>
-            <span class="menu-price">30K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Long Black</h3>
-              <p>Crema di atas hot water. Aroma penuh.</p>
-            </div>
-            <span class="menu-price">28K</span>
-          </div>
-        </div>
-
-        Manual Brew
-        <div class="menu-tab-content" data-content="manual">
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>V60 Pour Over</h3>
-              <p>Proses lambat, hasil presisi.</p>
-            </div>
-            <span class="menu-price">38K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Chemex</h3>
-              <p>Clean cup, clarity penuh.</p>
-            </div>
-            <span class="menu-price">40K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>AeroPress</h3>
-              <p>Versatile, intense.</p>
-            </div>
-            <span class="menu-price">35K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Cold Brew</h3>
-              <p>Diseduh 18 jam. Smooth, dark.</p>
-            </div>
-            <span class="menu-price">40K</span>
-          </div>
-        </div>
-
-        Signature
-        <div class="menu-tab-content" data-content="signature">
-          <div class="menu-item reveal featured">
-            <div class="menu-badge">Best Seller</div>
-            <div class="menu-item-info">
-              <h3>co.bold Black</h3>
-              <p>Espresso, dark chocolate, sea salt.</p>
-            </div>
-            <span class="menu-price">45K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Midnight Latte</h3>
-              <p>Charcoal oat milk, vanilla.</p>
-            </div>
-            <span class="menu-price">48K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Golden Hour</h3>
-              <p>Turmeric, coconut milk, madu.</p>
-            </div>
-            <span class="menu-price">45K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Ristretto Tonic</h3>
-              <p>Double ristretto, tonic water.</p>
-            </div>
-            <span class="menu-price">42K</span>
-          </div>
-        </div>
-
-        Food
-        <div class="menu-tab-content" data-content="food">
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Butter Croissant</h3>
-              <p>Renyah, lembut. Panggang pagi.</p>
-            </div>
-            <span class="menu-price">28K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Dark Choco Banana Cake</h3>
-              <p>Moist, intense.</p>
-            </div>
-            <span class="menu-price">35K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Avocado Toast</h3>
-              <p>Sourdough, smashed avo, chili flakes.</p>
-            </div>
-            <span class="menu-price">45K</span>
-          </div>
-          <div class="menu-item reveal">
-            <div class="menu-item-info">
-              <h3>Cheese Scone</h3>
-              <p>Gurih, flaky.</p>
-            </div>
-            <span class="menu-price">30K</span>
-          </div>
-        </div>
-
+      <!-- Menu grid -->
+      <div class="menu-grid" id="menuGrid" style="display:none">
+        <!-- Items injected by JS -->
       </div>
     </div>
   </section>
 
-   -->
-<!-- GALLERY (hidden) -->
-<!-- GALLERY
-  <section class="gallery" id="gallery">
-    <div class="container">
-      <div class="section-header reveal">
-        <p class="label">The Space</p>
-        <h2>Feel the Vibe</h2>
-      </div>
-    </div>
-    <div class="gallery-grid reveal">
-      <div class="gallery-item g1">
-        <div class="gallery-placeholder"><span>Interior</span></div>
-        <div class="gallery-overlay"><p>Main Hall</p></div>
-      </div>
-      <div class="gallery-item g2">
-        <div class="gallery-placeholder"><span>Bar</span></div>
-        <div class="gallery-overlay"><p>The Bar</p></div>
-      </div>
-      <div class="gallery-item g3">
-        <div class="gallery-placeholder"><span>Coffee</span></div>
-        <div class="gallery-overlay"><p>Craft Brew</p></div>
-      </div>
-      <div class="gallery-item g4">
-        <div class="gallery-placeholder"><span>Corner</span></div>
-        <div class="gallery-overlay"><p>The Corner</p></div>
-      </div>
-      <div class="gallery-item g5">
-        <div class="gallery-placeholder"><span>Night</span></div>
-        <div class="gallery-overlay"><p>After Hours</p></div>
-      </div>
-    </div>
-    <p class="gallery-note reveal">Ganti placeholder dengan foto nyata</p>
-  </section>
-
-   -->
-<!-- VISIT -->
+  <!-- VISIT -->
   <section class="visit" id="visit">
     <div class="container">
       <div class="visit-grid">
@@ -314,38 +139,20 @@
           <div class="visit-details">
             <div class="visit-block">
               <p class="visit-label">Lokasi</p>
-              <p class="visit-val"><a href="https://maps.app.goo.gl/G2jtULWkgBaigS8t5?g_st=ic" target="_blank">Sentraland boulevard, Parung Panjang, Kec. Parung Panjang, Kabupaten Bogor, Jawa Barat 16360</a></p>
+              <p class="visit-val"><a href="https://maps.app.goo.gl/ZCMjNq2o6kjDuhFY9?g_st=ic" target="_blank">Sentraland boulevard, Parung Panjang, Kec. Parung Panjang, Kabupaten Bogor, Jawa Barat 16360</a></p>
             </div>
-            <!--
-            <div class="visit-block">
-              <p class="visit-label">Jam Buka</p>
-              <div class="hours-grid">
-                <span>Senin – Jumat</span><span>07.00 – 22.00</span>
-                <span>Sabtu</span><span>08.00 – 23.00</span>
-                <span>Minggu</span><span>08.00 – 21.00</span>
-              </div>
-            </div>
-            <div class="visit-block">
-              <p class="visit-label">Kontak</p>
-              <p class="visit-val">+62 8XX XXXX XXXX</p>
-            </div>
-            -->
             <div class="visit-block">
               <p class="visit-label">Instagram</p>
-              <p class="visit-val"><a href="https://www.instagram.com/co.bold_space?igsh=MXE5NXMwbnIxZ2dwcQ%3D%3D&utm_source=qr" target="_blank">@co.bold_space</a></p>
+              <p class="visit-val"><a href="https://www.instagram.com/co.bold_space" target="_blank">@co.bold_space</a></p>
             </div>
           </div>
-          
+
           <div class="visit-socials">
-            <a href="https://www.instagram.com/co.bold_space?igsh=MXE5NXMwbnIxZ2dwcQ%3D%3D&utm_source=qr" target="_blank" class="social-pill">Instagram</a>
-            <!--<a href="#" class="social-pill">WhatsApp</a>-->
-            <a href="https://maps.app.goo.gl/G2jtULWkgBaigS8t5?g_st=ic" target="_blank" class="social-pill">Google Maps</a>
+            <a href="https://www.instagram.com/co.bold_space" target="_blank" class="social-pill">Instagram</a>
+            <a href="https://maps.app.goo.gl/ZCMjNq2o6kjDuhFY9?g_st=ic" target="_blank" class="social-pill">Google Maps</a>
           </div>
-          
+
         </div>
-        <!-- <div class="visit-logo reveal">
-          <img src="cobold-icon.png" alt="co.bold space logo" />
-        </div> -->
       </div>
     </div>
   </section>
@@ -359,6 +166,8 @@
           <p>Seduh pelan, nikmati ruang.</p>
         </div>
         <div class="footer-links">
+          <a href="#about">About</a>
+          <a href="#menu">Menu</a>
           <a href="#visit">Visit</a>
         </div>
       </div>
@@ -369,17 +178,154 @@
     </div>
   </footer>
 
-  <!-- MOILE BOTTOM NAV -->
+  <!-- MOBILE BOTTOM NAV -->
   <nav class="mobile-bottom-nav" id="mobileBottomNav">
     <a href="#home" class="mobile-nav-item active">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
       <span>Home</span>
+    </a>
+    <a href="#menu" class="mobile-nav-item">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+      <span>Menu</span>
     </a>
     <a href="#visit" class="mobile-nav-item">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
       <span>Visit</span>
     </a>
   </nav>
+
+  <!-- Firebase SDK (Public read, no auth required) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",
+      authDomain: "cobold-b0e8d.firebaseapp.com",
+      projectId: "cobold-b0e8d",
+      storageBucket: "cobold-b0e8d.firebasestorage.app",
+      messagingSenderId: "317072309656",
+      appId: "1:317072309656:web:803003d311f119e437bfed"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let menuItems = [];
+    let ingredients = [];
+    let activeCat = 'Semua';
+
+    // Fallback static menu (shown if Firebase fails)
+    const fallbackMenu = [
+      { id: 'f1', name: 'Espresso', category: 'Espresso', price: 25000, description: 'Single origin, dark roast. Intens.', available: true },
+      { id: 'f2', name: 'Americano', category: 'Espresso', price: 28000, description: 'Espresso + air panas. Bold, clean.', available: true },
+      { id: 'f3', name: 'Cappuccino', category: 'Espresso', price: 32000, description: 'Espresso, steamed milk, foam.', available: true },
+      { id: 'f4', name: 'Flat White', category: 'Espresso', price: 35000, description: 'Double ristretto, microfoam.', available: true },
+      { id: 'f5', name: 'V60 Pour Over', category: 'Manual Brew', price: 38000, description: 'Proses lambat, hasil presisi.', available: true },
+      { id: 'f6', name: 'Chemex', category: 'Manual Brew', price: 40000, description: 'Clean cup, clarity penuh.', available: true },
+      { id: 'f7', name: 'Cold Brew', category: 'Manual Brew', price: 40000, description: 'Diseduh 18 jam. Smooth, dark.', available: true },
+      { id: 'f8', name: 'co.bold Black', category: 'Signature', price: 45000, description: 'Espresso, dark chocolate, sea salt.', available: true },
+      { id: 'f9', name: 'Midnight Latte', category: 'Signature', price: 48000, description: 'Charcoal oat milk, vanilla.', available: true },
+      { id: 'f10', name: 'Golden Hour', category: 'Signature', price: 45000, description: 'Turmeric, coconut milk, madu.', available: true },
+      { id: 'f11', name: 'Butter Croissant', category: 'Bites', price: 28000, description: 'Renyah, lembut. Panggang pagi.', available: true },
+      { id: 'f12', name: 'Dark Choco Banana Cake', category: 'Bites', price: 35000, description: 'Moist, intense.', available: true },
+    ];
+
+    // Public read — no auth needed (Firestore rules must allow read)
+    async function initFirebase() {
+      try {
+        await Promise.all([loadMenu(), loadIngredients()]);
+        renderMenuUI();
+      } catch (e) {
+        console.error('Firebase error:', e);
+        menuItems = fallbackMenu;
+        renderMenuUI();
+      }
+    }
+
+    async function loadMenu() {
+      const snap = await getDocs(query(collection(db, "menu"), orderBy("category")));
+      menuItems = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .filter(m => m.available !== false)
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (menuItems.length === 0) menuItems = fallbackMenu;
+    }
+
+    async function loadIngredients() {
+      try {
+        const snap = await getDocs(query(collection(db, "ingredients"), orderBy("category")));
+        ingredients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (e) {
+        ingredients = []; // Optional for landing page
+      }
+    }
+
+    // Landing page only checks 'available' field.
+    // Detailed stock validation (recipe → ingredients) is done in kasir.html
+
+    // Build category pills
+    function buildPills() {
+      const cats = ['Semua', ...new Set(menuItems.map(m => m.category).filter(Boolean))];
+      const container = document.getElementById('menuTabs');
+      container.innerHTML = cats.map(c =>
+        `<button class="tab-btn${c === activeCat ? ' active' : ''}" onclick="window.setMenuCat('${c}')">${c}</button>`
+      ).join('');
+      container.style.display = 'flex';
+    }
+
+    // Set active category
+    window.setMenuCat = function(c) {
+      activeCat = c;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent === c));
+      renderMenuGrid();
+    };
+
+    // Render menu items (READ-ONLY, no actions)
+    function renderMenuGrid() {
+      const grid = document.getElementById('menuGrid');
+      const list = menuItems.filter(m => activeCat === 'Semua' || m.category === activeCat);
+
+      if (list.length === 0) {
+        grid.innerHTML = '<div class="menu-empty">Menu tidak tersedia untuk kategori ini.</div>';
+        return;
+      }
+
+      grid.innerHTML = list.map(m => {
+        // Format price: 15000 → 15K, 12500 → 12.5K
+        const price = m.price || 0;
+        let priceStr;
+        if (price >= 1000) {
+          const thousands = price / 1000;
+          priceStr = Number.isInteger(thousands) ? thousands + 'K' : thousands.toFixed(1).replace(/\.0$/, '') + 'K';
+        } else {
+          priceStr = price.toString();
+        }
+
+        return `
+          <div class="menu-item reveal visible">
+            <div class="menu-item-info">
+              <div class="menu-item-top">
+                <h3>${m.name}</h3>
+              </div>
+              <p class="menu-item-desc">${m.description || m.category || ''}</p>
+            </div>
+            <span class="menu-price">${priceStr}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Main render function
+    function renderMenuUI() {
+      document.getElementById('menuLoading').style.display = 'none';
+      buildPills();
+      document.getElementById('menuGrid').style.display = 'grid';
+      renderMenuGrid();
+    }
+
+    // Initialize
+    initFirebase();
+  </script>
 
   <script src="script.js"></script>
 </body>
