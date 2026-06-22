@@ -644,7 +644,7 @@ body:hover .cursor { opacity: 1; }
   margin-bottom: 12px;
 }
 .section-sub {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: var(--text-dim);
   font-weight: 300;
 }
@@ -662,7 +662,7 @@ body:hover .cursor { opacity: 1; }
 }
 .tab-btn {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -709,7 +709,7 @@ body:hover .cursor { opacity: 1; }
 
 .menu-item-info h3 {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 6px;
@@ -1152,7 +1152,7 @@ body:hover .cursor { opacity: 1; }
 
 /* Description line */
 .menu-item-desc {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   color: var(--text-dim);
   line-height: 1.5;
   font-weight: 300;
