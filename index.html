@@ -25,8 +25,25 @@
     })();
   </script>
   
+<base target="_blank">
 </head>
 <body>
+
+  <!-- THEME TOGGLE (Mobile) -->
+  <button class="theme-toggle mobile-only" id="themeToggleMobile" aria-label="Toggle theme">
+    <svg class="themeIconMobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </button>
+
 
 
   <!-- CURSOR -->
@@ -356,11 +373,17 @@
   <!-- Theme Toggle Functionality -->
   <script>
     (function() {
-      const toggleBtn = document.getElementById('themeToggle');
-      const themeIcon = document.getElementById('themeIcon');
+      const toggleBtns = [
+        document.getElementById('themeToggle'),
+        document.getElementById('themeToggleMobile')
+      ].filter(Boolean);
+      const themeIcons = [
+        document.getElementById('themeIcon'),
+        document.querySelector('.themeIconMobile')
+      ].filter(Boolean);
       const html = document.documentElement;
 
-      // Sun icon SVG
+      // Sun icon SVG (dark mode -> click to go light)
       const sunIcon = `<circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -371,32 +394,34 @@
       <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
       <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
 
-      // Moon icon SVG
+      // Moon icon SVG (light mode -> click to go dark)
       const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
 
-      function updateIcon(theme) {
-        if (themeIcon) {
-          themeIcon.innerHTML = theme === 'dark' ? sunIcon : moonIcon;
-        }
+      function updateIcons(theme) {
+        const iconHtml = theme === 'dark' ? sunIcon : moonIcon;
+        themeIcons.forEach(icon => {
+          if (icon) icon.innerHTML = iconHtml;
+        });
       }
 
       function setTheme(theme) {
         html.setAttribute('data-theme', theme);
         localStorage.setItem('cobold-theme', theme);
-        updateIcon(theme);
+        updateIcons(theme);
       }
 
-      // Initialize icon
+      // Initialize icons
       const currentTheme = html.getAttribute('data-theme') || 'dark';
-      updateIcon(currentTheme);
+      updateIcons(currentTheme);
 
-      if (toggleBtn) {
-        toggleBtn.addEventListener('click', function() {
+      // Bind click to all toggle buttons
+      toggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
           const current = html.getAttribute('data-theme') || 'dark';
           const next = current === 'dark' ? 'light' : 'dark';
           setTheme(next);
         });
-      }
+      });
 
       // Listen for system changes (only if no user preference saved)
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {

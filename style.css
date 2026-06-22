@@ -171,17 +171,28 @@ button { cursor: none; background: none; border: none; font: inherit; }
   stroke-linejoin: round;
 }
 
-/* Fixed toggle for mobile (when not in nav) */
-.theme-toggle.fixed {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 1001;
-}
-
-/* Nav-integrated toggle */
+/* Nav-integrated toggle (desktop nav) */
 .nav-theme-toggle {
   margin-left: 16px;
+}
+
+/* Mobile-only toggle: hidden on desktop */
+.theme-toggle.mobile-only {
+  display: none;
+}
+
+/* Mobile: show fixed toggle, hide nav toggle */
+@media (max-width: 768px) {
+  .theme-toggle.mobile-only {
+    display: flex;
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1001;
+  }
+  .nav-theme-toggle {
+    display: none !important;
+  }
 }
 
 /* ─── CUSTOM CURSOR ──────────────────────────────────────────── */
@@ -1025,15 +1036,6 @@ body:hover .cursor { opacity: 1; }
   }
 
   /* Theme toggle on mobile */
-  .theme-toggle.fixed {
-    top: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-  }
-  .nav-theme-toggle {
-    display: none;
-  }
 }
 
 @media (max-width: 480px) {
