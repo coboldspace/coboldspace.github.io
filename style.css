@@ -142,10 +142,6 @@ button { cursor: none; background: none; border: none; font: inherit; }
 
 /* ─── THEME TOGGLE BUTTON ───────────────────────────────────── */
 .theme-toggle {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 1001;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -158,6 +154,7 @@ button { cursor: none; background: none; border: none; font: inherit; }
   font-size: 1.1rem;
   transition: var(--transition);
   backdrop-filter: blur(8px);
+  flex-shrink: 0;
 }
 .theme-toggle:hover {
   background: var(--accent);
@@ -172,6 +169,19 @@ button { cursor: none; background: none; border: none; font: inherit; }
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Fixed toggle for mobile (when not in nav) */
+.theme-toggle.fixed {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1001;
+}
+
+/* Nav-integrated toggle */
+.nav-theme-toggle {
+  margin-left: 16px;
 }
 
 /* ─── CUSTOM CURSOR ──────────────────────────────────────────── */
@@ -414,7 +424,7 @@ body:hover .cursor { opacity: 1; }
 }
 
 .hero-sub {
-  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-size: clamp(1.1rem, 2.2vw, 1.35rem);
   color: var(--text-muted);
   line-height: 1.8;
   margin-bottom: 48px;
@@ -524,7 +534,7 @@ body:hover .cursor { opacity: 1; }
   font-style: italic;
 }
 .body-text {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   line-height: 1.9;
   color: var(--text-muted);
   margin-bottom: 16px;
@@ -634,7 +644,7 @@ body:hover .cursor { opacity: 1; }
   margin-bottom: 12px;
 }
 .section-sub {
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: var(--text-dim);
   font-weight: 300;
 }
@@ -705,7 +715,7 @@ body:hover .cursor { opacity: 1; }
   margin-bottom: 6px;
 }
 .menu-item-info p {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: var(--text-dim);
   line-height: 1.6;
   font-weight: 300;
@@ -832,7 +842,7 @@ body:hover .cursor { opacity: 1; }
   margin-bottom: 8px;
 }
 .visit-val {
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: var(--text-secondary);
   line-height: 1.6;
   font-weight: 300;
@@ -1015,11 +1025,14 @@ body:hover .cursor { opacity: 1; }
   }
 
   /* Theme toggle on mobile */
-  .theme-toggle {
+  .theme-toggle.fixed {
     top: 16px;
     right: 16px;
     width: 40px;
     height: 40px;
+  }
+  .nav-theme-toggle {
+    display: none;
   }
 }
 
@@ -1139,7 +1152,7 @@ body:hover .cursor { opacity: 1; }
 
 /* Description line */
 .menu-item-desc {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--text-dim);
   line-height: 1.5;
   font-weight: 300;
