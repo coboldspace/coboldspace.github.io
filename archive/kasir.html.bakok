@@ -15,8 +15,6 @@
       overflow: hidden;
       min-height: 0;
     }
-
-    /* MENU PANEL */
     .menu-panel {
       flex: 1;
       display: flex;
@@ -77,7 +75,16 @@
     .menu-card-cat    { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 6px; }
     .menu-card-name   { font-size: 14px; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
     .menu-card-price  { font-size: 14px; color: var(--accent); font-weight: 600; }
+    .menu-card-stock  { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+    .menu-card-stock.low { color: var(--red); }
     .menu-empty       { grid-column: 1/-1; text-align: center; padding: 48px; color: var(--text-dim); font-size: 14px; }
+
+    .menu-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: var(--border);
+    }
+    .menu-card.disabled:hover { transform: none; border-color: var(--border); }
 
     /* ORDER PANEL */
     .order-panel {
@@ -176,8 +183,6 @@
         overflow: hidden;
         position: relative;
       }
-
-      /* Tab switcher */
       .pos-tabs {
         display: flex;
         border-bottom: 1px solid var(--border);
@@ -217,15 +222,12 @@
         margin-left: 6px;
         font-weight: 600;
       }
-
-      /* Menu panel: full height when active */
       .menu-panel { 
         flex: 1;
         min-height: 0;
         display: none;
       }
       .menu-panel.active { display: flex; }
-
       .menu-toolbar { padding: 12px 14px; }
       .menu-grid { 
         padding: 12px 14px; 
@@ -234,8 +236,6 @@
       }
       .menu-card { padding: 14px; }
       .menu-card-name { font-size: 13px; }
-
-      /* Order panel: full height when active */
       .order-panel {
         width: 100%;
         border-left: none;
@@ -243,11 +243,9 @@
         display: none;
         flex: 1;
         min-height: 0;
-        /* FIX: padding bawah biar "Proses Pesanan" ga ketutup bottom nav */
         padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 20px + env(safe-area-inset-bottom, 16px));
       }
       .order-panel.active { display: flex; }
-
       .order-items { 
         flex: 1; 
         padding: 12px 14px; 
@@ -256,52 +254,61 @@
       .order-notes { display: none; }
       .order-head { padding: 12px 14px; }
       .order-foot { padding: 12px 14px; }
-
-      /* Floating cart summary (always visible) */
-      .cart-float {
-        position: fixed;
-        bottom: calc(var(--bn-total) + 8px);
-        left: 16px;
-        right: 16px;
-        background: var(--card-bg);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 10px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 700;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      }
-      .cart-float.hidden { display: none; }
-      .cart-float-total { font-size: 14px; color: var(--text-dim); }
-      .cart-float-total span { color: var(--accent); font-weight: 600; font-size: 18px; }
-      .cart-float-btn {
-        background: var(--accent);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 16px;
-        font-family: 'Inter', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-      }
     }
-
-    /* ── TABLET ADJUSTMENTS ── */
     @media (max-width: 1024px) and (min-width: 641px) {
       .order-panel { width: 260px; }
       .menu-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
       .pos-tabs { display: none; }
-      .cart-float { display: none !important; }
     }
-
-    /* Desktop: hide tab switcher */
     @media (min-width: 641px) {
       .pos-tabs { display: none; }
-      .cart-float { display: none !important; }
     }
+  
+    /* ── ORDER PANEL TABS ── */
+    .order-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .order-tab {
+      flex: 1; padding: 10px;
+      text-align: center; font-size: 12px; font-weight: 600;
+      color: var(--text-dim); background: none; border: none;
+      border-bottom: 2px solid transparent; cursor: pointer;
+      font-family: 'Inter', sans-serif; transition: 0.2s;
+    }
+    .order-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .order-tab .tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--accent); color: white; border-radius: 8px;
+      font-size: 10px; margin-left: 4px; font-weight: 600;
+    }
+    .order-tab-content { display: none; flex: 1; overflow-y: auto; min-height: 0; }
+    .order-tab-content.active { display: block; }
+    .order-tab-content#tabContentAktif { padding: 12px 18px; }
+    .order-tab-content#tabContentRiwayat { padding: 0; }
+
+    /* Riwayat item */
+    .riwayat-item { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .riwayat-item:last-child { border-bottom: none; }
+    .riwayat-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .riwayat-name { font-size: 13px; font-weight: 600; }
+    .riwayat-time { font-size: 11px; color: var(--text-dim); }
+    .riwayat-items { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+    .riwayat-total { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+    .btn-selesai {
+      width: 100%; padding: 8px;
+      background: var(--green); color: white; border: none;
+      border-radius: 8px; font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-selesai:hover { opacity: 0.85; }
+    .btn-selesai:disabled { opacity: 0.4; cursor: default; }
+    .riwayat-empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 36px 18px; font-style: italic; }
+    .riwayat-done { font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 4px; }
+
+    @media (max-width: 640px) {
+      .order-tab-content#tabContentAktif { padding: 12px 14px; }
+      .riwayat-item { padding: 12px 14px; }
+    }
+
   </style>
 
 </head>
@@ -345,11 +352,7 @@
   </button>
 </div>
 
-<!-- FLOATING CART (mobile only) -->
-<div class="cart-float hidden" id="cartFloat">
-  <div class="cart-float-total">Total: <span id="cartFloatTotal">Rp 0</span></div>
-  <button class="cart-float-btn" onclick="switchTab('order')">Lihat Pesanan</button>
-</div>
+
 
 <!-- POS -->
 <div class="pos-wrap">
@@ -376,14 +379,36 @@
         <input type="text" id="tableNo" placeholder="contoh: 5"/>
       </div>
     </div>
-    <div class="order-items" id="orderItems">
-      <div class="order-empty">Pilih menu untuk memulai.</div>
+
+    <!-- TABS -->
+    <div class="order-tabs">
+      <button class="order-tab active" onclick="switchOrderTab('aktif')" id="tabAktif">
+        🛒 Pesanan Aktif
+      </button>
+      <button class="order-tab" onclick="switchOrderTab('riwayat')" id="tabRiwayat">
+        📜 Riwayat <span class="tab-badge" id="riwayatBadge" style="display:none">0</span>
+      </button>
     </div>
-    <div class="order-notes">
+
+    <!-- TAB: PESANAN AKTIF -->
+    <div class="order-tab-content active" id="tabContentAktif">
+      <div class="order-items" id="orderItems" style="padding:0">
+        <div class="order-empty">Pilih menu untuk memulai.</div>
+      </div>
+    </div>
+
+    <!-- TAB: RIWAYAT -->
+    <div class="order-tab-content" id="tabContentRiwayat">
+      <div id="riwayatList">
+        <div class="riwayat-empty">Belum ada pesanan hari ini.</div>
+      </div>
+    </div>
+
+    <div class="order-notes" id="orderNotesWrap">
       <label>Catatan</label>
       <textarea id="orderNotes" placeholder="Less sugar, extra hot..."></textarea>
     </div>
-    <div class="order-foot">
+    <div class="order-foot" id="orderFootWrap">
       <div class="total-row">
         <span class="total-label">Total</span>
         <span class="total-value" id="totalValue">Rp 0</span>
@@ -420,7 +445,8 @@
     messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"
   };
   const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
-  let currentUser=null, menuItems=[], cart=[], orderType='dine-in', activeCat='Semua';
+  let currentUser=null, menuItems=[], ingredients=[], products=[], cart=[], orderType='dine-in', activeCat='Semua';
+  let dataLoaded = false;
 
   onAuthStateChanged(auth, async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -430,15 +456,32 @@
     if(role!=='kasir'&&role!=='admin'){location.href="login.html";return;}
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
     if(role==='admin') document.body.classList.add('is-admin');
-    await loadMenu();
+
+    // Load menu, ingredients, and products
+    await Promise.all([loadMenu(), loadIngredients(), loadProducts()]);
+    dataLoaded = true;
+
+    // Now render menu with ingredients data ready
+    buildPills();
+    renderMenu();
+
     document.getElementById('loadingOverlay').style.display='none';
   });
 
   async function loadMenu(){
     const snap=await getDocs(query(collection(db,"menu"),orderBy("category")));
     menuItems=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.available!==false);
-    buildPills(); renderMenu();
   }
+
+  async function loadIngredients(){
+    const snap=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
+    ingredients=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  async function loadProducts(){
+    const snap=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    products=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
   function buildPills(){
     const cats=['Semua',...new Set(menuItems.map(m=>m.category).filter(Boolean))];
     document.getElementById('catPills').innerHTML=cats.map(c=>
@@ -446,32 +489,77 @@
     ).join('');
   }
   window.setCat=function(c){activeCat=c;document.querySelectorAll('.cat-pill').forEach(b=>b.classList.toggle('active',b.textContent===c));renderMenu();};
+
+  function canMakeMenu(menuId){
+    const m=menuItems.find(x=>x.id===menuId);
+    if(!m||!m.recipe||!m.recipe.length) return true;
+    for(const r of m.recipe){
+      if(!r.ingredientId||!r.amount) continue;
+
+      // Check if it's a product (finished good) with prod_ prefix
+      if(r.ingredientId.startsWith('prod_')){
+        const prodId = r.ingredientId.replace('prod_','');
+        const prod = products.find(p=>p.id===prodId);
+        if(!prod) return false;
+        if(prod.stock < r.amount) return false;
+      }
+      // Check if it's an ingredient with ing_ prefix
+      else if(r.ingredientId.startsWith('ing_')){
+        const ingId = r.ingredientId.replace('ing_','');
+        const ing = ingredients.find(i=>i.id===ingId);
+        if(!ing) return false;
+        if(ing.stock < r.amount) return false;
+      }
+      // Legacy: no prefix (backward compatibility)
+      else {
+        const ing = ingredients.find(i=>i.id===r.ingredientId);
+        if(!ing) return false;
+        if(ing.stock < r.amount) return false;
+      }
+    }
+    return true;
+  }
+
   window.renderMenu=function(){
+    if(!dataLoaded){
+      document.getElementById('menuGrid').innerHTML='<div class="menu-empty">Memuat data...</div>';
+      return;
+    }
+
     const q=document.getElementById('searchInput').value.toLowerCase();
     const grid=document.getElementById('menuGrid');
     const list=menuItems.filter(m=>(activeCat==='Semua'||m.category===activeCat)&&(!q||m.name.toLowerCase().includes(q)));
-    grid.innerHTML=list.length?list.map(m=>`
-      <div class="menu-card" onclick="addToCart('${m.id}')">
+    grid.innerHTML=list.length?list.map(m=>{
+      const canMake=canMakeMenu(m.id);
+      const disabledClass=canMake?'':' disabled';
+      const onclick=canMake?`onclick="addToCart('${m.id}')"`:'';
+      const stockText=canMake?'':'<div class="menu-card-stock low"><i class="fa-solid fa-circle-xmark"></i> Stok habis</div>';
+      return`<div class="menu-card${disabledClass}" ${onclick}>
         <div class="menu-card-cat">${m.category||''}</div>
         <div class="menu-card-name">${m.name}</div>
         <div class="menu-card-price">Rp ${(m.price||0).toLocaleString('id')}</div>
-      </div>`).join(''):`<div class="menu-empty">Menu tidak ditemukan.</div>`;
+        ${stockText}
+      </div>`;
+    }).join(''):`<div class="menu-empty">Menu tidak ditemukan.</div>`;
   };
+
   window.addToCart=function(id){
     const item=menuItems.find(m=>m.id===id); if(!item)return;
     const ex=cart.find(c=>c.id===id); if(ex)ex.qty++; else cart.push({id,name:item.name,price:item.price,qty:1});
     renderCart(); showToast('+ '+item.name,'success');
   };
   window.changeQty=function(id,d){
-    const i=cart.findIndex(c=>c.id===id); if(i<0)return;
+    const i=cart.findIndex(c=>c.id===id); if(i < 0)return;
     cart[i].qty+=d; if(cart[i].qty<=0)cart.splice(i,1); renderCart();
   };
   window.clearCart=function(){cart=[];renderCart();};
+
   function renderCart(){
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     document.getElementById('totalValue').textContent='Rp '+total.toLocaleString('id');
     document.getElementById('btnPay').disabled=cart.length===0;
-    document.getElementById('orderItems').innerHTML=cart.length
+    const orderItems = document.getElementById('orderItems');
+    orderItems.innerHTML=cart.length
       ?cart.map(c=>`<div class="order-item">
           <div class="oi-info"><div class="oi-name">${c.name}</div><div class="oi-price">Rp ${(c.price*c.qty).toLocaleString('id')}</div></div>
           <div class="qty-ctrl">
@@ -480,18 +568,23 @@
             <button class="qty-btn" onclick="changeQty('${c.id}',1)">+</button>
           </div></div>`).join('')
       :`<div class="order-empty">Pilih menu untuk memulai.</div>`;
+    updateCartFloat();
   }
+
   window.setType=function(t){
     orderType=t;
     document.getElementById('btnDineIn').classList.toggle('active',t==='dine-in');
     document.getElementById('btnTakeaway').classList.toggle('active',t==='takeaway');
     document.getElementById('tableWrap').classList.toggle('show',t==='dine-in');
   };
+
   window.openConfirm=function(){
     if(!cart.length)return;
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     const tableNo=document.getElementById('tableNo').value;
     const notes=document.getElementById('orderNotes')?.value||'';
+
+    // KASIR TIDAK LIHAT HPP/PROFIT - hanya total dan item
     document.getElementById('confirmItems').innerHTML=`
       ${cart.map(c=>`<div class="confirm-item"><span>${c.name} ×${c.qty}</span><span>Rp ${(c.price*c.qty).toLocaleString('id')}</span></div>`).join('')}
       <div class="confirm-item"><span>Tipe</span><span>${orderType==='dine-in'?`Dine-in (Meja ${tableNo||'—'})`:'Takeaway'}</span></div>
@@ -500,28 +593,147 @@
     document.getElementById('confirmModal').classList.add('show');
   };
   window.closeConfirm=function(){document.getElementById('confirmModal').classList.remove('show');};
+
+  // ── VALIDASI STOK ──
+  async function validateStock(){
+    const neededIng={};   // ingredients needed
+    const neededProd={};  // products needed
+
+    for(const ci of cart){
+      const md=await getDoc(doc(db,"menu",ci.id));
+      const recipe=(md.data()?.recipe)||[];
+      for(const r of recipe){
+        if(!r.ingredientId||!r.amount) continue;
+
+        if(r.ingredientId.startsWith('prod_')){
+          const prodId = r.ingredientId.replace('prod_','');
+          neededProd[prodId]=(neededProd[prodId]||0)+(r.amount*ci.qty);
+        }
+        else if(r.ingredientId.startsWith('ing_')){
+          const ingId = r.ingredientId.replace('ing_','');
+          neededIng[ingId]=(neededIng[ingId]||0)+(r.amount*ci.qty);
+        }
+        else {
+          // Legacy: no prefix = ingredient
+          neededIng[r.ingredientId]=(neededIng[r.ingredientId]||0)+(r.amount*ci.qty);
+        }
+      }
+    }
+
+    // Validate ingredients
+    for(const [ingId,amount] of Object.entries(neededIng)){
+      const ing=ingredients.find(i=>i.id===ingId);
+      if(!ing) return {ok:false, msg:`Bahan tidak ditemukan di inventory`};
+      if(ing.stock < amount){
+        return {ok:false, msg:`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${amount} ${ing.unit})`};
+      }
+    }
+
+    // Validate products
+    for(const [prodId,amount] of Object.entries(neededProd)){
+      const prod=products.find(p=>p.id===prodId);
+      if(!prod) return {ok:false, msg:`Produk tidak ditemukan di inventory`};
+      if(prod.stock < amount){
+        return {ok:false, msg:`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${amount} ${prod.unit})`};
+      }
+    }
+
+    return {ok:true};
+  }
+
   window.submitOrder=async function(){
+    // VALIDASI STOK SEBELUM SUBMIT
+    const stockCheck=await validateStock();
+    if(!stockCheck.ok){
+      showToast(stockCheck.msg,'error');
+      closeConfirm();
+      return;
+    }
+
     const btn=document.getElementById('btnConfirm');
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
       const tableNo=document.getElementById('tableNo').value;
       const notes=document.getElementById('orderNotes')?.value||'';
+
+      // HPP & profit dihitung dan disimpan ke Firestore (untuk laporan admin)
+      // tapi TIDAK DITAMPILKAN ke kasir
+      let totalHPP = 0;
+      const orderItems = cart.map(c=>{
+        const m = menuItems.find(x => x.id === c.id);
+        const itemHPP = m && m.hpp ? m.hpp.total : 0;
+        totalHPP += itemHPP * c.qty;
+        return {id:c.id,name:c.name,price:c.price,qty:c.qty};
+      });
+
       await addDoc(collection(db,"orders"),{
-        items:cart.map(c=>({id:c.id,name:c.name,price:c.price,qty:c.qty})),
-        total,type:orderType,tableNo:orderType==='dine-in'?tableNo:null,
+        items:orderItems,
+        total,
+        hpp:totalHPP,           // ← disimpan untuk admin (hidden dari kasir)
+        profit:total-totalHPP,   // ← disimpan untuk admin (hidden dari kasir)
+        type:orderType,tableNo:orderType==='dine-in'?tableNo:null,
         notes:notes||null,status:"pending",
         kasirUid:currentUser.uid,kasirName:currentUser.name,createdAt:serverTimestamp()
       });
+
       for(const ci of cart){
         const md=await getDoc(doc(db,"menu",ci.id));
         for(const r of(md.data()?.recipe||[])){
           if(!r.ingredientId||!r.amount)continue;
-          await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-(r.amount*ci.qty))});
-          const ig=await getDoc(doc(db,"ingredients",r.ingredientId));
-          await addDoc(collection(db,"stockLogs"),{ingredientId:r.ingredientId,ingredientName:ig.data()?.name||'',unit:ig.data()?.unit||'',change:-(r.amount*ci.qty),note:`Order: ${ci.name} ×${ci.qty}`,byName:currentUser.name,createdAt:serverTimestamp()});
+
+          // Deduct from products (finished goods)
+          if(r.ingredientId.startsWith('prod_')){
+            const prodId = r.ingredientId.replace('prod_','');
+            await updateDoc(doc(db,"finishedGoods",prodId),{stock:increment(-(r.amount*ci.qty))});
+            const prod=await getDoc(doc(db,"finishedGoods",prodId));
+            await addDoc(collection(db,"stockLogs"),{
+              type:'finishedGoods',
+              itemId:prodId,
+              itemName:prod.data()?.name||'',
+              unit:prod.data()?.unit||'',
+              change:-(r.amount*ci.qty),
+              note:`Order: ${ci.name} ×${ci.qty}`,
+              byName:currentUser.name,
+              createdAt:serverTimestamp()
+            });
+          }
+          // Deduct from ingredients (raw materials)
+          else if(r.ingredientId.startsWith('ing_')){
+            const ingId = r.ingredientId.replace('ing_','');
+            await updateDoc(doc(db,"ingredients",ingId),{stock:increment(-(r.amount*ci.qty))});
+            const ig=await getDoc(doc(db,"ingredients",ingId));
+            await addDoc(collection(db,"stockLogs"),{
+              type:'ingredient',
+              ingredientId:ingId,
+              ingredientName:ig.data()?.name||'',
+              unit:ig.data()?.unit||'',
+              change:-(r.amount*ci.qty),
+              note:`Order: ${ci.name} ×${ci.qty}`,
+              byName:currentUser.name,
+              createdAt:serverTimestamp()
+            });
+          }
+          // Legacy: no prefix = ingredient
+          else {
+            await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-(r.amount*ci.qty))});
+            const ig=await getDoc(doc(db,"ingredients",r.ingredientId));
+            await addDoc(collection(db,"stockLogs"),{
+              type:'ingredient',
+              ingredientId:r.ingredientId,
+              ingredientName:ig.data()?.name||'',
+              unit:ig.data()?.unit||'',
+              change:-(r.amount*ci.qty),
+              note:`Order: ${ci.name} ×${ci.qty}`,
+              byName:currentUser.name,
+              createdAt:serverTimestamp()
+            });
+          }
         }
       }
+      // Refresh data setelah decrement untuk update UI
+      await Promise.all([loadIngredients(), loadProducts()]);
+      renderMenu();
       closeConfirm(); clearCart();
       document.getElementById('tableNo').value='';
       if(document.getElementById('orderNotes')) document.getElementById('orderNotes').value='';
@@ -529,6 +741,102 @@
     }catch(e){showToast('Gagal: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Konfirmasi';
   };
+
+  let todayOrders = [];
+
+  // ── ORDER TAB SWITCH ──
+  window.switchOrderTab = function(tab) {
+    const tabAktif = document.getElementById('tabAktif');
+    const tabRiwayat = document.getElementById('tabRiwayat');
+    const contentAktif = document.getElementById('tabContentAktif');
+    const contentRiwayat = document.getElementById('tabContentRiwayat');
+    const notesWrap = document.getElementById('orderNotesWrap');
+    const footWrap = document.getElementById('orderFootWrap');
+
+    if (tab === 'aktif') {
+      tabAktif.classList.add('active');
+      tabRiwayat.classList.remove('active');
+      contentAktif.classList.add('active');
+      contentRiwayat.classList.remove('active');
+      notesWrap.style.display = '';
+      footWrap.style.display = '';
+    } else {
+      tabAktif.classList.remove('active');
+      tabRiwayat.classList.add('active');
+      contentAktif.classList.remove('active');
+      contentRiwayat.classList.add('active');
+      notesWrap.style.display = 'none';
+      footWrap.style.display = 'none';
+      loadTodayOrders();
+    }
+  };
+
+  // ── LOAD TODAY ORDERS ──
+  async function loadTodayOrders() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
+    todayOrders = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(o => {
+        const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds || 0) * 1000);
+        return ts >= startOfDay && o.status === 'pending';
+      });
+    renderRiwayat();
+  }
+
+  function renderRiwayat() {
+    const el = document.getElementById('riwayatList');
+    const badge = document.getElementById('riwayatBadge');
+
+    if (todayOrders.length === 0) {
+      el.innerHTML = '<div class="riwayat-empty">Belum ada pesanan hari ini.</div>';
+      badge.style.display = 'none';
+      return;
+    }
+
+    badge.style.display = 'inline-flex';
+    badge.textContent = todayOrders.length;
+
+    el.innerHTML = todayOrders.map(o => {
+      const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds || 0) * 1000);
+      const timeStr = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const itemsStr = (o.items || []).map(i => `${i.name} ×${i.qty}`).join(', ');
+      const typeLabel = o.type === 'dine-in' ? `Dine-in #${o.tableNo || '?'}` : 'Takeaway';
+
+      return `<div class="riwayat-item" id="riwayat-${o.id}">
+        <div class="riwayat-top">
+          <span class="riwayat-name">${typeLabel}</span>
+          <span class="riwayat-time">${timeStr}</span>
+        </div>
+        <div class="riwayat-items">${itemsStr}</div>
+        <div class="riwayat-total">Rp ${(o.total || 0).toLocaleString('id')}</div>
+        <button class="btn-selesai" onclick="markDone('${o.id}', this)">✓ Tandai Selesai</button>
+      </div>`;
+    }).join('');
+  }
+
+  window.markDone = async function(id, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+    try {
+      await updateDoc(doc(db, "orders", id), { status: "done" });
+      // Remove from list visually
+      const item = document.getElementById('riwayat-' + id);
+      if (item) {
+        item.innerHTML = `<div class="riwayat-done"><i class="fa-solid fa-check-circle"></i> Pesanan selesai</div>`;
+        item.style.opacity = '0.6';
+      }
+      showToast('✓ Pesanan selesai', 'success');
+      // Refresh count
+      setTimeout(() => loadTodayOrders(), 500);
+    } catch (e) {
+      showToast('Gagal: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '✓ Tandai Selesai';
+    }
+  };
+
   function showToast(msg,type=''){
     const t=document.getElementById('toast');
     t.textContent=msg;t.className=`toast ${type} show`;
@@ -542,49 +850,31 @@
     const orderPanel = document.getElementById('orderPanel');
     const tabMenu = document.getElementById('tabMenu');
     const tabOrder = document.getElementById('tabOrder');
-    const cartFloat = document.getElementById('cartFloat'); // FIX: ambil ref cartFloat
-    
+
     if (tab === 'menu') {
       menuPanel.classList.add('active');
       orderPanel.classList.remove('active');
       tabMenu.classList.add('active');
       tabOrder.classList.remove('active');
-      // FIX: tampilin floating cart di tab Menu (kalau ada item)
-      if (cart.length > 0) cartFloat.classList.remove('hidden');
     } else {
       menuPanel.classList.remove('active');
       orderPanel.classList.add('active');
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
-      // FIX: sembunyiin floating cart di tab Pesanan
-      cartFloat.classList.add('hidden');
+      // Reset order tab ke aktif saat buka panel
+      switchOrderTab('aktif');
     }
   };
 
-  // Update floating cart & badge
   function updateCartFloat() {
-    const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
     const badge = document.getElementById('tabBadge');
-    const cartFloat = document.getElementById('cartFloat');
-    const cartFloatTotal = document.getElementById('cartFloatTotal');
-    
     if (cart.length > 0) {
       badge.style.display = 'inline-flex';
       badge.textContent = cart.reduce((s, c) => s + c.qty, 0);
-      cartFloat.classList.remove('hidden');
-      cartFloatTotal.textContent = 'Rp ' + total.toLocaleString('id');
     } else {
       badge.style.display = 'none';
-      cartFloat.classList.add('hidden');
     }
   }
-
-  // Override renderCart to also update float
-  const originalRenderCart = renderCart;
-  renderCart = function() {
-    originalRenderCart();
-    updateCartFloat();
-  };
 </script>
 <script src="nav-scroll.js"></script>
 </body>

@@ -113,6 +113,35 @@
 
     .table-wrap-input { margin-top: 10px; display: none; }
     .table-wrap-input.show { display: block; }
+
+    /* ── TABLE MODE TOGGLE ── */
+    .table-mode-toggle {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .mode-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .mode-btn.active {
+      background: #222;
+      border-color: var(--accent);
+      color: var(--text-main);
+      font-weight: 600;
+    }
     .table-wrap-input label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 6px; }
     .table-wrap-input input {
       width: 100%; background: var(--bg-color);
@@ -311,6 +340,7 @@
 
   </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -375,7 +405,11 @@
         <button class="type-btn"        id="btnTakeaway" onclick="setType('takeaway')">🥡 Takeaway</button>
       </div>
       <div class="table-wrap-input show" id="tableWrap">
-        <label>Nomor Meja</label>
+        <div class="table-mode-toggle">
+          <button class="mode-btn active" id="modeTable" onclick="setTableMode('table')">🪑 Meja</button>
+          <button class="mode-btn" id="modeName" onclick="setTableMode('name')">👤 Nama</button>
+        </div>
+        <label id="tableLabel">Nomor Meja</label>
         <input type="text" id="tableNo" placeholder="contoh: 5"/>
       </div>
     </div>
@@ -578,6 +612,23 @@
     document.getElementById('tableWrap').classList.toggle('show',t==='dine-in');
   };
 
+  let tableMode = 'table';
+
+  window.setTableMode = function(mode) {
+    tableMode = mode;
+    const label = document.getElementById('tableLabel');
+    const input = document.getElementById('tableNo');
+    document.getElementById('modeTable').classList.toggle('active', mode === 'table');
+    document.getElementById('modeName').classList.toggle('active', mode === 'name');
+    if (mode === 'table') {
+      label.textContent = 'Nomor Meja';
+      input.placeholder = 'contoh: 5';
+    } else {
+      label.textContent = 'Nama Customer';
+      input.placeholder = 'contoh: Budi';
+    }
+  };
+
   window.openConfirm=function(){
     if(!cart.length)return;
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
@@ -587,7 +638,7 @@
     // KASIR TIDAK LIHAT HPP/PROFIT - hanya total dan item
     document.getElementById('confirmItems').innerHTML=`
       ${cart.map(c=>`<div class="confirm-item"><span>${c.name} ×${c.qty}</span><span>Rp ${(c.price*c.qty).toLocaleString('id')}</span></div>`).join('')}
-      <div class="confirm-item"><span>Tipe</span><span>${orderType==='dine-in'?`Dine-in (Meja ${tableNo||'—'})`:'Takeaway'}</span></div>
+      <div class="confirm-item"><span>Tipe</span><span>${orderType==='dine-in'?`Dine-in (${tableMode==='table'?'Meja':'Nama'}: ${tableNo||'—'})`:'Takeaway'}</span></div>
       ${notes?`<div class="confirm-item"><span>Catatan</span><span>${notes}</span></div>`:''}
       <div class="confirm-total"><span>Total</span><span>Rp ${total.toLocaleString('id')}</span></div>`;
     document.getElementById('confirmModal').classList.add('show');
@@ -672,7 +723,7 @@
         total,
         hpp:totalHPP,           // ← disimpan untuk admin (hidden dari kasir)
         profit:total-totalHPP,   // ← disimpan untuk admin (hidden dari kasir)
-        type:orderType,tableNo:orderType==='dine-in'?tableNo:null,
+        type:orderType,tableNo:orderType==='dine-in'?tableNo:null,tableMode:tableMode,
         notes:notes||null,status:"pending",
         kasirUid:currentUser.uid,kasirName:currentUser.name,createdAt:serverTimestamp()
       });
