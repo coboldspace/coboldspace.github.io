@@ -181,16 +181,18 @@ button { cursor: none; background: none; border: none; font: inherit; }
   display: none;
 }
 
+/* Nav-integrated toggle: hidden on mobile */
+.nav-theme-toggle {
+  display: flex;
+}
+
 /* Mobile: show fixed toggle, hide nav toggle */
 @media (max-width: 768px) {
   .theme-toggle.mobile-only {
     display: flex;
-    position: fixed;
-    top: 20px;
-    right: 24px;
     width: 36px;
     height: 36px;
-    z-index: 1001;
+    margin-left: 8px;
   }
   .theme-toggle.mobile-only svg {
     width: 16px;
