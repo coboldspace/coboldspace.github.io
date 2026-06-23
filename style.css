@@ -36,6 +36,7 @@
   --text-secondary:#f0e6d0;
   --text-muted:   #9e9485;
   --text-dim:     #6b6355;
+  /* --text-menu-info:#969593; */
   --border:       rgba(61, 46, 30, 0.5);
   --border-light: rgba(201, 168, 76, 0.15);
   --shadow:       rgba(0,0,0,0.4);
@@ -735,8 +736,8 @@ body:hover .cursor { opacity: 1; }
   margin-bottom: 6px;
 }
 .menu-item-info p {
-  font-size: 0.95rem;
-  color: var(--text-dim);
+  font-size: 1.05rem;
+  color: var(--text-muted);
   line-height: 1.6;
   font-weight: 300;
 }
