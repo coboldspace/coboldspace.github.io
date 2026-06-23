@@ -670,10 +670,10 @@ body:hover .cursor { opacity: 1; }
 
 /* Tabs */
 .menu-tabs {
-  display: flex; justify-content: center; gap: 4px;
+  display: flex; justify-content: center; gap: 6px;
   margin-bottom: 48px;
   background: var(--tab-bg);
-  padding: 4px;
+  padding: 6px;
   border-radius: 40px;
   width: fit-content;
   margin-left: auto; margin-right: auto;
@@ -681,11 +681,12 @@ body:hover .cursor { opacity: 1; }
 }
 .tab-btn {
   font-family: var(--font-mono);
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-  padding: 10px 24px;
+  padding: 12px 28px;
   border-radius: 40px;
   transition: var(--transition);
   background: none;
