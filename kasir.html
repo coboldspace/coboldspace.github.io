@@ -338,9 +338,41 @@
       .riwayat-item { padding: 12px 14px; }
     }
 
+
+    /* ── MODAL CENTER OVERRIDE ── */
+    /* Override pos.css bottom sheet to always center modal */
+    .modal-overlay {
+      align-items: center !important;
+      padding: 16px !important;
+    }
+    .modal {
+      border-radius: 16px !important;
+      max-width: 480px !important;
+      padding-bottom: 24px !important;
+      transform: scale(0.95) !important;
+    }
+    .modal-overlay.show .modal {
+      transform: scale(1) !important;
+    }
+    /* Mobile: keep centered, not bottom sheet */
+    @media (max-width: 640px) {
+      .modal-overlay {
+        align-items: center !important;
+        padding: 16px !important;
+      }
+      .modal {
+        border-radius: 16px !important;
+        max-width: 480px !important;
+        padding-bottom: 24px !important;
+        transform: scale(0.95) !important;
+        max-height: 85dvh;
+      }
+      .modal-overlay.show .modal {
+        transform: scale(1) !important;
+      }
+    }
   </style>
 
-<base target="_blank">
 </head>
 <body>
 
