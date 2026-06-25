@@ -468,10 +468,31 @@
 
     for(const r of prodRows){
       if(!r.ingredientId||!r.amount)continue;
-      const ing=ingredients.find(i=>i.id===r.ingredientId);
-      if(!ing||!ing.hargaBeli||!ing.unitMultiplier)continue;
-      const hargaSatuan=ing.hargaBeli/ing.unitMultiplier;
-      totalBahan+=hargaSatuan*r.amount;
+
+      // Check if it's a product (finished good) with prod_ prefix
+      if(r.ingredientId.startsWith('prod_')){
+        const prodId = r.ingredientId.replace('prod_','');
+        const prod = products.find(p=>p.id===prodId);
+        if(!prod || !prod.hppTotal || !prod.stock) continue;
+        // Cost per unit = HPP Total / stock (if stock > 0)
+        const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
+        totalBahan += hargaSatuan * r.amount;
+      }
+      // Check if it's an ingredient with ing_ prefix
+      else if(r.ingredientId.startsWith('ing_')){
+        const ingId = r.ingredientId.replace('ing_','');
+        const ing = ingredients.find(i=>i.id===ingId);
+        if(!ing||!ing.hargaBeli||!ing.unitMultiplier)continue;
+        const hargaSatuan=ing.hargaBeli/ing.unitMultiplier;
+        totalBahan+=hargaSatuan*r.amount;
+      }
+      // Legacy: no prefix
+      else {
+        const ing = ingredients.find(i=>i.id===r.ingredientId);
+        if(!ing||!ing.hargaBeli||!ing.unitMultiplier)continue;
+        const hargaSatuan=ing.hargaBeli/ing.unitMultiplier;
+        totalBahan+=hargaSatuan*r.amount;
+      }
     }
 
     const overhead=parseFloat(document.getElementById('prodOverhead').value)||0;
@@ -500,8 +521,17 @@
       const fillCls={kritis:'fill-kritis',rendah:'fill-rendah',aman:'fill-aman'}[st];
       const ings=p.ingredients||[];
       const ingRows=ings.length?ings.map(x=>{
-        const ing=ingredients.find(i=>i.id===x.ingredientId);
-        return `<div class="prod-ing-item"><span>${ing?ing.name:'(dihapus)'}</span><span>${x.amount} ${ing?ing.unit:''}</span></div>`;
+        let itemName='(dihapus)', itemUnit='';
+        if(x.ingredientId?.startsWith('prod_')){
+          const prodId=x.ingredientId.replace('prod_','');
+          const prod=products.find(p=>p.id===prodId);
+          if(prod){itemName=prod.name;itemUnit=prod.unit;}
+        } else {
+          const ingId=x.ingredientId?.startsWith('ing_')?x.ingredientId.replace('ing_',''):x.ingredientId;
+          const ing=ingredients.find(i=>i.id===ingId||i.id===x.ingredientId);
+          if(ing){itemName=ing.name;itemUnit=ing.unit;}
+        }
+        return `<div class="prod-ing-item"><span>${itemName}</span><span>${x.amount} ${itemUnit}</span></div>`;
       }).join(''):`<div class="prod-ing-item" style="font-style:italic">Belum ada bahan baku</div>`;
 
       return `<div class="prod-card">
@@ -562,13 +592,34 @@
 
   function renderProdEditor(){
     const ed=document.getElementById('prodEditor');
-    if(!ingredients.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku dulu di tab Stok Bahan.</p>`;return;}
+    if(!ingredients.length && !products.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku atau produk dulu.</p>`;return;}
+
+    // Build options with optgroups for both ingredients and products
+    let optionsHtml = '';
+    if(ingredients.length){
+      optionsHtml += `<optgroup label="Bahan Baku">${ingredients.map(i=>`<option value="ing_${i.id}">${i.name} (${i.unit})</option>`).join('')}</optgroup>`;
+    }
+    if(products.length){
+      optionsHtml += `<optgroup label="Produk Jadi">${products.map(p=>`<option value="prod_${p.id}">${p.name} (${p.unit})</option>`).join('')}</optgroup>`;
+    }
+
     ed.innerHTML=prodRows.map((r,idx)=>{
-      const ing=ingredients.find(i=>i.id===r.ingredientId);
+      // Determine type and find item
+      let item, selectValue;
+      if(r.ingredientId?.startsWith('prod_')){
+        const prodId = r.ingredientId.replace('prod_','');
+        item = products.find(p=>p.id===prodId);
+        selectValue = r.ingredientId;
+      } else {
+        const ingId = r.ingredientId?.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+        item = ingredients.find(i=>i.id===ingId || i.id===r.ingredientId);
+        selectValue = item ? (r.ingredientId?.startsWith('ing_') ? r.ingredientId : 'ing_' + r.ingredientId) : '';
+      }
+
       return`<div class="recipe-editor-item">
-        <select onchange="updateProdRow(${idx},'ingredientId',this.value)">${ingredients.map(i=>`<option value="${i.id}"${i.id===r.ingredientId?' selected':''}>${i.name}</option>`).join('')}</select>
+        <select onchange="updateProdRow(${idx},'ingredientId',this.value)">${optionsHtml.replace(new RegExp('value="' + selectValue + '"'), 'value="' + selectValue + '" selected')}</select>
         <input type="number" value="${r.amount}" min="0" step="0.01" placeholder="Jml" onchange="updateProdRow(${idx},'amount',parseFloat(this.value))"/>
-        <span class="unit-label">${ing?ing.unit:''}</span>
+        <span class="unit-label">${item?item.unit:''}</span>
         <button class="btn-remove-recipe" onclick="removeProdRow(${idx})"><i class="fa-solid fa-xmark"></i></button>
       </div>`;
     }).join('');
@@ -595,9 +646,27 @@
     // Hitung HPP
     let totalBahan=0;
     for(const r of validIngredients){
-      const ing=ingredients.find(i=>i.id===r.ingredientId);
-      if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
-      totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
+      // Product (finished good)
+      if(r.ingredientId.startsWith('prod_')){
+        const prodId = r.ingredientId.replace('prod_','');
+        const prod = products.find(p=>p.id===prodId);
+        if(!prod||!prod.hppTotal){toast(`HPP ${prod?.name||'produk'} belum dihitung.`,'error');return;}
+        const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
+        totalBahan += hargaSatuan * r.amount;
+      }
+      // Ingredient with ing_ prefix
+      else if(r.ingredientId.startsWith('ing_')){
+        const ingId = r.ingredientId.replace('ing_','');
+        const ing=ingredients.find(i=>i.id===ingId);
+        if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
+        totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
+      }
+      // Legacy: no prefix
+      else {
+        const ing=ingredients.find(i=>i.id===r.ingredientId);
+        if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
+        totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
+      }
     }
     const hppTotal=totalBahan+overhead;
     const hargaJual=Math.ceil(hppTotal*(1+margin/100)/1000)*1000;

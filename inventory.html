@@ -95,6 +95,7 @@
     }
 </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -683,14 +684,76 @@
           ingredients:validIngredients
         });
       }else{
-        // Tambah baru: buat produk (stok awal cuma inisialisasi, tidak kurangi bahan baku)
-        // Bahan baku dikurangi saat restock/produksi via + Stok, bukan saat pembuatan produk
-        await addDoc(collection(db,"finishedGoods"),{
+        // Tambah baru: buat produk DAN kurangi stok bahan baku jika stock > 0
+        const newProdRef = doc(collection(db,"finishedGoods"));
+        batch.set(newProdRef,{
           name,category,unit,stock,minStock,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients,
           createdAt:serverTimestamp()
         });
+
+        // Jika stock awal > 0, kurangi stok bahan baku / produk jadi
+        if(stock > 0){
+          for(const r of validIngredients){
+            const deduct = r.amount * stock;
+
+            if(r.ingredientId.startsWith('prod_')){
+              // Deduct from finished goods (another product)
+              const prodId = r.ingredientId.replace('prod_','');
+              const prod = products.find(p=>p.id===prodId);
+              if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
+              if(prod.stock < deduct){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
+              batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-deduct)});
+
+              const logRef=doc(collection(db,"stockLogs"));
+              batch.set(logRef,{
+                type:'finishedGoods',
+                itemId:prodId,
+                itemName:prod.name,
+                unit:prod.unit,
+                change:-deduct,
+                note:`Produksi: ${name} +${stock}${unit}`,
+                byName:currentUser.name,
+                createdAt:serverTimestamp()
+              });
+            }
+            else {
+              // Deduct from raw ingredient
+              const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+              const ing = ingredients.find(i=>i.id===ingId);
+              if(!ing){toast(`Bahan ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
+              if(ing.stock < deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
+              batch.update(doc(db,"ingredients",ingId),{stock:increment(-deduct)});
+
+              const logRef=doc(collection(db,"stockLogs"));
+              batch.set(logRef,{
+                type:'ingredient',
+                ingredientId:ingId,
+                ingredientName:ing.name,
+                unit:ing.unit,
+                change:-deduct,
+                note:`Produksi: ${name} +${stock}${unit}`,
+                byName:currentUser.name,
+                createdAt:serverTimestamp()
+              });
+            }
+          }
+
+          // Log produk baru
+          const prodLogRef=doc(collection(db,"stockLogs"));
+          batch.set(prodLogRef,{
+            type:'finishedGoods',
+            itemName:name,
+            unit:unit,
+            change:stock,
+            note:`Produksi batch awal`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
+        }
+
+        await batch.commit();
       }
 
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
@@ -729,24 +792,50 @@
     try{
       const batch=writeBatch(db);
 
-      // Kurangin stok bahan baku
+      // Kurangin stok bahan baku / produk jadi
       for(const r of validIngredients){
-        const ing=ingredients.find(i=>i.id===r.ingredientId);
         const deduct=r.amount*amt;
-        if(ing.stock<deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
-        batch.update(doc(db,"ingredients",r.ingredientId),{stock:increment(-deduct)});
 
-        const logRef=doc(collection(db,"stockLogs"));
-        batch.set(logRef,{
-          type:'ingredient',
-          ingredientId:r.ingredientId,
-          ingredientName:ing.name,
-          unit:ing.unit,
-          change:-deduct,
-          note:`Produksi: ${p.name} +${amt}${p.unit}`,
-          byName:currentUser.name,
-          createdAt:serverTimestamp()
-        });
+        if(r.ingredientId.startsWith('prod_')){
+          // Deduct from another finished good
+          const prodId = r.ingredientId.replace('prod_','');
+          const prod = products.find(p=>p.id===prodId);
+          if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+          if(prod.stock < deduct){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+          batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-deduct)});
+
+          const logRef=doc(collection(db,"stockLogs"));
+          batch.set(logRef,{
+            type:'finishedGoods',
+            itemId:prodId,
+            itemName:prod.name,
+            unit:prod.unit,
+            change:-deduct,
+            note:`Produksi: ${p.name} +${amt}${p.unit}`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
+        }
+        else {
+          // Deduct from raw ingredient
+          const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+          const ing = ingredients.find(i=>i.id===ingId);
+          if(!ing){toast(`Bahan ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+          if(ing.stock < deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+          batch.update(doc(db,"ingredients",ingId),{stock:increment(-deduct)});
+
+          const logRef=doc(collection(db,"stockLogs"));
+          batch.set(logRef,{
+            type:'ingredient',
+            ingredientId:ingId,
+            ingredientName:ing.name,
+            unit:ing.unit,
+            change:-deduct,
+            note:`Produksi: ${p.name} +${amt}${p.unit}`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
+        }
       }
 
       // Tambah stok produk
