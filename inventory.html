@@ -624,7 +624,7 @@
       </div>`;
     }).join('');
   }
-  window.addProdRow=function(){prodRows.push({ingredientId:ingredients[0]?.id||'',amount:0});renderProdEditor();calcHPP();};
+  window.addProdRow=function(){const firstIng=ingredients[0];prodRows.push({ingredientId:firstIng?'ing_'+firstIng.id:'',amount:0});renderProdEditor();calcHPP();};
   window.updateProdRow=function(idx,field,val){prodRows[idx][field]=val;if(field==='ingredientId')renderProdEditor();calcHPP();};
   window.removeProdRow=function(idx){prodRows.splice(idx,1);renderProdEditor();calcHPP();};
 
@@ -638,7 +638,45 @@
     const minStock=parseFloat(document.getElementById('prodMin').value)||0;
     const overhead=parseFloat(document.getElementById('prodOverhead').value)||0;
     const margin=parseFloat(document.getElementById('prodMargin').value)||0;
+    // Sync prodRows with actual DOM select values before submitting
+    const editorDiv = document.getElementById('prodEditor');
+    if(editorDiv){
+      const selects = editorDiv.querySelectorAll('select');
+      const inputs = editorDiv.querySelectorAll('input[type="number"]');
+      selects.forEach((sel, idx)=>{
+        if(prodRows[idx]){
+          const oldVal = prodRows[idx].ingredientId;
+          const newVal = sel.value;
+          if(oldVal !== newVal){
+            console.log('[submitProd] Syncing row', idx, 'ingredientId from', oldVal, 'to', newVal);
+            prodRows[idx].ingredientId = newVal;
+          }
+        }
+      });
+      inputs.forEach((inp, idx)=>{
+        if(prodRows[idx]){
+          const oldVal = prodRows[idx].amount;
+          const newVal = parseFloat(inp.value) || 0;
+          if(oldVal !== newVal){
+            console.log('[submitProd] Syncing row', idx, 'amount from', oldVal, 'to', newVal);
+            prodRows[idx].amount = newVal;
+          }
+        }
+      });
+    }
+
     const validIngredients=prodRows.filter(r=>r.ingredientId&&r.amount>0);
+
+    // Validate all rows have proper ingredientIds
+    const invalidRows = prodRows.filter(r=>!r.ingredientId||!r.amount);
+    if(invalidRows.length>0){
+      console.warn('[submitProd] Invalid rows found:', invalidRows);
+    }
+
+    console.log('[submitProd] Starting, id:', id || 'NEW');
+    console.log('[submitProd] Product:', name, 'stock:', stock, 'unit:', unit);
+    console.log('[submitProd] Ingredients count:', validIngredients.length);
+    console.log('[submitProd] Ingredients:', validIngredients.map(r=>({id:r.ingredientId, amount:r.amount})));
 
     if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');return;}
     if(!validIngredients.length){toast('Tambahkan minimal 1 bahan baku.','error');return;}
@@ -646,44 +684,48 @@
     // Hitung HPP
     let totalBahan=0;
     for(const r of validIngredients){
-      // Product (finished good)
+      console.log('[submitProd] HPP calc for:', r.ingredientId, 'amount:', r.amount);
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
         if(!prod||!prod.hppTotal){toast(`HPP ${prod?.name||'produk'} belum dihitung.`,'error');return;}
         const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
         totalBahan += hargaSatuan * r.amount;
+        console.log('[submitProd]   Product ingredient:', prod.name, 'hargaSatuan:', hargaSatuan);
       }
-      // Ingredient with ing_ prefix
       else if(r.ingredientId.startsWith('ing_')){
         const ingId = r.ingredientId.replace('ing_','');
         const ing=ingredients.find(i=>i.id===ingId);
         if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
         totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
+        console.log('[submitProd]   Raw ingredient:', ing.name, 'hargaSatuan:', ing.hargaBeli/ing.unitMultiplier);
       }
-      // Legacy: no prefix
       else {
         const ing=ingredients.find(i=>i.id===r.ingredientId);
         if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
         totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
+        console.log('[submitProd]   Legacy ingredient:', ing.name);
       }
     }
     const hppTotal=totalBahan+overhead;
     const hargaJual=Math.ceil(hppTotal*(1+margin/100)/1000)*1000;
+    console.log('[submitProd] HPP Total:', hppTotal, 'Harga Jual:', hargaJual);
 
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       const batch=writeBatch(db);
+      let batchCount = 0;
 
       if(id){
-        // Edit: update produk, tidak kurangi stok bahan baku
+        console.log('[submitProd] EDIT mode');
         await updateDoc(doc(db,"finishedGoods",id),{
           name,category,unit,stock,minStock,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients
         });
       }else{
-        // Tambah baru: buat produk DAN kurangi stok bahan baku (sekali per bahan, tidak dikali stok)
+        console.log('[submitProd] NEW product mode');
+        // Tambah baru: buat produk DAN kurangi stok bahan baku
         const newProdRef = doc(collection(db,"finishedGoods"));
         batch.set(newProdRef,{
           name,category,unit,stock,minStock,overhead,margin,
@@ -691,18 +733,25 @@
           ingredients:validIngredients,
           createdAt:serverTimestamp()
         });
+        batchCount++;
+        console.log('[submitProd] Added product to batch:', newProdRef.id);
 
-        // Kurangi stok bahan baku / produk jadi (1x per bahan, untuk batch awal)
+        // Kurangi stok bahan baku / produk jadi
         for(const r of validIngredients){
-          const deduct = r.amount; // Hanya sekali, tidak dikali stok awal
+          const deduct = r.amount;
+          console.log('[submitProd] Processing ingredient:', r.ingredientId, 'deduct:', deduct);
 
           if(r.ingredientId.startsWith('prod_')){
-            // Deduct from finished goods (another product)
             const prodId = r.ingredientId.replace('prod_','');
             const prod = products.find(p=>p.id===prodId);
+            console.log('[submitProd]   Product ref:', prodId, 'found:', !!prod);
             if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
             if(prod.stock < deduct){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-            batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-deduct)});
+
+            const prodDocRef = doc(db,"finishedGoods",prodId);
+            batch.update(prodDocRef,{stock:increment(-deduct)});
+            batchCount++;
+            console.log('[submitProd]   Added product update to batch:', prodId, 'deduct:', deduct);
 
             const logRef=doc(collection(db,"stockLogs"));
             batch.set(logRef,{
@@ -715,14 +764,20 @@
               byName:currentUser.name,
               createdAt:serverTimestamp()
             });
+            batchCount++;
+            console.log('[submitProd]   Added product log to batch');
           }
           else {
-            // Deduct from raw ingredient
             const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
             const ing = ingredients.find(i=>i.id===ingId);
+            console.log('[submitProd]   Ingredient ref:', ingId, 'found:', !!ing, 'stock:', ing?.stock);
             if(!ing){toast(`Bahan ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
             if(ing.stock < deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-            batch.update(doc(db,"ingredients",ingId),{stock:increment(-deduct)});
+
+            const ingDocRef = doc(db,"ingredients",ingId);
+            batch.update(ingDocRef,{stock:increment(-deduct)});
+            batchCount++;
+            console.log('[submitProd]   Added ingredient update to batch:', ingId, 'deduct:', deduct);
 
             const logRef=doc(collection(db,"stockLogs"));
             batch.set(logRef,{
@@ -735,6 +790,8 @@
               byName:currentUser.name,
               createdAt:serverTimestamp()
             });
+            batchCount++;
+            console.log('[submitProd]   Added ingredient log to batch');
           }
         }
 
@@ -749,15 +806,22 @@
           byName:currentUser.name,
           createdAt:serverTimestamp()
         });
+        batchCount++;
+        console.log('[submitProd] Added product creation log to batch');
 
+        console.log('[submitProd] Committing batch with', batchCount, 'operations');
         await batch.commit();
+        console.log('[submitProd] Batch committed successfully');
       }
 
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
       renderIngredients();renderProducts();renderLogs();checkAlerts();
       closeProdModal();
       toast(id?'✓ Produk diupdate':'✓ Produk dibuat','success');
-    }catch(e){toast('Error: '+e.message,'error');}
+    }catch(e){
+      console.error('[submitProd] ERROR:', e);
+      toast('Error: '+e.message,'error');
+    }
     btn.disabled=false;btn.textContent='Simpan';
   };
 
