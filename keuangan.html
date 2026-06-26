@@ -53,6 +53,7 @@
     }
   </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -81,8 +82,8 @@
     <a href="admin.html"     class="bn-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
     <a href="inventory.html" class="bn-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
     <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
-    <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
     <a href="keuangan.html"  class="bn-item active admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
+    <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
 </nav>
 
@@ -243,6 +244,7 @@
     if(!snap.exists()){location.href="login.html";return;}
     const role=snap.data().role||'kasir';
     if(role!=='admin'){location.href="dashboard.html";return;}
+    document.body.classList.add('is-admin');
     currentUser={uid:user.uid,name:snap.data().name||user.email};
     await Promise.all([loadCashflows(),loadIngredients(),loadProducts()]);
     renderSummary();renderTable();
