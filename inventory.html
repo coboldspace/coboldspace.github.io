@@ -107,8 +107,9 @@
     <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
     <a href="kasir.html"     class="nav-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
     <a href="admin.html"     class="nav-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
-    <a href="inventory.html" class="nav-item active admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="inventory.html" class="nav-item admin-only active"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
     <a href="roasting.html"  class="nav-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="keuangan.html"  class="nav-item admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
     <a href="hpp.html"       class="nav-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </nav>
   <button class="btn-logout" id="btnLogout">LOGOUT</button>
@@ -120,12 +121,12 @@
     <a href="dashboard.html" class="bn-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
     <a href="kasir.html"     class="bn-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
     <a href="admin.html"     class="bn-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
-    <a href="inventory.html" class="bn-item active admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="inventory.html" class="bn-item admin-only active"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
     <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="keuangan.html"  class="bn-item admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
     <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
 </nav>
-
 <div class="main-content">
   <div class="header">
     <div><h1>Inventori</h1><div class="header-sub">Kelola stok bahan baku, produk jadi, resep menu, dan riwayat.</div></div>
@@ -448,6 +449,20 @@
       const i=ingredients.find(x=>x.id===id);
       await updateDoc(doc(db,"ingredients",id),{stock:increment(amt)});
       await addDoc(collection(db,"stockLogs"),{type:'ingredient',ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()});
+      // Auto-catat ke cashflow
+      const biaya = amt * (i.hargaBeli / i.unitMultiplier);
+      if(biaya > 0){
+        await addDoc(collection(db,"cashflow"),{
+          type:'expense',
+          amount: Math.round(biaya),
+          description: `Restock: ${i.name} +${amt} ${i.unit}`,
+          category:'inventory',
+          relatedId: id,
+          relatedType:'ingredient',
+          createdBy: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
       await loadIngredients();await loadLogs();renderIngredients();renderLogs();checkAlerts();closeRestock();toast(`✓ +${amt} ${i.unit} ditambahkan`,'success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Tambah Stok';
@@ -973,6 +988,35 @@
       });
 
       await batch.commit();
+      // Auto-catat ke cashflow (HPP bahan yang dipakai)
+      let totalCost = 0;
+      for (const r of validIngredients) {
+        if(r.ingredientId.startsWith('prod_')){
+          const prodId = r.ingredientId.replace('prod_','');
+          const prod = products.find(p=>p.id===prodId);
+          if(prod && prod.hppTotal && prod.stock > 0){
+            totalCost += (prod.hppTotal / prod.stock) * r.amount * amt;
+          }
+        } else {
+          const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+          const ing = ingredients.find(i=>i.id===ingId);
+          if(ing && ing.hargaBeli && ing.unitMultiplier){
+            totalCost += (ing.hargaBeli / ing.unitMultiplier) * r.amount * amt;
+          }
+        }
+      }
+      if(totalCost > 0){
+        await addDoc(collection(db,"cashflow"),{
+          type:'expense',
+          amount: Math.round(totalCost),
+          description: `Produksi: ${p.name} +${amt} ${p.unit}`,
+          category:'inventory',
+          relatedId: id,
+          relatedType:'finishedGoods',
+          createdBy: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
       renderIngredients();renderProducts();renderLogs();checkAlerts();
       closeProdRestock();

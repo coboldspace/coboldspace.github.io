@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Cobold POS — Keuangan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link rel="stylesheet" href="pos.css"/>
+  <style>
+    .section { display:none; } .section.active { display:block; }
+
+    /* Summary Cards */
+    .cf-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    .cf-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .cf-card-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+    .cf-card-value { font-size:20px; font-weight:600; color:var(--text-main); }
+    .cf-card-sub { font-size:12px; color:var(--text-dim); margin-top:2px; }
+    .cf-card.expense .cf-card-value { color:var(--red); }
+    .cf-card.income .cf-card-value { color:var(--green); }
+    .cf-card.balance .cf-card-value { color:var(--accent); }
+
+    /* Filter Bar */
+    .cf-filter-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+    .cf-filter-bar select, .cf-filter-bar input { background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text-main); font-family:'Inter',sans-serif; font-size:13px; outline:none; }
+    .cf-filter-bar select:focus, .cf-filter-bar input:focus { border-color:var(--accent); }
+    .cf-filter-bar .btn-sm { margin-left:auto; }
+
+    /* Table */
+    .cf-table .badge-inventory { background:rgba(59,130,246,.15); color:#60a5fa; }
+    .cf-table .badge-operational { background:rgba(168,85,247,.15); color:#c084fc; }
+    .cf-table .badge-other { background:rgba(107,114,128,.15); color:#9ca3af; }
+    .cf-table .badge-kasir { background:rgba(34,197,94,.15); color:#4ade80; }
+    .cf-table .badge-modal { background:rgba(245,158,11,.15); color:#f59e0b; }
+    .cf-table .badge-pengembalian { background:rgba(255,95,95,.15); color:#ff5f5f; }
+    .cf-amount { font-weight:600; font-size:14px; }
+    .cf-amount.expense { color:var(--red); }
+    .cf-amount.income { color:var(--green); }
+
+    /* Modal */
+    .modal-overlay { align-items:center !important; justify-content:center !important; padding:16px !important; }
+    .modal { max-width:480px !important; width:100% !important; max-height:85vh !important; transform:translateY(0) !important; }
+    .modal-overlay.show .modal { transform:translateY(0) !important; }
+
+    @media(max-width:640px){
+      .cf-summary { grid-template-columns:1fr 1fr; }
+      .cf-filter-bar { flex-direction:column; align-items:stretch; }
+      .cf-filter-bar .btn-sm { margin-left:0; width:100%; justify-content:center; }
+      .cf-filter-bar select, .cf-filter-bar input { width:100%; }
+    }
+    @media(min-width:641px) and (max-width:1024px){
+      .cf-summary { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+
+</head>
+<body>
+
+<div id="loadingOverlay">COBOLD POS</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">Cobold POS</div>
+  <nav class="nav-menu">
+    <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+    <a href="kasir.html"     class="nav-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
+    <a href="admin.html"     class="nav-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
+    <a href="inventory.html" class="nav-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="roasting.html"  class="nav-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="keuangan.html"  class="nav-item active admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
+    <a href="hpp.html"       class="nav-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
+  </nav>
+  <button class="btn-logout" id="btnLogout">LOGOUT</button>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bn-bar">
+    <a href="dashboard.html" class="bn-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+    <a href="kasir.html"     class="bn-item"><i class="fa-solid fa-cash-register"></i><span>Transaksi</span></a>
+    <a href="admin.html"     class="bn-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
+    <a href="inventory.html" class="bn-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
+    <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
+    <a href="keuangan.html"  class="bn-item active admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
+  </div>
+</nav>
+
+<div class="main-content">
+  <div class="header">
+    <div><h1>Keuangan</h1><div class="header-sub">Pantau arus kas kedai — pengeluaran, pemasukan, dan modal.</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="openIncomeModal()" style="background:var(--green)"><i class="fa-solid fa-arrow-down"></i> Pemasukan</button>
+      <button class="btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-arrow-up"></i> Pengeluaran</button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="cf-summary">
+    <div class="cf-card expense">
+      <div class="cf-card-label">Pengeluaran Hari Ini</div>
+      <div class="cf-card-value" id="cfTodayExpense">Rp 0</div>
+      <div class="cf-card-sub" id="cfTodayExpenseCount">0 transaksi</div>
+    </div>
+    <div class="cf-card income">
+      <div class="cf-card-label">Pemasukan Hari Ini</div>
+      <div class="cf-card-value" id="cfTodayIncome">Rp 0</div>
+      <div class="cf-card-sub" id="cfTodayIncomeCount">0 transaksi</div>
+    </div>
+    <div class="cf-card balance">
+      <div class="cf-card-label">Sisa Kas Hari Ini</div>
+      <div class="cf-card-value" id="cfTodayBalance">Rp 0</div>
+      <div class="cf-card-sub">income - expense</div>
+    </div>
+    <div class="cf-card balance">
+      <div class="cf-card-label">Total Modal Masuk</div>
+      <div class="cf-card-value" id="cfTotalModal">Rp 0</div>
+      <div class="cf-card-sub" id="cfTotalModalCount">0 setoran</div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="cf-filter-bar">
+    <select id="cfFilterPeriod" onchange="applyFilter()">
+      <option value="all">Semua Waktu</option>
+      <option value="today">Hari Ini</option>
+      <option value="week">Minggu Ini</option>
+      <option value="month">Bulan Ini</option>
+    </select>
+    <select id="cfFilterType" onchange="applyFilter()">
+      <option value="all">Semua Tipe</option>
+      <option value="expense">Pengeluaran</option>
+      <option value="income">Pemasukan</option>
+    </select>
+    <select id="cfFilterCategory" onchange="applyFilter()">
+      <option value="all">Semua Kategori</option>
+      <option value="inventory">Inventory</option>
+      <option value="operational">Operasional</option>
+      <option value="kasir">Kasir</option>
+      <option value="modal">Modal</option>
+      <option value="pengembalian_modal">Pengembalian Modal</option>
+      <option value="other">Lainnya</option>
+    </select>
+    <input type="date" id="cfFilterDateFrom" onchange="applyFilter()"/>
+    <input type="date" id="cfFilterDateTo" onchange="applyFilter()"/>
+    <button class="btn-sm" onclick="resetFilter()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="table-wrap cf-table">
+      <table>
+        <thead><tr><th>Waktu</th><th>Tipe</th><th>Kategori</th><th>Deskripsi</th><th>Jumlah</th><th>Oleh</th><th>Aksi</th></tr></thead>
+        <tbody id="cfTbody"><tr><td colspan="7" class="empty-cell">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH PENGELUARAN -->
+<div class="modal-overlay" id="expenseModal">
+  <div class="modal">
+    <h2>Tambah Pengeluaran</h2>
+    <div class="form-group"><label>Kategori</label>
+      <select id="expCat">
+        <option value="operational">Operasional (Sewa, Listrik, Gaji)</option>
+        <option value="inventory">Inventory (Bahan/Produk)</option>
+        <option value="pengembalian_modal">Pengembalian Modal</option>
+        <option value="other">Lainnya</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Nominal (Rp)</label><input type="number" id="expAmount" placeholder="150000" min="1" step="1"/></div>
+    <div class="form-group"><label>Deskripsi</label><input type="text" id="expDesc" placeholder="cth: Bayar sewa bulan Juni"/></div>
+    <div class="form-group"><label>Tanggal</label><input type="datetime-local" id="expDate"/></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeExpenseModal()">Batal</button>
+      <button class="btn-modal-confirm" id="expSaveBtn" onclick="submitExpense()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH PEMASUKAN -->
+<div class="modal-overlay" id="incomeModal">
+  <div class="modal">
+    <h2>Tambah Pemasukan</h2>
+    <div class="form-group"><label>Kategori</label>
+      <select id="incCat">
+        <option value="modal">Modal (Setoran Pribadi)</option>
+        <option value="other">Lainnya</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Nominal (Rp)</label><input type="number" id="incAmount" placeholder="10000000" min="1" step="1"/></div>
+    <div class="form-group"><label>Deskripsi</label><input type="text" id="incDesc" placeholder="cth: Modal awal dari Budi"/></div>
+    <div class="form-group"><label>Tanggal</label><input type="datetime-local" id="incDate"/></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeIncomeModal()">Batal</button>
+      <button class="btn-modal-confirm" id="incSaveBtn" onclick="submitIncome()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDIT TRANSAKSI -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>Edit Transaksi</h2>
+    <input type="hidden" id="editId"/>
+    <input type="hidden" id="editType"/>
+    <div class="form-group"><label>Kategori</label>
+      <select id="editCat">
+        <option value="inventory">Inventory</option>
+        <option value="operational">Operasional</option>
+        <option value="kasir">Kasir</option>
+        <option value="modal">Modal</option>
+        <option value="pengembalian_modal">Pengembalian Modal</option>
+        <option value="other">Lainnya</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Nominal (Rp)</label><input type="number" id="editAmount" min="1" step="1"/></div>
+    <div class="form-group"><label>Deskripsi</label><input type="text" id="editDesc"/></div>
+    <div class="form-group"><label>Tanggal</label><input type="datetime-local" id="editDate"/></div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="closeEditModal()">Batal</button>
+      <button class="btn-modal-confirm" id="editSaveBtn" onclick="submitEdit()">Update</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp, Timestamp }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
+  const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
+  let currentUser=null,cashflows=[],ingredients=[],products=[];
+
+  onAuthStateChanged(auth,async(user)=>{
+    if(!user){location.href="login.html";return;}
+    const snap=await getDoc(doc(db,"users",user.uid));
+    if(!snap.exists()){location.href="login.html";return;}
+    const role=snap.data().role||'kasir';
+    if(role!=='admin'){location.href="dashboard.html";return;}
+    currentUser={uid:user.uid,name:snap.data().name||user.email};
+    await Promise.all([loadCashflows(),loadIngredients(),loadProducts()]);
+    renderSummary();renderTable();
+    document.getElementById('loadingOverlay').style.display='none';
+  });
+
+  async function loadCashflows(){
+    const s=await getDocs(query(collection(db,"cashflow"),orderBy("createdAt","desc")));
+    cashflows=s.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  async function loadIngredients(){
+    const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
+    ingredients=s.docs.map(d=>({id:d.id,...d.data()}));
+  }
+  async function loadProducts(){
+    const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    products=s.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  // ── SUMMARY ──
+  function renderSummary(){
+    const now=new Date();
+    const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const weekStart=new Date(todayStart);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+
+    const toTimestamp=(d)=>Timestamp.fromDate(d);
+
+    const todayItems=cashflows.filter(c=>{
+      const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
+      return d>=todayStart;
+    });
+
+    const todayExpense=todayItems.filter(c=>c.type==='expense');
+    const todayIncome=todayItems.filter(c=>c.type==='income');
+    const sum=(arr)=>arr.reduce((a,c)=>a+(c.amount||0),0);
+
+    const totalExpense=sum(todayExpense);
+    const totalIncome=sum(todayIncome);
+    const balance=totalIncome-totalExpense;
+
+    const allModal=cashflows.filter(c=>c.category==='modal');
+    const totalModal=sum(allModal);
+
+    document.getElementById('cfTodayExpense').textContent='Rp '+totalExpense.toLocaleString('id');
+    document.getElementById('cfTodayExpenseCount').textContent=todayExpense.length+' transaksi';
+    document.getElementById('cfTodayIncome').textContent='Rp '+totalIncome.toLocaleString('id');
+    document.getElementById('cfTodayIncomeCount').textContent=todayIncome.length+' transaksi';
+    document.getElementById('cfTodayBalance').textContent='Rp '+balance.toLocaleString('id');
+    document.getElementById('cfTotalModal').textContent='Rp '+totalModal.toLocaleString('id');
+    document.getElementById('cfTotalModalCount').textContent=allModal.length+' setoran';
+  }
+
+  // ── TABLE & FILTER ──
+  window.applyFilter=function(){renderTable();};
+  window.resetFilter=function(){
+    document.getElementById('cfFilterPeriod').value='all';
+    document.getElementById('cfFilterType').value='all';
+    document.getElementById('cfFilterCategory').value='all';
+    document.getElementById('cfFilterDateFrom').value='';
+    document.getElementById('cfFilterDateTo').value='';
+    renderTable();
+  };
+
+  window.renderTable=function(){
+    const period=document.getElementById('cfFilterPeriod').value;
+    const type=document.getElementById('cfFilterType').value;
+    const cat=document.getElementById('cfFilterCategory').value;
+    const fromStr=document.getElementById('cfFilterDateFrom').value;
+    const toStr=document.getElementById('cfFilterDateTo').value;
+
+    let filtered=[...cashflows];
+
+    const now=new Date();
+    if(period==='today'){
+      const start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=start;});
+    }else if(period==='week'){
+      const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-now.getDay());
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=start;});
+    }else if(period==='month'){
+      const start=new Date(now.getFullYear(),now.getMonth(),1);
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=start;});
+    }
+
+    if(type!=='all') filtered=filtered.filter(c=>c.type===type);
+    if(cat!=='all') filtered=filtered.filter(c=>c.category===cat);
+
+    if(fromStr){
+      const from=new Date(fromStr);from.setHours(0,0,0,0);
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=from;});
+    }
+    if(toStr){
+      const to=new Date(toStr);to.setHours(23,59,59,999);
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d<=to;});
+    }
+
+    const tbody=document.getElementById('cfTbody');
+    if(!filtered.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-cell">Tidak ada transaksi.</td></tr>`;return;}
+
+    tbody.innerHTML=filtered.map(c=>{
+      const ts=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
+      const catLabels={inventory:'Inventory',operational:'Operasional',other:'Lainnya',kasir:'Kasir',modal:'Modal',pengembalian_modal:'Pengembalian Modal'};
+      const catCls={inventory:'badge-inventory',operational:'badge-operational',other:'badge-other',kasir:'badge-kasir',modal:'badge-modal',pengembalian_modal:'badge-pengembalian'};
+      const catLabel=catLabels[c.category]||c.category||'Lainnya';
+      const catClass=catCls[c.category]||'badge-other';
+
+      let desc=c.description||'—';
+      if(c.category==='inventory' && c.relatedId){
+        let itemName='';
+        if(c.relatedType==='ingredient'){
+          const ing=ingredients.find(i=>i.id===c.relatedId);
+          if(ing) itemName=ing.name;
+        }else if(c.relatedType==='finishedGoods'){
+          const prod=products.find(p=>p.id===c.relatedId);
+          if(prod) itemName=prod.name;
+        }
+        if(itemName) desc+=` <span style="color:var(--accent);font-size:11px">→ ${itemName}</span>`;
+      }
+
+      const isManual=!c.relatedId && c.category!=='kasir';
+      const typeLabel=c.type==='expense'?'Pengeluaran':'Pemasukan';
+      const typeCls=c.type==='expense'?'expense':'income';
+      const sign=c.type==='expense'?'-':'+';
+
+      return`<tr>
+        <td style="font-size:12px;color:var(--text-dim);white-space:nowrap">${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+        <td><span class="badge ${c.type==='expense'?'badge-red':'badge-green'}">${typeLabel}</span></td>
+        <td><span class="badge ${catClass}">${catLabel}</span></td>
+        <td>${desc}</td>
+        <td class="cf-amount ${typeCls}">${sign}Rp ${(c.amount||0).toLocaleString('id')}</td>
+        <td style="font-size:12px;color:var(--text-dim)">${c.createdBy||'—'}</td>
+        <td>
+          ${isManual?`<button class="btn-sm" onclick="openEditModal('${c.id}')">Edit</button>
+          <button class="btn-sm danger" onclick="deleteCf('${c.id}')">Hapus</button>`:`<span style="font-size:11px;color:var(--text-dim)">Auto</span>`}
+        </td>
+      </tr>`;
+    }).join('');
+  };
+
+  // ── ADD EXPENSE ──
+  window.openExpenseModal=function(){
+    document.getElementById('expCat').value='operational';
+    document.getElementById('expAmount').value='';
+    document.getElementById('expDesc').value='';
+    const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+    document.getElementById('expDate').value=now.toISOString().slice(0,16);
+    document.getElementById('expenseModal').classList.add('show');
+  };
+  window.closeExpenseModal=function(){document.getElementById('expenseModal').classList.remove('show');};
+  window.submitExpense=async function(){
+    const btn=document.getElementById('expSaveBtn');
+    const cat=document.getElementById('expCat').value;
+    const amount=parseFloat(document.getElementById('expAmount').value);
+    const desc=document.getElementById('expDesc').value.trim();
+    const dateStr=document.getElementById('expDate').value;
+    if(!amount||amount<=0||!desc){toast('Nominal dan deskripsi wajib diisi.','error');return;}
+
+    btn.disabled=true;btn.textContent='Menyimpan...';
+    try{
+      let createdAt=serverTimestamp();
+      if(dateStr){const d=new Date(dateStr);createdAt=Timestamp.fromDate(d);}
+      await addDoc(collection(db,"cashflow"),{type:'expense',amount,description:desc,category:cat,createdBy:currentUser.name,createdAt});
+      await loadCashflows();
+      renderSummary();renderTable();
+      closeExpenseModal();
+      toast('✓ Pengeluaran tercatat','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Simpan';
+  };
+
+  // ── ADD INCOME ──
+  window.openIncomeModal=function(){
+    document.getElementById('incCat').value='modal';
+    document.getElementById('incAmount').value='';
+    document.getElementById('incDesc').value='';
+    const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+    document.getElementById('incDate').value=now.toISOString().slice(0,16);
+    document.getElementById('incomeModal').classList.add('show');
+  };
+  window.closeIncomeModal=function(){document.getElementById('incomeModal').classList.remove('show');};
+  window.submitIncome=async function(){
+    const btn=document.getElementById('incSaveBtn');
+    const cat=document.getElementById('incCat').value;
+    const amount=parseFloat(document.getElementById('incAmount').value);
+    const desc=document.getElementById('incDesc').value.trim();
+    const dateStr=document.getElementById('incDate').value;
+    if(!amount||amount<=0||!desc){toast('Nominal dan deskripsi wajib diisi.','error');return;}
+
+    btn.disabled=true;btn.textContent='Menyimpan...';
+    try{
+      let createdAt=serverTimestamp();
+      if(dateStr){const d=new Date(dateStr);createdAt=Timestamp.fromDate(d);}
+      await addDoc(collection(db,"cashflow"),{type:'income',amount,description:desc,category:cat,createdBy:currentUser.name,createdAt});
+      await loadCashflows();
+      renderSummary();renderTable();
+      closeIncomeModal();
+      toast('✓ Pemasukan tercatat','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Simpan';
+  };
+
+  // ── EDIT ──
+  window.openEditModal=function(id){
+    const c=cashflows.find(x=>x.id===id);
+    if(!c||c.relatedId||c.category==='kasir'){toast('Hanya transaksi manual yang bisa diedit.','error');return;}
+    document.getElementById('editId').value=id;
+    document.getElementById('editType').value=c.type;
+    document.getElementById('editCat').value=c.category||'other';
+    document.getElementById('editAmount').value=c.amount||'';
+    document.getElementById('editDesc').value=c.description||'';
+    const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
+    d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+    document.getElementById('editDate').value=d.toISOString().slice(0,16);
+    document.getElementById('editModal').classList.add('show');
+  };
+  window.closeEditModal=function(){document.getElementById('editModal').classList.remove('show');};
+  window.submitEdit=async function(){
+    const btn=document.getElementById('editSaveBtn');
+    const id=document.getElementById('editId').value;
+    const cat=document.getElementById('editCat').value;
+    const amount=parseFloat(document.getElementById('editAmount').value);
+    const desc=document.getElementById('editDesc').value.trim();
+    const dateStr=document.getElementById('editDate').value;
+    if(!amount||amount<=0||!desc){toast('Nominal dan deskripsi wajib diisi.','error');return;}
+
+    btn.disabled=true;btn.textContent='Menyimpan...';
+    try{
+      let createdAt=serverTimestamp();
+      if(dateStr){const d=new Date(dateStr);createdAt=Timestamp.fromDate(d);}
+      await updateDoc(doc(db,"cashflow",id),{amount,description:desc,category:cat,createdAt});
+      await loadCashflows();
+      renderSummary();renderTable();
+      closeEditModal();
+      toast('✓ Transaksi diupdate','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent='Update';
+  };
+
+  // ── DELETE ──
+  window.deleteCf=async function(id){
+    const c=cashflows.find(x=>x.id===id);
+    if(!c){return;}
+    if(c.relatedId||c.category==='kasir'){toast('Transaksi auto tidak bisa dihapus di sini.','error');return;}
+    if(!confirm(`Hapus transaksi "${c.description}"?`))return;
+    try{
+      await deleteDoc(doc(db,"cashflow",id));
+      await loadCashflows();
+      renderSummary();renderTable();
+      toast('Transaksi dihapus','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+  };
+
+  function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}
+  document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
+</script>
+<script src="nav-scroll.js"></script>
+</body>
+</html>
