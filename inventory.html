@@ -226,14 +226,19 @@
 
 <!-- MODAL RESTOCK BAHAN BAKU -->
 <div class="modal-overlay" id="restockModal">
-  <div class="modal" style="max-width:360px">
+  <div class="modal" style="max-width:420px">
     <h2>Tambah Stok</h2>
     <input type="hidden" id="restockId"/>
     <div class="restock-info">
       <div class="ri-name" id="restockName">—</div>
       <div class="ri-stock" id="restockCurrent">Stok saat ini: —</div>
+      <div class="ri-stock" id="restockHarga" style="margin-top:4px">Harga beli terakhir: —</div>
     </div>
     <div class="form-group"><label>Jumlah Penambahan</label><input type="number" id="restockAmt" placeholder="0" min="0.01" step="0.01"/></div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Harga Beli Baru (Rp/<span id="restockUnitLabel">unit</span>)</label><input type="number" id="restockHargaBeli" placeholder="Kosongkan = pakai harga lama" min="0" step="1"/></div>
+      <div class="form-group"><label>Unit Multiplier</label><input type="number" id="restockMultiplier" placeholder="1000" min="1" step="1"/></div>
+    </div>
     <div class="form-group"><label>Keterangan</label><input type="text" id="restockNote" placeholder="Restock mingguan"/></div>
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="closeRestock()">Batal</button>
@@ -434,7 +439,12 @@
     document.getElementById('restockId').value=id;
     document.getElementById('restockName').textContent=i.name;
     document.getElementById('restockCurrent').textContent=`Stok saat ini: ${i.stock} ${i.unit}`;
-    document.getElementById('restockAmt').value='';document.getElementById('restockNote').value='';
+    document.getElementById('restockHarga').textContent=`Harga beli terakhir: Rp ${(i.hargaBeli||0).toLocaleString('id')} / ${i.unitMultiplier||1000}${i.unit}`;
+    document.getElementById('restockUnitLabel').textContent=i.unit;
+    document.getElementById('restockAmt').value='';
+    document.getElementById('restockHargaBeli').value='';
+    document.getElementById('restockMultiplier').value=i.unitMultiplier||1000;
+    document.getElementById('restockNote').value='';
     document.getElementById('restockModal').classList.add('show');
   };
   window.closeRestock=function(){document.getElementById('restockModal').classList.remove('show');};
@@ -442,20 +452,32 @@
     const btn=document.getElementById('restockSaveBtn');
     const id=document.getElementById('restockId').value;
     const amt=parseFloat(document.getElementById('restockAmt').value);
+    const hargaBeliBaru=parseFloat(document.getElementById('restockHargaBeli').value)||0;
+    const unitMultiplierBaru=parseFloat(document.getElementById('restockMultiplier').value)||0;
     const note=document.getElementById('restockNote').value.trim()||'Restock manual';
     if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');return;}
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       const i=ingredients.find(x=>x.id===id);
-      await updateDoc(doc(db,"ingredients",id),{stock:increment(amt)});
+      const updates={stock:increment(amt)};
+
+      // Update harga beli & multiplier kalau diisi baru
+      if(hargaBeliBaru>0) updates.hargaBeli=hargaBeliBaru;
+      if(unitMultiplierBaru>0) updates.unitMultiplier=unitMultiplierBaru;
+
+      await updateDoc(doc(db,"ingredients",id),updates);
       await addDoc(collection(db,"stockLogs"),{type:'ingredient',ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()});
-      // Auto-catat ke cashflow
-      const biaya = amt * (i.hargaBeli / i.unitMultiplier);
+
+      // Auto-catat ke cashflow pakai harga baru (kalau ada) atau harga lama
+      const hargaFinal = hargaBeliBaru>0 ? hargaBeliBaru : (i.hargaBeli||0);
+      const multiplierFinal = unitMultiplierBaru>0 ? unitMultiplierBaru : (i.unitMultiplier||1000);
+      const biaya = amt * (hargaFinal / multiplierFinal);
+
       if(biaya > 0){
         await addDoc(collection(db,"cashflow"),{
           type:'expense',
           amount: Math.round(biaya),
-          description: `Restock: ${i.name} +${amt} ${i.unit}`,
+          description: `Restock: ${i.name} +${amt} ${i.unit}${hargaBeliBaru>0?' (harga baru)':''}`,
           category:'inventory',
           relatedId: id,
           relatedType:'ingredient',
@@ -988,20 +1010,25 @@
       });
 
       await batch.commit();
-      // Auto-catat ke cashflow (HPP bahan yang dipakai)
+      // Auto-catat ke cashflow (HPP bahan yang dipakai untuk produksi)
       let totalCost = 0;
+      let costBreakdown = [];
       for (const r of validIngredients) {
         if(r.ingredientId.startsWith('prod_')){
           const prodId = r.ingredientId.replace('prod_','');
           const prod = products.find(p=>p.id===prodId);
           if(prod && prod.hppTotal && prod.stock > 0){
-            totalCost += (prod.hppTotal / prod.stock) * r.amount * amt;
+            const cost = (prod.hppTotal / prod.stock) * r.amount * amt;
+            totalCost += cost;
+            costBreakdown.push(`${prod.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
           }
         } else {
           const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
           const ing = ingredients.find(i=>i.id===ingId);
           if(ing && ing.hargaBeli && ing.unitMultiplier){
-            totalCost += (ing.hargaBeli / ing.unitMultiplier) * r.amount * amt;
+            const cost = (ing.hargaBeli / ing.unitMultiplier) * r.amount * amt;
+            totalCost += cost;
+            costBreakdown.push(`${ing.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
           }
         }
       }
