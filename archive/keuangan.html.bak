@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
   <link rel="stylesheet" href="pos.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     .section { display:none; } .section.active { display:block; }
 
@@ -20,27 +19,6 @@
     .cf-card.expense .cf-card-value { color:var(--red); }
     .cf-card.income .cf-card-value { color:var(--green); }
     .cf-card.balance .cf-card-value { color:var(--accent); }
-
-    /* Chart Tabs */
-    .chart-type-tabs { display:flex; gap:6px; }
-    .chart-type-tab {
-      padding:8px 18px; border-radius:8px; border:1px solid var(--border);
-      background:none; color:var(--text-dim); font-family:'Inter',sans-serif;
-      font-size:13px; font-weight:500; cursor:pointer; transition:0.2s;
-    }
-    .chart-type-tab:hover { border-color:var(--accent); color:var(--accent); }
-    .chart-type-tab.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
-
-    .report-tabs { display:flex; gap:6px; }
-    .report-tab {
-      padding:6px 14px; border-radius:20px; border:1px solid var(--border);
-      background:none; color:var(--text-dim); font-family:'Inter',sans-serif;
-      font-size:12px; cursor:pointer; transition:0.2s;
-    }
-    .report-tab:hover { border-color:var(--accent); color:var(--accent); }
-    .report-tab.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
-
-    .chart-container { position:relative; height:300px; width:100%; }
 
     /* Filter Bar */
     .cf-filter-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
@@ -69,8 +47,6 @@
       .cf-filter-bar { flex-direction:column; align-items:stretch; }
       .cf-filter-bar .btn-sm { margin-left:0; width:100%; justify-content:center; }
       .cf-filter-bar select, .cf-filter-bar input { width:100%; }
-      .chart-type-tabs, .report-tabs { width:100%; }
-      .chart-type-tab, .report-tab { flex:1; text-align:center; }
     }
     @media(min-width:641px) and (max-width:1024px){
       .cf-summary { grid-template-columns:repeat(2,1fr); }
@@ -140,28 +116,6 @@
       <div class="cf-card-label">Total Modal Masuk</div>
       <div class="cf-card-value" id="cfTotalModal">Rp 0</div>
       <div class="cf-card-sub" id="cfTotalModalCount">0 setoran</div>
-    </div>
-  </div>
-
-  <!-- Chart Section -->
-  <div class="card" style="margin-bottom:20px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <h2 id="cfChartTitle">📊 Laporan Keuangan</h2>
-      <div class="chart-type-tabs">
-        <button class="chart-type-tab active" onclick="switchCfChartType('expense',this)">Pengeluaran</button>
-        <button class="chart-type-tab" onclick="switchCfChartType('income',this)">Pemasukan</button>
-        <button class="chart-type-tab" onclick="switchCfChartType('net',this)">Net</button>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <div class="report-tabs">
-        <button class="report-tab active" onclick="switchCfPeriod('daily',this)">Harian</button>
-        <button class="report-tab" onclick="switchCfPeriod('weekly',this)">Mingguan</button>
-        <button class="report-tab" onclick="switchCfPeriod('monthly',this)">Bulanan</button>
-      </div>
-    </div>
-    <div class="chart-container">
-      <canvas id="cfChart"></canvas>
     </div>
   </div>
 
@@ -292,7 +246,7 @@
     document.body.classList.add('is-admin');
     currentUser={uid:user.uid,name:snap.data().name||user.email};
     await Promise.all([loadCashflows(),loadIngredients(),loadProducts()]);
-    renderSummary();renderTable();renderCfChart();
+    renderSummary();renderTable();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
@@ -313,6 +267,9 @@
   function renderSummary(){
     const now=new Date();
     const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const weekStart=new Date(todayStart);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+
+    const toTimestamp=(d)=>Timestamp.fromDate(d);
 
     const todayItems=cashflows.filter(c=>{
       const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
@@ -339,172 +296,6 @@
     document.getElementById('cfTotalModalCount').textContent=allModal.length+' setoran';
   }
 
-  // ── CHART ──
-  let cfChart=null;
-  let currentCfChartType='expense'; // expense | income | net
-  let currentCfPeriod='daily';      // daily | weekly | monthly
-
-  function getCfDate(c){
-    return c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
-  }
-
-  function renderCfChart(){
-    if(currentCfPeriod==='daily') renderCfDailyChart(cashflows);
-    else if(currentCfPeriod==='weekly') renderCfWeeklyChart(cashflows);
-    else if(currentCfPeriod==='monthly') renderCfMonthlyChart(cashflows);
-  }
-
-  function renderCfDailyChart(data){
-    const days=[], labels=[];
-    const now=new Date();
-    for(let i=6;i>=0;i--){
-      const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);
-      days.push(d);
-      labels.push(d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric'}));
-    }
-
-    const expenses=days.map(day=>{
-      const s=new Date(day.getFullYear(),day.getMonth(),day.getDate());
-      const e=new Date(day.getFullYear(),day.getMonth(),day.getDate()+1);
-      return data.filter(c=>{const ts=getCfDate(c);return ts>=s&&ts<e&&c.type==='expense';}).reduce((a,c)=>a+(c.amount||0),0);
-    });
-    const incomes=days.map(day=>{
-      const s=new Date(day.getFullYear(),day.getMonth(),day.getDate());
-      const e=new Date(day.getFullYear(),day.getMonth(),day.getDate()+1);
-      return data.filter(c=>{const ts=getCfDate(c);return ts>=s&&ts<e&&c.type==='income';}).reduce((a,c)=>a+(c.amount||0),0);
-    });
-    const nets=days.map((_,i)=>incomes[i]-expenses[i]);
-
-    let dataset;
-    if(currentCfChartType==='expense'){
-      dataset={label:'Pengeluaran (Rp)',data:expenses,backgroundColor:'rgba(255,95,95,0.7)',borderColor:'rgba(255,95,95,1)',borderWidth:1,borderRadius:6};
-    }else if(currentCfChartType==='income'){
-      dataset={label:'Pemasukan (Rp)',data:incomes,backgroundColor:'rgba(34,197,94,0.7)',borderColor:'rgba(34,197,94,1)',borderWidth:1,borderRadius:6};
-    }else{
-      dataset={label:'Net (Rp)',data:nets,backgroundColor:nets.map(v=>v>=0?'rgba(34,197,94,0.7)':'rgba(255,95,95,0.7)'),borderColor:nets.map(v=>v>=0?'rgba(34,197,94,1)':'rgba(255,95,95,1)'),borderWidth:1,borderRadius:6};
-    }
-
-    const ctx=document.getElementById('cfChart').getContext('2d');
-    if(cfChart)cfChart.destroy();
-    cfChart=new Chart(ctx,{
-      type:'bar',
-      data:{labels,datasets:[dataset]},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rp '+c.raw.toLocaleString('id')}}},
-        scales:{
-          y:{beginAtZero:true,ticks:{color:'#888',callback:v=>'Rp '+(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,0.05)'}},
-          x:{ticks:{color:'#888'},grid:{display:false}}
-        }
-      }
-    });
-  }
-
-  function renderCfWeeklyChart(data){
-    const weeks=[], labels=[];
-    const now=new Date();
-    for(let i=3;i>=0;i--){
-      const ws=new Date(now.getFullYear(),now.getMonth(),now.getDate()-(now.getDay()+i*7));
-      weeks.push(ws);
-      labels.push('Minggu '+(4-i));
-    }
-
-    const expenses=weeks.map((ws,idx)=>{
-      const we=idx<weeks.length-1?weeks[idx+1]:new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
-      return data.filter(c=>{const ts=getCfDate(c);return ts>=ws&&ts<we&&c.type==='expense';}).reduce((a,c)=>a+(c.amount||0),0);
-    });
-    const incomes=weeks.map((ws,idx)=>{
-      const we=idx<weeks.length-1?weeks[idx+1]:new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
-      return data.filter(c=>{const ts=getCfDate(c);return ts>=ws&&ts<we&&c.type==='income';}).reduce((a,c)=>a+(c.amount||0),0);
-    });
-    const nets=weeks.map((_,i)=>incomes[i]-expenses[i]);
-
-    let dataset;
-    const colors={
-      expense:{bg:'rgba(255,95,95,0.15)',border:'rgba(255,95,95,1)',point:'rgba(255,95,95,1)'},
-      income:{bg:'rgba(34,197,94,0.15)',border:'rgba(34,197,94,1)',point:'rgba(34,197,94,1)'},
-      net:{bg:'rgba(210,160,110,0.15)',border:'rgba(210,160,110,1)',point:'rgba(210,160,110,1)'}
-    };
-    const c=colors[currentCfChartType]||colors.expense;
-    const d=currentCfChartType==='expense'?expenses:currentCfChartType==='income'?incomes:nets;
-
-    dataset={label:(currentCfChartType==='expense'?'Pengeluaran':currentCfChartType==='income'?'Pemasukan':'Net')+' (Rp)',data:d,backgroundColor:c.bg,borderColor:c.border,borderWidth:2,fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:c.point};
-
-    const ctx=document.getElementById('cfChart').getContext('2d');
-    if(cfChart)cfChart.destroy();
-    cfChart=new Chart(ctx,{
-      type:'line',
-      data:{labels,datasets:[dataset]},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rp '+c.raw.toLocaleString('id')}}},
-        scales:{
-          y:{beginAtZero:true,ticks:{color:'#888',callback:v=>'Rp '+(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,0.05)'}},
-          x:{ticks:{color:'#888'},grid:{display:false}}
-        }
-      }
-    });
-  }
-
-  function renderCfMonthlyChart(data){
-    const months=[], labels=[];
-    const now=new Date();
-    for(let i=5;i>=0;i--){
-      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      months.push(d);
-      labels.push(d.toLocaleDateString('id-ID',{month:'short',year:'2-digit'}));
-    }
-
-    const expenses=months.map((ms,idx)=>{
-      const me=idx<months.length-1?months[idx+1]:new Date(now.getFullYear(),now.getMonth()+1,1);
-      return data.filter(c=>{const ts=getCfDate(c);return ts>=ms&&ts<me&&c.type==='expense';}).reduce((a,c)=>a+(c.amount||0),0);
-    });
-    const incomes=months.map((ms,idx)=>{
-      const me=idx<months.length-1?months[idx+1]:new Date(now.getFullYear(),now.getMonth()+1,1);
-      return data.filter(c=>{const ts=getCfDate(c);return ts>=ms&&ts<me&&c.type==='income';}).reduce((a,c)=>a+(c.amount||0),0);
-    });
-    const nets=months.map((_,i)=>incomes[i]-expenses[i]);
-
-    let dataset;
-    if(currentCfChartType==='expense'){
-      dataset={label:'Pengeluaran (Rp)',data:expenses,backgroundColor:'rgba(255,95,95,0.7)',borderColor:'rgba(255,95,95,1)',borderWidth:1,borderRadius:6};
-    }else if(currentCfChartType==='income'){
-      dataset={label:'Pemasukan (Rp)',data:incomes,backgroundColor:'rgba(34,197,94,0.7)',borderColor:'rgba(34,197,94,1)',borderWidth:1,borderRadius:6};
-    }else{
-      dataset={label:'Net (Rp)',data:nets,backgroundColor:nets.map(v=>v>=0?'rgba(34,197,94,0.7)':'rgba(255,95,95,0.7)'),borderColor:nets.map(v=>v>=0?'rgba(34,197,94,1)':'rgba(255,95,95,1)'),borderWidth:1,borderRadius:6};
-    }
-
-    const ctx=document.getElementById('cfChart').getContext('2d');
-    if(cfChart)cfChart.destroy();
-    cfChart=new Chart(ctx,{
-      type:'bar',
-      data:{labels,datasets:[dataset]},
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Rp '+c.raw.toLocaleString('id')}}},
-        scales:{
-          y:{beginAtZero:true,ticks:{color:'#888',callback:v=>'Rp '+(v/1000).toFixed(0)+'k'},grid:{color:'rgba(255,255,255,0.05)'}},
-          x:{ticks:{color:'#888'},grid:{display:false}}
-        }
-      }
-    });
-  }
-
-  window.switchCfChartType=function(type,btn){
-    document.querySelectorAll('.chart-type-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentCfChartType=type;
-    const titles={expense:'📊 Laporan Pengeluaran',income:'💰 Laporan Pemasukan',net:'📈 Laporan Net Keuangan'};
-    document.getElementById('cfChartTitle').textContent=titles[type]||titles.expense;
-    renderCfChart();
-  };
-  window.switchCfPeriod=function(period,btn){
-    document.querySelectorAll('.report-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentCfPeriod=period;
-    renderCfChart();
-  };
-
   // ── TABLE & FILTER ──
   window.applyFilter=function(){renderTable();};
   window.resetFilter=function(){
@@ -528,13 +319,13 @@
     const now=new Date();
     if(period==='today'){
       const start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-      filtered=filtered.filter(c=>{const d=getCfDate(c);return d>=start;});
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=start;});
     }else if(period==='week'){
       const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-now.getDay());
-      filtered=filtered.filter(c=>{const d=getCfDate(c);return d>=start;});
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=start;});
     }else if(period==='month'){
       const start=new Date(now.getFullYear(),now.getMonth(),1);
-      filtered=filtered.filter(c=>{const d=getCfDate(c);return d>=start;});
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=start;});
     }
 
     if(type!=='all') filtered=filtered.filter(c=>c.type===type);
@@ -542,18 +333,18 @@
 
     if(fromStr){
       const from=new Date(fromStr);from.setHours(0,0,0,0);
-      filtered=filtered.filter(c=>{const d=getCfDate(c);return d>=from;});
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d>=from;});
     }
     if(toStr){
       const to=new Date(toStr);to.setHours(23,59,59,999);
-      filtered=filtered.filter(c=>{const d=getCfDate(c);return d<=to;});
+      filtered=filtered.filter(c=>{const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);return d<=to;});
     }
 
     const tbody=document.getElementById('cfTbody');
     if(!filtered.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-cell">Tidak ada transaksi.</td></tr>`;return;}
 
     tbody.innerHTML=filtered.map(c=>{
-      const ts=getCfDate(c);
+      const ts=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
       const catLabels={inventory:'Inventory',operational:'Operasional',other:'Lainnya',kasir:'Kasir',modal:'Modal',pengembalian_modal:'Pengembalian Modal'};
       const catCls={inventory:'badge-inventory',operational:'badge-operational',other:'badge-other',kasir:'badge-kasir',modal:'badge-modal',pengembalian_modal:'badge-pengembalian'};
       const catLabel=catLabels[c.category]||c.category||'Lainnya';
@@ -616,7 +407,7 @@
       if(dateStr){const d=new Date(dateStr);createdAt=Timestamp.fromDate(d);}
       await addDoc(collection(db,"cashflow"),{type:'expense',amount,description:desc,category:cat,createdBy:currentUser.name,createdAt});
       await loadCashflows();
-      renderSummary();renderTable();renderCfChart();
+      renderSummary();renderTable();
       closeExpenseModal();
       toast('✓ Pengeluaran tercatat','success');
     }catch(e){toast('Error: '+e.message,'error');}
@@ -647,7 +438,7 @@
       if(dateStr){const d=new Date(dateStr);createdAt=Timestamp.fromDate(d);}
       await addDoc(collection(db,"cashflow"),{type:'income',amount,description:desc,category:cat,createdBy:currentUser.name,createdAt});
       await loadCashflows();
-      renderSummary();renderTable();renderCfChart();
+      renderSummary();renderTable();
       closeIncomeModal();
       toast('✓ Pemasukan tercatat','success');
     }catch(e){toast('Error: '+e.message,'error');}
@@ -663,7 +454,7 @@
     document.getElementById('editCat').value=c.category||'other';
     document.getElementById('editAmount').value=c.amount||'';
     document.getElementById('editDesc').value=c.description||'';
-    const d=getCfDate(c);
+    const d=c.createdAt?.toDate?c.createdAt.toDate():new Date((c.createdAt?.seconds||0)*1000);
     d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
     document.getElementById('editDate').value=d.toISOString().slice(0,16);
     document.getElementById('editModal').classList.add('show');
@@ -684,7 +475,7 @@
       if(dateStr){const d=new Date(dateStr);createdAt=Timestamp.fromDate(d);}
       await updateDoc(doc(db,"cashflow",id),{amount,description:desc,category:cat,createdAt});
       await loadCashflows();
-      renderSummary();renderTable();renderCfChart();
+      renderSummary();renderTable();
       closeEditModal();
       toast('✓ Transaksi diupdate','success');
     }catch(e){toast('Error: '+e.message,'error');}
@@ -700,7 +491,7 @@
     try{
       await deleteDoc(doc(db,"cashflow",id));
       await loadCashflows();
-      renderSummary();renderTable();renderCfChart();
+      renderSummary();renderTable();
       toast('Transaksi dihapus','success');
     }catch(e){toast('Error: '+e.message,'error');}
   };
