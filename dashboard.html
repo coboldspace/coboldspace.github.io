@@ -41,11 +41,24 @@
     .chart-type-tab.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
     .admin-report-section { animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* Cashflow summary cards */
+    .cf-mini-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+    .cf-mini-card { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
+    .cf-mini-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+    .cf-mini-value { font-size:18px; font-weight:600; }
+    .cf-mini-value.positive { color:var(--green); }
+    .cf-mini-value.negative { color:var(--red); }
+    .cf-mini-value.accent { color:var(--accent); }
+    .cf-mini-sub { font-size:11px; color:var(--text-dim); margin-top:2px; }
     @media (max-width: 640px) {
       #btnLogoutMobile { padding: 9px 11px; }
       #btnLogoutMobile .logout-label { display: none; }
       .report-tabs { width: 100%; }
       .report-tab { flex: 1; text-align: center; }
+      .cf-mini-summary { grid-template-columns:1fr; }
+    }
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .cf-mini-summary { grid-template-columns:repeat(2,1fr); }
     }
   </style>
 
@@ -188,6 +201,25 @@
       </div>
     </div>
 
+    <!-- Cashflow Mini Summary -->
+    <div class="cf-mini-summary">
+      <div class="cf-mini-card">
+        <div class="cf-mini-label">Sisa Kas</div>
+        <div class="cf-mini-value accent" id="cfBalance">Rp 0</div>
+        <div class="cf-mini-sub">akumulasi semua waktu</div>
+      </div>
+      <div class="cf-mini-card">
+        <div class="cf-mini-label">Pengeluaran Bulan Ini</div>
+        <div class="cf-mini-value negative" id="cfExpenseMonth">Rp 0</div>
+        <div class="cf-mini-sub" id="cfExpenseMonthCount">0 transaksi</div>
+      </div>
+      <div class="cf-mini-card">
+        <div class="cf-mini-label">Total Modal Masuk</div>
+        <div class="cf-mini-value positive" id="cfModal">Rp 0</div>
+        <div class="cf-mini-sub" id="cfModalCount">0 setoran</div>
+      </div>
+    </div>
+
     <!-- Margin & Overhead Cards -->
     <div class="stats-grid" style="margin-top:16px">
       <div class="stat-card">
@@ -219,17 +251,6 @@
         <h3>Overhead Bulanan</h3>
         <div class="value" id="overheadMonthly">Rp 0</div>
         <div class="value-sub">biaya operasional</div>
-      </div>
-    </div>
-
-    <!-- Tabel Detail Margin per Menu -->
-    <div class="card" style="margin-top:16px">
-      <h2>💰 Detail Margin per Menu (Bulan Ini)</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Menu</th><th>Terjual</th><th>Pendapatan</th><th>HPP</th><th>Margin</th><th>%</th></tr></thead>
-          <tbody id="marginDetailTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -304,9 +325,19 @@
 
   async function loadData() {
     try {
-      // Orders
-      const oSnap  = await getDocs(query(collection(db,"orders"), orderBy("createdAt","desc")));
+      // Orders + Menu + Ingredients + Cashflow — semua parallel
+      const [oSnap, mSnap, iSnap, cfSnap] = await Promise.all([
+        getDocs(query(collection(db,"orders"), orderBy("createdAt","desc"))),
+        getDocs(collection(db,"menu")),
+        getDocs(collection(db,"ingredients")),
+        getDocs(query(collection(db,"cashflow"), orderBy("createdAt","desc")))
+      ]);
+
       allOrders = oSnap.docs.map(d=>({id:d.id,...d.data()}));
+      menuDataCache = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const ings  = iSnap.docs.map(d=>({id:d.id,...d.data()}));
+      const cashflows = cfSnap.docs.map(d=>({id:d.id,...d.data()}));
+
       const now    = new Date();
       const todayS = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const monthS = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -321,6 +352,7 @@
       document.getElementById('statRevMonth').textContent = 'Rp '+rm.toLocaleString('id');
       document.getElementById('statOrdMonth').textContent = om+' transaksi';
       document.getElementById('statTotal').textContent    = allOrders.length;
+      document.getElementById('statMenu').textContent = mSnap.docs.filter(d=>d.data().available!==false).length;
 
       // Recent 5
       const tbody  = document.getElementById('recentTbody');
@@ -337,15 +369,8 @@
         </tr>`;
       }).join('') : `<tr><td colspan="5" class="empty-cell">Belum ada transaksi.</td></tr>`;
 
-      // Menu count
-      const mSnap = await getDocs(collection(db,"menu"));
-      document.getElementById('statMenu').textContent = mSnap.docs.filter(d=>d.data().available!==false).length;
-
       // Ingredients
-      const iSnap = await getDocs(collection(db,"ingredients"));
-      const ings  = iSnap.docs.map(d=>({id:d.id,...d.data()}));
       const low   = ings.filter(i=>i.minStock>0 && i.stock<=i.minStock);
-
       document.getElementById('stockTbody').innerHTML = ings.length ? ings.map(i=>{
         const r   = i.minStock>0 ? i.stock/i.minStock : 2;
         const cls = r<=0?'badge-red':r<=0.5?'badge-red':r<=1?'badge-yellow':'badge-green';
@@ -358,29 +383,35 @@
         document.getElementById('alertLowBody').innerHTML = low.map(i=>`• ${i.name}: ${i.stock} ${i.unit}`).join('<br>');
       }
 
+      // Cashflow mini summary
+      const sum = (arr) => arr.reduce((a,c)=>a+(c.amount||0),0);
+      const allIncome = cashflows.filter(c => c.type === 'income');
+      const allExpense = cashflows.filter(c => c.type === 'expense');
+      const monthExpense = cashflows.filter(c => {
+        const d = c.createdAt?.toDate ? c.createdAt.toDate() : new Date((c.createdAt?.seconds||0)*1000);
+        return c.type === 'expense' && d >= monthS;
+      });
+      const allModal = cashflows.filter(c => c.category === 'modal');
+
+      document.getElementById('cfBalance').textContent = 'Rp ' + (sum(allIncome) - sum(allExpense)).toLocaleString('id');
+      document.getElementById('cfExpenseMonth').textContent = 'Rp ' + sum(monthExpense).toLocaleString('id');
+      document.getElementById('cfExpenseMonthCount').textContent = monthExpense.length + ' transaksi';
+      document.getElementById('cfModal').textContent = 'Rp ' + sum(allModal).toLocaleString('id');
+      document.getElementById('cfModalCount').textContent = allModal.length + ' setoran';
+
       // Load admin reports if admin
       const userSnap = await getDoc(doc(db,"users",auth.currentUser.uid));
       if (userSnap.exists() && userSnap.data().role === 'admin') {
-        await loadAdminReports();
+        loadAdminReports();
       }
     } catch(e) { console.error(e); }
   }
 
   // ── ADMIN REPORTS ──
-  async function loadAdminReports() {
-    // Load menu data first for accurate overhead calculation
-    await loadMenuData();
-
+  function loadAdminReports() {
     const doneOrders = allOrders.filter(o => o.status === 'done');
-
-    // Daily chart (last 7 days)
     renderDailyChart(doneOrders);
-
-    // Calculate margins & overhead
     calculateMargins(doneOrders);
-
-    // Detail margin per menu
-    renderMarginDetail(doneOrders);
   }
 
   function getOrderDate(o) {
@@ -410,7 +441,6 @@
       } else if (currentChartType === 'margin') {
         return dayOrders.reduce((s, o) => s + ((o.total || 0) - (o.hpp || 0)), 0);
       } else if (currentChartType === 'overhead') {
-        // Calculate actual overhead from menu data
         let overhead = 0;
         dayOrders.forEach(o => {
           (o.items || []).forEach(item => {
@@ -695,7 +725,6 @@
     };
     document.getElementById('chartTitle').textContent = titles[type] || titles.sales;
 
-    // Re-render current period with new chart type
     const doneOrders = allOrders.filter(o => o.status === 'done');
     if (currentPeriod === 'daily') renderDailyChart(doneOrders);
     else if (currentPeriod === 'weekly') renderWeeklyChart(doneOrders);
@@ -715,15 +744,9 @@
 
   let menuDataCache = [];
 
-  async function loadMenuData() {
-    const snap = await getDocs(collection(db, "menu"));
-    menuDataCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  }
-
   function calculateMargins(orders) {
     const now = new Date();
 
-    // Daily
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     const todayOrders = orders.filter(o => {
@@ -731,39 +754,30 @@
       return ts >= todayStart && ts < todayEnd;
     });
 
-    // Weekly
     const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
     const weekOrders = orders.filter(o => {
       const ts = getOrderDate(o);
       return ts >= weekStart;
     });
 
-    // Monthly
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthOrders = orders.filter(o => {
       const ts = getOrderDate(o);
       return ts >= monthStart;
     });
 
-    // Calculate for each period using ACTUAL overhead from menu data
     const calcPeriod = (ords) => {
-      let revenue = 0, hppTotal = 0, overheadTotal = 0, bahanTotal = 0;
+      let revenue = 0, hppTotal = 0, overheadTotal = 0;
 
       ords.forEach(o => {
         revenue += (o.total || 0);
         hppTotal += (o.hpp || 0);
 
-        // Calculate actual overhead from menu data
         (o.items || []).forEach(item => {
           const menu = menuDataCache.find(m => m.id === item.id);
           if (menu && menu.hpp) {
             const qty = item.qty || 1;
-            // overhead per porsi * qty
-            const itemOverhead = (menu.hpp.overhead || 0) * qty;
-            overheadTotal += itemOverhead;
-            // bahan = hpp total - overhead
-            const itemHpp = (menu.hpp.total || 0) * qty;
-            bahanTotal += (itemHpp - itemOverhead);
+            overheadTotal += (menu.hpp.overhead || 0) * qty;
           }
         });
       });
@@ -771,14 +785,13 @@
       const profit = revenue - hppTotal;
       const marginPct = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0;
 
-      return { revenue, hpp: hppTotal, profit, marginPct, overhead: overheadTotal, bahan: bahanTotal };
+      return { revenue, hpp: hppTotal, profit, marginPct, overhead: overheadTotal };
     };
 
     const daily = calcPeriod(todayOrders);
     const weekly = calcPeriod(weekOrders);
     const monthly = calcPeriod(monthOrders);
 
-    // Update DOM
     document.getElementById('marginDaily').textContent = 'Rp ' + Math.round(daily.profit).toLocaleString('id');
     document.getElementById('marginDailyPct').textContent = daily.marginPct + '%';
     document.getElementById('marginDailyPct').className = 'value-sub ' + (daily.profit >= 0 ? 'profit-positive' : 'profit-negative');
@@ -796,70 +809,8 @@
     document.getElementById('overheadMonthly').textContent = 'Rp ' + Math.round(monthly.overhead).toLocaleString('id');
   }
 
-  function renderMarginDetail(orders) {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthOrders = orders.filter(o => {
-      const ts = getOrderDate(o);
-      return ts >= monthStart;
-    });
-
-    // Aggregate by menu using actual menu data for accurate HPP breakdown
-    const menuStats = {};
-    monthOrders.forEach(o => {
-      (o.items || []).forEach(item => {
-        if (!menuStats[item.id]) {
-          menuStats[item.id] = { name: item.name, qty: 0, revenue: 0, hpp: 0, overhead: 0, bahan: 0 };
-        }
-        const qty = item.qty || 1;
-        menuStats[item.id].qty += qty;
-        menuStats[item.id].revenue += (item.price || 0) * qty;
-
-        // Get actual HPP data from menu
-        const menu = menuDataCache.find(m => m.id === item.id);
-        if (menu && menu.hpp) {
-          const itemHppTotal = (menu.hpp.total || 0) * qty;
-          const itemOverhead = (menu.hpp.overhead || 0) * qty;
-          const itemBahan = itemHppTotal - itemOverhead;
-          menuStats[item.id].hpp += itemHppTotal;
-          menuStats[item.id].overhead += itemOverhead;
-          menuStats[item.id].bahan += itemBahan;
-        } else {
-          // Fallback: estimate from order hpp proportion
-          const itemTotal = (item.price || 0) * qty;
-          const orderTotal = o.total || 1;
-          const itemHppShare = o.hpp ? (o.hpp * (itemTotal / orderTotal)) : 0;
-          menuStats[item.id].hpp += itemHppShare;
-        }
-      });
-    });
-
-    const tbody = document.getElementById('marginDetailTbody');
-    const rows = Object.values(menuStats).sort((a, b) => b.revenue - a.revenue);
-
-    if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">Belum ada data penjualan bulan ini.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = rows.map(r => {
-      const margin = r.revenue - r.hpp;
-      const marginPct = r.revenue > 0 ? ((margin / r.revenue) * 100).toFixed(1) : 0;
-      const cls = margin >= 0 ? 'profit-positive' : 'profit-negative';
-      return `<tr>
-        <td><strong>${r.name}</strong></td>
-        <td>${r.qty}</td>
-        <td>Rp ${Math.round(r.revenue).toLocaleString('id')}</td>
-        <td>Rp ${Math.round(r.hpp).toLocaleString('id')}</td>
-        <td class="${cls}">Rp ${Math.round(margin).toLocaleString('id')}</td>
-        <td class="${cls}">${marginPct}%</td>
-      </tr>`;
-    }).join('');
-  }
-
   const doLogout = () => signOut(auth).then(() => location.href = "login.html");
   window.doLogout = doLogout;
-  // Sidebar logout (desktop/tablet)
   const sidebarLogout = document.getElementById('btnLogout');
   if (sidebarLogout) sidebarLogout.addEventListener('click', doLogout);
 </script>
