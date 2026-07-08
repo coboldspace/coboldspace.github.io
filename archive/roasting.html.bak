@@ -126,25 +126,6 @@
       padding: 6px 12px; font-size: 12px; font-weight: 600;
     }
 
-    /* Modal centering fix */
-    .modal-overlay { 
-      display: none; 
-      position: fixed; 
-      inset: 0; 
-      background: rgba(0,0,0,0.7); 
-      z-index: 1000; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 16px; 
-    }
-    .modal-overlay.show { display: flex; }
-    .modal { 
-      margin: auto; 
-      transform: none !important;
-      animation: modalFadeIn 0.2s ease;
-    }
-    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
     @media (max-width: 640px) {
       .blend-row { grid-template-columns: 1fr 1fr; gap: 8px; }
       .blend-row .btn-remove { grid-column: 2; justify-self: end; height: 36px; }
