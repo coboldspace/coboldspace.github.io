@@ -153,6 +153,7 @@
     }
   </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -305,9 +306,21 @@
     <!-- Target roasted bean di inventory -->
     <div class="form-group" style="margin-top:16px">
       <label>Tambahkan ke stok bahan <span style="color:var(--accent)">*</span></label>
-      <select id="roastedTarget">
+      <select id="roastedTarget" onchange="onTargetChange()">
         <option value="">— Pilih item roasted bean di inventory —</option>
       </select>
+    </div>
+
+    <!-- Unit Multiplier override -->
+    <div class="form-row-2" style="margin-top:12px">
+      <div class="form-group">
+        <label>Unit Multiplier <span style="color:var(--text-dim);font-size:11px">(g per unit)</span></label>
+        <input type="number" id="unitMultiplier" value="1000" min="1" step="1" oninput="calcPreview()"/>
+      </div>
+      <div class="form-group">
+        <label>Harga Beli Auto <span style="color:var(--text-dim);font-size:11px">(Rp per unit)</span></label>
+        <input type="text" id="autoHargaBeli" readonly style="opacity:0.7" placeholder="auto"/>
+      </div>
     </div>
 
     <div class="modal-footer">
@@ -616,15 +629,27 @@
     return parseFloat(harga) || 0;
   }
 
+  window.onTargetChange = function() {
+    const targetId = document.getElementById('roastedTarget').value;
+    const ing = ingredients.find(i => i.id === targetId);
+    if(ing && ing.unitMultiplier) {
+      document.getElementById('unitMultiplier').value = ing.unitMultiplier;
+    } else {
+      document.getElementById('unitMultiplier').value = 1000;
+    }
+    calcPreview();
+  };
+
   window.calcPreview = function() {
     const totalGreen = blendRows.reduce((s,r)=>s+(+r.grams||0),0);
     const yieldPct   = parseFloat(document.getElementById('yieldPct').value)||82;
     const roastCost  = parseFloat(document.getElementById('roastCost').value)||0;
+    const unitMult   = parseFloat(document.getElementById('unitMultiplier').value)||1000;
     const roasted    = Math.round(totalGreen * yieldPct / 100);
     const loss       = totalGreen - roasted;
 
     // Debug log
-    console.log('calcPreview:', {totalGreen, yieldPct, roastCost, roasted, loss});
+    console.log('calcPreview:', {totalGreen, yieldPct, roastCost, unitMult, roasted, loss});
 
     let hppBahan = 0;
     let missingPrice = [];
@@ -668,7 +693,7 @@
           <strong>Total HPP: Rp ${Math.round(totalHpp).toLocaleString('id')} ÷ ${roasted}g</strong>
         </div>
         <div style="font-size:10px;color:var(--green);margin-top:4px">
-          ✓ Harga beli roasted bean akan di-update otomatis ke Rp ${Math.round(hppPerKg).toLocaleString('id')}/kg
+          ✓ Harga beli roasted bean akan di-update otomatis sesuai unit multiplier
         </div>
       `;
     } else if(totalGreen === 0) {
@@ -736,12 +761,16 @@
         }
       }
       const finalHppPerGram = roasted > 0 ? (finalHppBahan + roastCost) / roasted : 0;
-      const finalHppPerKg = finalHppPerGram * 1000;
+      const finalHppPerKg = finalHppPerGram * 1000; // for display only
 
       // Inject hargaBeli ke roasted bean di inventory
-      if(targetId && finalHppPerKg > 0) {
+      // hargaBeli disesuaikan dengan unitMultiplier target (per kg, per 100g, per unit, dll)
+      if(targetId && finalHppPerGram > 0) {
+        const targetIng = ingredients.find(i=>i.id===targetId);
+        const targetMult = parseFloat(targetIng?.unitMultiplier) || 1000;
+        const hargaBeliInject = Math.round(finalHppPerGram * targetMult);
         await updateDoc(doc(db,"ingredients",targetId), { 
-          hargaBeli: Math.round(finalHppPerKg),
+          hargaBeli: hargaBeliInject,
           hargaBeliUpdatedAt: serverTimestamp(),
           hargaBeliSource: `Roasting batch ${batchNo}`
         });
@@ -753,6 +782,8 @@
         blend, totalGreen, yieldPct, roastedOutput: roasted,
         roastCost, hppPerGram: Math.round(finalHppPerGram),
         hppPerKg: Math.round(finalHppPerKg),
+        unitMultiplier: finalUnitMult,
+        hargaBeli: Math.round(finalHppPerUnit),
         roastedTargetId: targetId,
         createdBy: currentUser.name, createdAt: serverTimestamp()
       });
