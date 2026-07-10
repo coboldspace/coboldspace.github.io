@@ -623,6 +623,9 @@
     const roasted    = Math.round(totalGreen * yieldPct / 100);
     const loss       = totalGreen - roasted;
 
+    // Debug log
+    console.log('calcPreview:', {totalGreen, yieldPct, roastCost, roasted, loss});
+
     let hppBahan = 0;
     let missingPrice = [];
     for(const r of blendRows) {
@@ -646,20 +649,33 @@
     document.getElementById('prevRoasted').textContent = roasted   ? `${roasted.toLocaleString('id')} g` : '—';
     document.getElementById('prevLoss').textContent    = loss      ? `${loss.toLocaleString('id')} g` : '—';
 
+    const hppEl = document.getElementById('prevHpp');
     if(missingPrice.length > 0) {
-      document.getElementById('prevHpp').innerHTML = `<span style="color:var(--yellow);font-size:12px">
+      hppEl.innerHTML = `<span style="color:var(--yellow);font-size:12px">
         ⚠️ Harga beli belum diisi untuk: ${missingPrice.join(', ')}<br>
         Input harga di menu Inventori → ${missingPrice.join(', ')}
       </span>`;
-    } else if(hppPerGram > 0) {
-      document.getElementById('prevHpp').textContent = `Rp ${Math.round(hppPerGram).toLocaleString('id')}/g`;
-      document.getElementById('prevHpp').style.color = 'var(--accent)';
+    } else if(totalGreen > 0 && hppPerGram > 0) {
+      const hppPerKg = hppPerGram * 1000;
+      hppEl.innerHTML = `
+        <div style="font-size:16px;color:var(--accent);font-weight:600">
+          Rp ${Math.round(hppPerGram).toLocaleString('id')}/g
+          <span style="font-size:12px;color:var(--text-dim);font-weight:400">(Rp ${Math.round(hppPerKg).toLocaleString('id')}/kg)</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.6">
+          Bahan baku: Rp ${Math.round(hppBahan).toLocaleString('id')}<br>
+          Overhead roasting: Rp ${Math.round(roastCost).toLocaleString('id')}<br>
+          <strong>Total HPP: Rp ${Math.round(totalHpp).toLocaleString('id')} ÷ ${roasted}g</strong>
+        </div>
+        <div style="font-size:10px;color:var(--green);margin-top:4px">
+          ✓ Harga beli roasted bean akan di-update otomatis ke Rp ${Math.round(hppPerKg).toLocaleString('id')}/kg
+        </div>
+      `;
     } else if(totalGreen === 0) {
-      document.getElementById('prevHpp').textContent = '—';
-      document.getElementById('prevHpp').style.color = '';
+      hppEl.textContent = '—';
     } else {
-      document.getElementById('prevHpp').textContent = '(input harga beli bahan di Inventori)';
-      document.getElementById('prevHpp').style.color = 'var(--text-dim)';
+      hppEl.textContent = '(input harga beli bahan di Inventori)';
+      hppEl.style.color = 'var(--text-dim)';
     }
   };
 
@@ -671,6 +687,7 @@
     const roastDate = document.getElementById('roastDate').value;
     const yieldPct  = parseFloat(document.getElementById('yieldPct').value)||82;
     const roastCost = parseFloat(document.getElementById('roastCost').value)||0;
+    console.log('submitRoast roastCost:', roastCost);
     const temp      = document.getElementById('roastTemp').value;
     const duration  = document.getElementById('roastTime').value;
     const targetId  = document.getElementById('roastedTarget').value;
