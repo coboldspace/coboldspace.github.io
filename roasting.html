@@ -762,14 +762,15 @@
       const finalHppPerGram = roasted > 0 ? (finalHppBahan + roastCost) / roasted : 0;
       const finalHppPerKg = finalHppPerGram * 1000; // for display only
 
+      // Hitung HPP per unit berdasarkan unitMultiplier (dari form override)
+      const finalUnitMult = parseFloat(document.getElementById('unitMultiplier').value) || 1000;
+      const finalHppPerUnit = finalHppPerGram * finalUnitMult;
+
       // Inject hargaBeli ke roasted bean di inventory
-      // hargaBeli disesuaikan dengan unitMultiplier target (per kg, per 100g, per unit, dll)
-      if(targetId && finalHppPerGram > 0) {
-        const targetIng = ingredients.find(i=>i.id===targetId);
-        const targetMult = parseFloat(targetIng?.unitMultiplier) || 1000;
-        const hargaBeliInject = Math.round(finalHppPerGram * targetMult);
+      if(targetId && finalHppPerUnit > 0) {
         await updateDoc(doc(db,"ingredients",targetId), { 
-          hargaBeli: hargaBeliInject,
+          hargaBeli: Math.round(finalHppPerUnit),
+          unitMultiplier: finalUnitMult,
           hargaBeliUpdatedAt: serverTimestamp(),
           hargaBeliSource: `Roasting batch ${batchNo}`
         });
