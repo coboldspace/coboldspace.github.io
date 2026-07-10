@@ -394,7 +394,7 @@
     el.innerHTML = batches.map(b => {
       const ts = b.createdAt?.toDate ? b.createdAt.toDate() : new Date((b.createdAt?.seconds||0)*1000);
       const dateStr = ts.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
-      const hppStr  = b.hppPerGram ? `Rp ${b.hppPerGram.toLocaleString('id',{maximumFractionDigits:1})}/g` : '—';
+      const hppStr  = b.hppPerGram ? `Rp ${Math.round(b.hppPerGram).toLocaleString('id')}/g` : '—';
       const blendStr = (b.blend||[]).map(x=>`${x.name} ${x.grams}g`).join(' · ');
       const profileCls = b.profile||'medium';
       return `<div class="batch-card">
@@ -609,6 +609,13 @@
   window.updateBlend    = function(idx,field,val) { blendRows[idx][field]=val; calcPreview(); };
 
   // ── CALC PREVIEW ──
+  // helper: ambil harga beli dari berbagai kemungkinan field
+  function getHargaBeli(ing) {
+    if (!ing) return 0;
+    const harga = ing.hargaBeli || ing.price || ing.harga || ing.cost || 0;
+    return parseFloat(harga) || 0;
+  }
+
   window.calcPreview = function() {
     const totalGreen = blendRows.reduce((s,r)=>s+(+r.grams||0),0);
     const yieldPct   = parseFloat(document.getElementById('yieldPct').value)||82;
@@ -617,10 +624,18 @@
     const loss       = totalGreen - roasted;
 
     let hppBahan = 0;
+    let missingPrice = [];
     for(const r of blendRows) {
       const ing = ingredients.find(i=>i.id===r.id);
-      if(ing && ing.hargaBeli && r.grams) {
-        hppBahan += (ing.hargaBeli / (ing.unitMultiplier||1000)) * r.grams;
+      const harga = getHargaBeli(ing);
+      if(ing && r.grams) {
+        if(harga > 0) {
+          // harga per unit (biasanya per kg atau per unit), konversi ke per gram
+          const unitMult = parseFloat(ing.unitMultiplier) || 1000;
+          hppBahan += (harga / unitMult) * r.grams;
+        } else {
+          missingPrice.push(ing.name);
+        }
       }
     }
     const totalHpp   = hppBahan + roastCost;
@@ -630,9 +645,22 @@
     document.getElementById('prevGreen').textContent   = totalGreen ? `${totalGreen.toLocaleString('id')} g` : '—';
     document.getElementById('prevRoasted').textContent = roasted   ? `${roasted.toLocaleString('id')} g` : '—';
     document.getElementById('prevLoss').textContent    = loss      ? `${loss.toLocaleString('id')} g` : '—';
-    document.getElementById('prevHpp').textContent     = hppPerGram
-      ? `Rp ${hppPerGram.toLocaleString('id',{maximumFractionDigits:1})}/g`
-      : '(input harga beli bahan di HPP Calculator)';
+
+    if(missingPrice.length > 0) {
+      document.getElementById('prevHpp').innerHTML = `<span style="color:var(--yellow);font-size:12px">
+        ⚠️ Harga beli belum diisi untuk: ${missingPrice.join(', ')}<br>
+        Input harga di menu Inventori → ${missingPrice.join(', ')}
+      </span>`;
+    } else if(hppPerGram > 0) {
+      document.getElementById('prevHpp').textContent = `Rp ${Math.round(hppPerGram).toLocaleString('id')}/g`;
+      document.getElementById('prevHpp').style.color = 'var(--accent)';
+    } else if(totalGreen === 0) {
+      document.getElementById('prevHpp').textContent = '—';
+      document.getElementById('prevHpp').style.color = '';
+    } else {
+      document.getElementById('prevHpp').textContent = '(input harga beli bahan di Inventori)';
+      document.getElementById('prevHpp').style.color = 'var(--text-dim)';
+    }
   };
 
   // ── SUBMIT ──
@@ -680,11 +708,34 @@
         byName: currentUser.name, createdAt: serverTimestamp()
       });
 
+      // Hitung ulang HPP final
+      let finalHppBahan = 0;
+      for(const r of blend) {
+        const ing = ingredients.find(i=>i.id===r.id);
+        const harga = getHargaBeli(ing);
+        if(harga > 0 && r.grams) {
+          const unitMult = parseFloat(ing?.unitMultiplier) || 1000;
+          finalHppBahan += (harga / unitMult) * r.grams;
+        }
+      }
+      const finalHppPerGram = roasted > 0 ? (finalHppBahan + roastCost) / roasted : 0;
+      const finalHppPerKg = finalHppPerGram * 1000;
+
+      // Inject hargaBeli ke roasted bean di inventory
+      if(targetId && finalHppPerKg > 0) {
+        await updateDoc(doc(db,"ingredients",targetId), { 
+          hargaBeli: Math.round(finalHppPerKg),
+          hargaBeliUpdatedAt: serverTimestamp(),
+          hargaBeliSource: `Roasting batch ${batchNo}`
+        });
+      }
+
       await addDoc(collection(db,"roastingBatches"), {
         batchNo, blendName, roastDate, profile: roastProfile,
         temp: +temp||null, duration: +duration||null,
         blend, totalGreen, yieldPct, roastedOutput: roasted,
-        roastCost, hppPerGram: 0,
+        roastCost, hppPerGram: Math.round(finalHppPerGram),
+        hppPerKg: Math.round(finalHppPerKg),
         roastedTargetId: targetId,
         createdBy: currentUser.name, createdAt: serverTimestamp()
       });
