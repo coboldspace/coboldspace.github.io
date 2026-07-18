@@ -356,25 +356,7 @@
   async function loadIngredients(){const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));ingredients=s.docs.map(d=>({id:d.id,...d.data()}));}
   async function loadMenu(){const s=await getDocs(query(collection(db,"menu"),orderBy("category")));menuItems=s.docs.map(d=>({id:d.id,...d.data()}));}
   async function loadLogs(){const s=await getDocs(query(collection(db,"stockLogs"),orderBy("createdAt","desc")));stockLogs=s.docs.map(d=>({id:d.id,...d.data()})).slice(0,80);}
-
-  // FIX: Tambah migration hppPerUnit untuk produk lama
-  async function loadProducts(){
-    const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
-    products=s.docs.map(d=>({id:d.id,...d.data()}));
-
-    const needsMigration = products.filter(p => !p.hppPerUnit && p.stock > 0 && p.hppTotal > 0);
-    if (needsMigration.length > 0) {
-      const batch = writeBatch(db);
-      for (const p of needsMigration) {
-        batch.update(doc(db, "finishedGoods", p.id), { 
-          hppPerUnit: p.hppTotal / p.stock 
-        });
-      }
-      await batch.commit();
-      const s2 = await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
-      products = s2.docs.map(d=>({id:d.id,...d.data()}));
-    }
-  }
+  async function loadProducts(){const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));products=s.docs.map(d=>({id:d.id,...d.data()}));}
 
   window.switchTab=function(tab,btn){
     ['stok','produk','resep','log'].forEach(t=>document.getElementById('tab-'+t).classList.remove('active'));
@@ -516,8 +498,6 @@
     const unit=document.getElementById('prodUnit').value;
     document.querySelectorAll('.prod-unit-label').forEach(el=>el.textContent=unit);
   };
-
-  // FIX: Gunakan hppPerUnit untuk produk jadi agar harga satuan tidak naik saat stok turun
   function calcHPP(){
     let totalBahan=0;
     const unit=document.getElementById('prodUnit').value;
@@ -530,11 +510,9 @@
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
-        if(!prod || !prod.hppTotal) continue;
-        // FIX: pakai hppPerUnit kalau ada, jangan bagi hppTotal/stock
-        const hargaSatuan = prod.hppPerUnit > 0 
-            ? prod.hppPerUnit 
-            : (prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal);
+        if(!prod || !prod.hppTotal || !prod.stock) continue;
+        // Cost per unit = HPP Total / stock (if stock > 0)
+        const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
         totalBahan += hargaSatuan * r.amount;
       }
       // Check if it's an ingredient with ing_ prefix
@@ -610,7 +588,7 @@
           <span>Jual: Rp ${Math.round(p.hargaJual||0).toLocaleString('id')}</span>
         </div>
         <div class="prod-ingredients">
-          <div class="prod-ing-title">Bahan Baku per 1 ${p.unit}</div>
+          <div class="prod-ing-title">Bahan Baku per 1 ' + p.unit + '</div>
           ${ingRows}
         </div>
         <div class="prod-actions">
@@ -687,7 +665,6 @@
   window.updateProdRow=function(idx,field,val){prodRows[idx][field]=val;if(field==='ingredientId')renderProdEditor();calcHPP();};
   window.removeProdRow=function(idx){prodRows.splice(idx,1);renderProdEditor();calcHPP();};
 
-  // FIX: Simpan hppPerUnit & preserve saat edit stok-only
   window.submitProd=async function(){
     const btn=document.getElementById('prodSaveBtn');
     const id=document.getElementById('prodEditId').value;
@@ -732,9 +709,7 @@
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
         if(!prod||!prod.hppTotal){toast(`HPP ${prod?.name||'produk'} belum dihitung.`,'error');return;}
-        const hargaSatuan = prod.hppPerUnit > 0 
-            ? prod.hppPerUnit 
-            : (prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal);
+        const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
         totalBahan += hargaSatuan * r.amount;
       }
       else if(r.ingredientId.startsWith('ing_')){
@@ -758,30 +733,17 @@
       let batchCount = 0;
 
       if(id){
-        // EDIT mode
+        // EDIT mode: update produk DAN sesuaikan stok bahan baku jika resep berubah
         const oldProduct = products.find(p=>p.id===id);
         const oldIngredients = oldProduct?.ingredients || [];
-        const oldOverhead = oldProduct?.overhead || 0;
 
         console.log('[submitProd] EDIT mode - old ingredients:', oldIngredients.map(r=>({id:r.ingredientId, amount:r.amount})));
 
-        // Build maps
+        // Build maps for easy comparison
         const oldMap = {};
         oldIngredients.forEach(r => { oldMap[r.ingredientId] = r.amount; });
         const newMap = {};
         validIngredients.forEach(r => { newMap[r.ingredientId] = r.amount; });
-
-        // FIX: Deteksi apakah resep atau overhead berubah
-        let costStructureChanged = false;
-        if (oldOverhead !== overhead) {
-            costStructureChanged = true;
-        } else if (Object.keys(oldMap).length !== Object.keys(newMap).length) {
-            costStructureChanged = true;
-        } else {
-            for (const key of Object.keys(oldMap)) {
-                if (oldMap[key] !== newMap[key]) { costStructureChanged = true; break; }
-            }
-        }
 
         // Process changes: deduct new/increased, return decreased/removed
         const allIngredientIds = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
@@ -791,20 +753,23 @@
           const newAmt = newMap[ingId] || 0;
           const diff = newAmt - oldAmt;
 
-          if(diff === 0) continue;
+          if(diff === 0) continue; // No change
 
           console.log('[submitProd] Ingredient change:', ingId, 'old:', oldAmt, 'new:', newAmt, 'diff:', diff);
 
           if(ingId.startsWith('prod_')){
+            // Product ingredient
             const prodId = ingId.replace('prod_','');
             const prod = products.find(p=>p.id===prodId);
             if(!prod){toast(`Produk ${ingId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
 
             if(diff > 0){
+              // Need to deduct more
               if(prod.stock < diff){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh tambahan ${diff} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
               batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-diff)});
             } else {
-              batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-diff)});
+              // Return stock
+              batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-diff)}); // diff is negative, so -diff is positive
             }
             batchCount++;
 
@@ -822,15 +787,18 @@
             batchCount++;
           }
           else {
+            // Raw ingredient
             const rawId = ingId.startsWith('ing_') ? ingId.replace('ing_','') : ingId;
             const ing = ingredients.find(i=>i.id===rawId);
             if(!ing){toast(`Bahan ${ingId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
 
             if(diff > 0){
+              // Need to deduct more
               if(ing.stock < diff){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh tambahan ${diff} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
               batch.update(doc(db,"ingredients",rawId),{stock:increment(-diff)});
             } else {
-              batch.update(doc(db,"ingredients",rawId),{stock:increment(-diff)});
+              // Return stock
+              batch.update(doc(db,"ingredients",rawId),{stock:increment(-diff)}); // diff is negative, so -diff is positive
             }
             batchCount++;
 
@@ -849,38 +817,20 @@
           }
         }
 
-        // FIX: Jika resep tidak berubah, preserve hppPerUnit. Jika berubah, recalculate.
-        let finalHppTotal, finalHppPerUnit, finalHppBahan, finalHargaJual;
-        if (costStructureChanged) {
-            finalHppTotal = hppTotal;
-            finalHppPerUnit = stock > 0 ? hppTotal / stock : 0;
-            finalHppBahan = totalBahan;
-            finalHargaJual = hargaJual;
-        } else {
-            finalHppPerUnit = oldProduct.hppPerUnit || (oldProduct.stock > 0 ? oldProduct.hppTotal / oldProduct.stock : 0);
-            finalHppTotal = finalHppPerUnit * stock;
-            finalHppBahan = finalHppTotal - overhead;
-            finalHargaJual = Math.ceil(finalHppTotal * (1 + margin/100) / 1000) * 1000;
-        }
-
+        // Update product doc
         batch.update(doc(db,"finishedGoods",id),{
           name,category,unit,stock,minStock,overhead,margin,
-          hppBahan:finalHppBahan,
-          hppTotal:finalHppTotal,
-          hargaJual:finalHargaJual,
-          hppPerUnit:finalHppPerUnit,
+          hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients
         });
         batchCount++;
 
       }else{
         // NEW product mode
-        const hppPerUnit = stock > 0 ? hppTotal / stock : 0;
         const newProdRef = doc(collection(db,"finishedGoods"));
         batch.set(newProdRef,{
           name,category,unit,stock,minStock,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
-          hppPerUnit,               // FIX: simpan hppPerUnit
           ingredients:validIngredients,
           createdAt:serverTimestamp()
         });
@@ -983,8 +933,6 @@
     document.getElementById('prodRestockModal').classList.add('show');
   };
   window.closeProdRestock=function(){document.getElementById('prodRestockModal').classList.remove('show');};
-
-  // FIX: Weighted average HPP saat restock produksi
   window.submitProdRestock=async function(){
     const btn=document.getElementById('prodRestockSaveBtn');
     const id=document.getElementById('prodRestockId').value;
@@ -999,21 +947,15 @@
     try{
       const batch=writeBatch(db);
 
-      // FIX: Hitung weighted average HPP
-      const oldStock = p.stock;
-      const oldHppPerUnit = p.hppPerUnit || (p.stock > 0 ? p.hppTotal / p.stock : 0);
-      const oldHppTotal = oldHppPerUnit * oldStock;
-
-      // Hitung biaya batch baru
-      let batchCost = 0;
+      // Kurangin stok bahan baku / produk jadi
       for(const r of validIngredients){
-        const deduct = r.amount * amt;
+        const deduct=r.amount*amt;
+
         if(r.ingredientId.startsWith('prod_')){
+          // Deduct from another finished good
           const prodId = r.ingredientId.replace('prod_','');
           const prod = products.find(p=>p.id===prodId);
-          const hargaSatuan = prod.hppPerUnit > 0 ? prod.hppPerUnit : (prod.stock > 0 ? prod.hppTotal / prod.stock : 0);
-          batchCost += hargaSatuan * deduct;
-
+          if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
           if(prod.stock < deduct){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
           batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-deduct)});
 
@@ -1030,11 +972,9 @@
           });
         }
         else {
+          // Deduct from raw ingredient
           const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
           const ing = ingredients.find(i=>i.id===ingId);
-          const hargaSatuan = (ing.hargaBeli / ing.unitMultiplier);
-          batchCost += hargaSatuan * deduct;
-
           if(!ing){toast(`Bahan ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
           if(ing.stock < deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
           batch.update(doc(db,"ingredients",ingId),{stock:increment(-deduct)});
@@ -1053,18 +993,8 @@
         }
       }
 
-      const newStock = oldStock + amt;
-      const newHppTotal = oldHppTotal + batchCost;
-      const newHppPerUnit = newStock > 0 ? newHppTotal / newStock : 0;
-      const newHppBahan = newHppTotal - p.overhead;
-
-      // Tambah stok produk dengan HPP baru
-      batch.update(doc(db,"finishedGoods",id),{
-        stock: newStock,
-        hppTotal: newHppTotal,
-        hppBahan: newHppBahan,
-        hppPerUnit: newHppPerUnit
-      });
+      // Tambah stok produk
+      batch.update(doc(db,"finishedGoods",id),{stock:increment(amt)});
 
       // Log produk
       const prodLogRef=doc(collection(db,"stockLogs"));
@@ -1080,12 +1010,32 @@
       });
 
       await batch.commit();
-
-      // FIX: Cashflow pakai batchCost (biaya aktual batch ini)
-      if(batchCost > 0){
+      // Auto-catat ke cashflow (HPP bahan yang dipakai untuk produksi)
+      let totalCost = 0;
+      let costBreakdown = [];
+      for (const r of validIngredients) {
+        if(r.ingredientId.startsWith('prod_')){
+          const prodId = r.ingredientId.replace('prod_','');
+          const prod = products.find(p=>p.id===prodId);
+          if(prod && prod.hppTotal && prod.stock > 0){
+            const cost = (prod.hppTotal / prod.stock) * r.amount * amt;
+            totalCost += cost;
+            costBreakdown.push(`${prod.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
+          }
+        } else {
+          const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+          const ing = ingredients.find(i=>i.id===ingId);
+          if(ing && ing.hargaBeli && ing.unitMultiplier){
+            const cost = (ing.hargaBeli / ing.unitMultiplier) * r.amount * amt;
+            totalCost += cost;
+            costBreakdown.push(`${ing.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
+          }
+        }
+      }
+      if(totalCost > 0){
         await addDoc(collection(db,"cashflow"),{
           type:'expense',
-          amount: Math.round(batchCost),
+          amount: Math.round(totalCost),
           description: `Produksi: ${p.name} +${amt} ${p.unit}`,
           category:'inventory',
           relatedId: id,
@@ -1094,7 +1044,6 @@
           createdAt: serverTimestamp()
         });
       }
-
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
       renderIngredients();renderProducts();renderLogs();checkAlerts();
       closeProdRestock();
