@@ -588,7 +588,7 @@
           <span>Jual: Rp ${Math.round(p.hargaJual||0).toLocaleString('id')}</span>
         </div>
         <div class="prod-ingredients">
-          <div class="prod-ing-title">Bahan Baku per 1 ' + p.unit + '</div>
+          <div class="prod-ing-title">Bahan Baku (Resep per Batch)</div>
           ${ingRows}
         </div>
         <div class="prod-actions">
@@ -818,11 +818,13 @@
         }
 
         // Update product doc
-        batch.update(doc(db,"finishedGoods",id),{
+        const updates = {
           name,category,unit,stock,minStock,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients
-        });
+        };
+        if (!oldProduct.batchSize) { updates.batchSize = oldProduct.stock; }
+        batch.update(doc(db,"finishedGoods",id), updates);
         batchCount++;
 
       }else{
@@ -832,6 +834,7 @@
           name,category,unit,stock,minStock,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients,
+          batchSize: stock,
           createdAt:serverTimestamp()
         });
         batchCount++;
@@ -942,6 +945,7 @@
 
     const p=products.find(x=>x.id===id);
     const validIngredients=(p.ingredients||[]).filter(r=>r.ingredientId&&r.amount>0);
+    const batchSize = p.batchSize || p.stock || 1;
 
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
@@ -949,7 +953,7 @@
 
       // Kurangin stok bahan baku / produk jadi
       for(const r of validIngredients){
-        const deduct=r.amount*amt;
+        const deduct = Math.round(r.amount * amt / batchSize * 100) / 100;
 
         if(r.ingredientId.startsWith('prod_')){
           // Deduct from another finished good
@@ -1014,11 +1018,14 @@
       let totalCost = 0;
       let costBreakdown = [];
       for (const r of validIngredients) {
+        const ingredientAmt = Math.round(r.amount * amt / batchSize * 100) / 100;
         if(r.ingredientId.startsWith('prod_')){
           const prodId = r.ingredientId.replace('prod_','');
           const prod = products.find(p=>p.id===prodId);
-          if(prod && prod.hppTotal && prod.stock > 0){
-            const cost = (prod.hppTotal / prod.stock) * r.amount * amt;
+          if(prod && prod.hppTotal){
+            const prodBatchSize = prod.batchSize || prod.stock || 1;
+            const costPerUnit = prod.hppTotal / prodBatchSize;
+            const cost = costPerUnit * ingredientAmt;
             totalCost += cost;
             costBreakdown.push(`${prod.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
           }
@@ -1026,7 +1033,7 @@
           const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
           const ing = ingredients.find(i=>i.id===ingId);
           if(ing && ing.hargaBeli && ing.unitMultiplier){
-            const cost = (ing.hargaBeli / ing.unitMultiplier) * r.amount * amt;
+            const cost = (ing.hargaBeli / ing.unitMultiplier) * ingredientAmt;
             totalCost += cost;
             costBreakdown.push(`${ing.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
           }
