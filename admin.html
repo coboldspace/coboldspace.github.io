@@ -41,6 +41,33 @@
     .hpp-debug { font-size:10px; color:var(--text-dim); margin-top:4px; font-family:monospace; }
     .hpp-no-price { color:var(--yellow); font-size:11px; }
 
+    /* Checkbox fix — ensure native checkboxes are clickable */
+    .modal input[type="checkbox"] {
+      -webkit-appearance: checkbox !important;
+      appearance: checkbox !important;
+      width: 18px !important;
+      height: 18px !important;
+      min-width: 18px !important;
+      min-height: 18px !important;
+      cursor: pointer !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      position: relative !important;
+      z-index: 2 !important;
+      margin: 0 !important;
+      flex-shrink: 0 !important;
+    }
+    .modal .chk-label {
+      cursor: pointer !important;
+      text-transform: none !important;
+      letter-spacing: 0 !important;
+      font-size: 14px !important;
+      user-select: none !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+
     @media (max-width:640px) {
       .card-head { flex-direction:column; align-items:flex-start; }
       .card-head .btn-primary { width:100%; justify-content:center; }
@@ -145,8 +172,8 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Tersedia</th><th>Aksi</th></tr></thead>
-          <tbody id="menuTbody"><tr><td colspan="5" class="empty-cell">Memuat...</td></tr></tbody>
+          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Tersedia</th><th>Signature</th><th>Aksi</th></tr></thead>
+          <tbody id="menuTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -222,15 +249,16 @@
       <textarea id="mDescription" rows="2" placeholder="cth: Espresso dengan susu steamed dan foam lembut..."
         style="background:#111;border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text-main);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;width:100%;box-sizing:border-box;"></textarea>
     </div>
+    <!-- CHECKBOX FIX: separate label with for/id, explicit styling -->
     <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
-        <input type="checkbox" id="mAvail" checked style="accent-color:var(--accent);width:16px;height:16px"/>
+      <label class="chk-label" for="mAvail">
+        <input type="checkbox" id="mAvail" checked/>
         Tersedia di kasir
       </label>
     </div>
     <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
-        <input type="checkbox" id="mSignature" style="accent-color:var(--accent);width:16px;height:16px"/>
+      <label class="chk-label" for="mSignature">
+        <input type="checkbox" id="mSignature"/>
         🔥 Tandai sebagai Signature / Best Seller
       </label>
     </div>
@@ -369,14 +397,14 @@
     const q=document.getElementById('menuSearch').value.toLowerCase();
     const list=menuData.filter(m=>!q||m.name.toLowerCase().includes(q));
     document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>{
-      const sig = m.isSignature ? ' 🔥' : '';
       return `<tr>
-      <td><strong>${m.name}${sig}</strong></td>
+      <td><strong>${m.name}${m.isSignature===true?' 🔥':''}</strong></td>
       <td><span class="badge badge-accent">${m.category||'—'}</span></td>
       <td>Rp ${(m.price||0).toLocaleString('id')}</td>
       <td><label class="avail-toggle"><input type="checkbox" ${m.available!==false?'checked':''} onchange="toggleAvail('${m.id}',this.checked)"/> ${m.available!==false?'Ya':'Tidak'}</label></td>
+      <td><label class="avail-toggle"><input type="checkbox" ${m.isSignature===true?'checked':''} onchange="toggleSignature('${m.id}',this.checked)"/> ${m.isSignature===true?'🔥':'—'}</label></td>
       <td><button class="btn-sm" onclick="openMenuModal('${m.id}')">Edit</button><button class="btn-sm danger" onclick="deleteMenu('${m.id}')">Hapus</button></td>
-    </tr>`}).join(''):`<tr><td colspan="5" class="empty-cell">Tidak ada menu.</td></tr>`;
+    </tr>`}).join(''):`<tr><td colspan="6" class="empty-cell">Tidak ada menu.</td></tr>`;
   };
 
   window.openMenuModal=function(id){
@@ -423,6 +451,9 @@
   };
 
   window.toggleAvail=async function(id,val){try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
+  
+  window.toggleSignature=async function(id,val){try{await updateDoc(doc(db,"menu",id),{isSignature:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
+  
   window.deleteMenu=async function(id){
     const m=menuData.find(x=>x.id===id);
     if(!confirm(`Hapus "${m?.name}"?`))return;
