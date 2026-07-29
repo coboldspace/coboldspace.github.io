@@ -51,9 +51,7 @@
     }
   </style>
 
-
   <style>
-    /* Modal Centering Fix */
     .modal-overlay {
       display: flex !important;
       align-items: center !important;
@@ -96,13 +94,11 @@
       }
     }
   </style>
-
 </head>
 <body>
 
 <div id="loadingOverlay">COBOLD POS</div>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">Cobold POS</div>
   <nav class="nav-menu">
@@ -117,7 +113,6 @@
   <button class="btn-logout" id="btnLogout">LOGOUT</button>
 </div>
 
-<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="bn-bar">
     <a href="dashboard.html" class="bn-item"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
@@ -129,6 +124,7 @@
     <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
 </nav>
+
 <div class="main-content">
   <div class="header"><h1>Manajemen</h1></div>
 
@@ -138,7 +134,6 @@
     <button class="tab-btn"        onclick="showTab('transaksi',this)">🧾 Transaksi</button>
   </div>
 
-  <!-- MENU -->
   <div class="section active" id="sec-menu">
     <div class="card">
       <div class="card-head">
@@ -157,7 +152,6 @@
     </div>
   </div>
 
-  <!-- HPP -->
   <div class="section" id="sec-hpp">
     <div class="card">
       <div class="card-head">
@@ -168,15 +162,8 @@
         <table class="hpp-table">
           <thead>
             <tr>
-              <th>Menu</th>
-              <th>Kategori</th>
-              <th>HPP Bahan</th>
-              <th>Overhead</th>
-              <th>HPP Total</th>
-              <th>Margin</th>
-              <th>Harga Jual</th>
-              <th>Profit</th>
-              <th>Aksi</th>
+              <th>Menu</th><th>Kategori</th><th>HPP Bahan</th><th>Overhead</th><th>HPP Total</th>
+              <th>Margin</th><th>Harga Jual</th><th>Profit</th><th>Aksi</th>
             </tr>
           </thead>
           <tbody id="hppTbody"><tr><td colspan="9" class="empty-cell">Memuat...</td></tr></tbody>
@@ -185,22 +172,16 @@
     </div>
   </div>
 
-  <!-- TRANSAKSI -->
   <div class="section" id="sec-transaksi">
     <div class="card">
       <div class="card-head">
         <h2>Riwayat Transaksi</h2>
         <div class="filters">
           <select class="filter-select" id="filterStatus" onchange="renderTransaksi()">
-            <option value="">Semua Status</option>
-            <option value="pending">Pending</option>
-            <option value="done">Done</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="">Semua Status</option><option value="pending">Pending</option><option value="done">Done</option><option value="cancelled">Cancelled</option>
           </select>
           <select class="filter-select" id="filterType" onchange="renderTransaksi()">
-            <option value="">Semua Tipe</option>
-            <option value="dine-in">Dine-in</option>
-            <option value="takeaway">Takeaway</option>
+            <option value="">Semua Tipe</option><option value="dine-in">Dine-in</option><option value="takeaway">Takeaway</option>
           </select>
         </div>
       </div>
@@ -237,9 +218,20 @@
       </div>
     </div>
     <div class="form-group">
+      <label>Deskripsi</label>
+      <textarea id="mDescription" rows="2" placeholder="cth: Espresso dengan susu steamed dan foam lembut..."
+        style="background:#111;border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text-main);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;width:100%;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
         <input type="checkbox" id="mAvail" checked style="accent-color:var(--accent);width:16px;height:16px"/>
         Tersedia di kasir
+      </label>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px">
+        <input type="checkbox" id="mSignature" style="accent-color:var(--accent);width:16px;height:16px"/>
+        🔥 Tandai sebagai Signature / Best Seller
       </label>
     </div>
     <div class="modal-footer">
@@ -254,11 +246,9 @@
   <div class="modal" style="max-width:480px">
     <h2 id="hppModalTitle">HPP Menu</h2>
     <input type="hidden" id="hppMenuId"/>
-
     <div id="hppLoading" style="display:none;padding:20px;text-align:center;color:var(--text-dim)">
       <i class="fa-solid fa-spinner fa-spin"></i> Memuat data inventory...
     </div>
-
     <div id="hppContent">
       <div style="margin-bottom:16px">
         <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em">Bahan Baku (auto dari Resep & Inventory)</label>
@@ -270,7 +260,6 @@
           Total Bahan: <strong id="hppTotalBahan" style="color:var(--text-main)">Rp 0</strong>
         </div>
       </div>
-
       <div style="margin-bottom:16px">
         <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em">Overhead Operasional (per porsi)</label>
         <div id="hppOverheadList" style="margin-top:6px"></div>
@@ -279,13 +268,11 @@
           Total Overhead: <strong id="hppTotalOverhead" style="color:var(--text-main)">Rp 0</strong>
         </div>
       </div>
-
       <div class="hpp-summary-box">
         <div class="hpp-summary-line"><span>HPP Bahan</span><strong id="sumBahan">Rp 0</strong></div>
         <div class="hpp-summary-line"><span>Overhead</span><strong id="sumOverhead">Rp 0</strong></div>
         <div class="hpp-grand"><span>HPP Total</span><span id="sumGrand">Rp 0</span></div>
       </div>
-
       <div class="form-row-2">
         <div class="form-group">
           <label>Margin Keuntungan (%)</label>
@@ -296,18 +283,15 @@
           <input type="text" id="hppRekomendasi" readonly style="background:#1a1a1a;color:var(--accent);font-weight:600"/>
         </div>
       </div>
-
       <div class="form-group">
         <label>Harga Jual Final (Rp)</label>
         <input type="number" id="hppFinal" placeholder="22000" min="0" step="1" oninput="checkHppWarning()"/>
       </div>
-
       <div id="hppWarning" style="display:none;margin-bottom:12px" class="warning-text">
         <i class="fa-solid fa-triangle-exclamation"></i>
         <span>Harga jual di bawah HPP! Anda akan rugi Rp <span id="hppRugi">0</span> per porsi.</span>
       </div>
     </div>
-
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="closeHppModal()">Batal</button>
       <button class="btn-modal-confirm" id="hppSaveBtn" onclick="submitHPP()">Simpan HPP</button>
@@ -344,7 +328,6 @@
     if(!user){location.href="login.html";return;}
     const snap=await getDoc(doc(db,"users",user.uid));
     if(!snap.exists()){location.href="login.html";return;}
-
     const role = snap.data().role || 'kasir';
     if(role === 'admin') {
       document.body.classList.add('is-admin');
@@ -352,10 +335,7 @@
       location.href = "dashboard.html";
       return;
     }
-
     await Promise.all([loadMenu(),loadOrders(),loadIngredients(),loadProducts()]);
-    console.log('[INIT] Ingredients loaded:', ingredientsData.length, 'items');
-    console.log('[INIT] Sample ingredient:', ingredientsData[0]);
     renderMenuTable(); renderTransaksi(); renderHPP();
     document.getElementById('loadingOverlay').style.display='none';
   });
@@ -371,12 +351,10 @@
   async function loadIngredients(){
     const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
     ingredientsData=s.docs.map(d=>({id:d.id,...d.data()}));
-    console.log('[LOAD] Ingredients:', ingredientsData.map(i => ({name:i.name, hargaBeli:i.hargaBeli, unitMultiplier:i.unitMultiplier, unit:i.unit})));
   }
   async function loadProducts(){
     const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
     productsData=s.docs.map(d=>({id:d.id,...d.data()}));
-    console.log('[LOAD] Products:', productsData.map(p => ({name:p.name, hargaJual:p.hargaJual, hppTotal:p.hppTotal, unit:p.unit})));
   }
 
   window.showTab=function(id,btn){
@@ -387,25 +365,44 @@
     if(id==='hpp') renderHPP();
   };
 
-  // ── MENU (existing) ──
   window.renderMenuTable=function(){
     const q=document.getElementById('menuSearch').value.toLowerCase();
     const list=menuData.filter(m=>!q||m.name.toLowerCase().includes(q));
-    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>`<tr>
-      <td><strong>${m.name}</strong></td>
+    document.getElementById('menuTbody').innerHTML=list.length?list.map(m=>{
+      const sig = m.isSignature ? ' 🔥' : '';
+      return `<tr>
+      <td><strong>${m.name}${sig}</strong></td>
       <td><span class="badge badge-accent">${m.category||'—'}</span></td>
       <td>Rp ${(m.price||0).toLocaleString('id')}</td>
       <td><label class="avail-toggle"><input type="checkbox" ${m.available!==false?'checked':''} onchange="toggleAvail('${m.id}',this.checked)"/> ${m.available!==false?'Ya':'Tidak'}</label></td>
       <td><button class="btn-sm" onclick="openMenuModal('${m.id}')">Edit</button><button class="btn-sm danger" onclick="deleteMenu('${m.id}')">Hapus</button></td>
-    </tr>`).join(''):`<tr><td colspan="5" class="empty-cell">Tidak ada menu.</td></tr>`;
+    </tr>`}).join(''):`<tr><td colspan="5" class="empty-cell">Tidak ada menu.</td></tr>`;
   };
+
   window.openMenuModal=function(id){
     document.getElementById('menuEditId').value=id||'';
-    if(id){const m=menuData.find(x=>x.id===id);document.getElementById('menuModalTitle').textContent='Edit Menu';document.getElementById('mName').value=m.name;document.getElementById('mPrice').value=m.price;document.getElementById('mCategory').value=m.category||'Lainnya';document.getElementById('mAvail').checked=m.available!==false;}
-    else{document.getElementById('menuModalTitle').textContent='Tambah Menu';document.getElementById('mName').value='';document.getElementById('mPrice').value='';document.getElementById('mAvail').checked=true;}
+    if(id){
+      const m=menuData.find(x=>x.id===id);
+      document.getElementById('menuModalTitle').textContent='Edit Menu';
+      document.getElementById('mName').value=m.name;
+      document.getElementById('mPrice').value=m.price;
+      document.getElementById('mCategory').value=m.category||'Lainnya';
+      document.getElementById('mAvail').checked=m.available!==false;
+      document.getElementById('mDescription').value=m.description||'';
+      document.getElementById('mSignature').checked=m.isSignature===true;
+    } else {
+      document.getElementById('menuModalTitle').textContent='Tambah Menu';
+      document.getElementById('mName').value='';
+      document.getElementById('mPrice').value='';
+      document.getElementById('mAvail').checked=true;
+      document.getElementById('mDescription').value='';
+      document.getElementById('mSignature').checked=false;
+    }
     document.getElementById('menuModal').classList.add('show');
   };
+
   window.closeMenuModal=function(){document.getElementById('menuModal').classList.remove('show');};
+
   window.submitMenu=async function(){
     const btn=document.getElementById('menuSaveBtn');
     const id=document.getElementById('menuEditId').value;
@@ -413,15 +410,18 @@
     const price=parseFloat(document.getElementById('mPrice').value);
     const category=document.getElementById('mCategory').value;
     const available=document.getElementById('mAvail').checked;
+    const description=document.getElementById('mDescription').value.trim();
+    const isSignature=document.getElementById('mSignature').checked;
     if(!name||isNaN(price)){toast('Nama dan harga wajib diisi.','error');return;}
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      if(id)await updateDoc(doc(db,"menu",id),{name,price,category,available});
-      else await addDoc(collection(db,"menu"),{name,price,category,available,createdAt:serverTimestamp()});
+      if(id) await updateDoc(doc(db,"menu",id),{name,price,category,available,description,isSignature});
+      else await addDoc(collection(db,"menu"),{name,price,category,available,description,isSignature,createdAt:serverTimestamp()});
       await loadMenu();renderMenuTable();renderHPP();closeMenuModal();toast('✓ Menu disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan';
   };
+
   window.toggleAvail=async function(id,val){try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
   window.deleteMenu=async function(id){
     const m=menuData.find(x=>x.id===id);
@@ -429,80 +429,61 @@
     try{await deleteDoc(doc(db,"menu",id));await loadMenu();renderMenuTable();renderHPP();toast('Menu dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
   };
 
-  // ── HPP ──
   function calculateBahanCost(recipe){
     if(!recipe||!recipe.length) return {items:[],total:0};
     let total=0;
     const items=recipe.map(r=>{
       let item, itemType, hargaSatuan, unitMultiplier;
-
-      // Check if it's a product (finished good) with prod_ prefix
       if(r.ingredientId?.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         item = productsData.find(p=>p.id===prodId);
         itemType = 'product';
         if(!item) return {name:'(produk tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Produk tidak ditemukan di inventory'};
-
-        // Use hppTotal as cost basis for finished goods
         const hppTotal = Number(item.hppTotal) || 0;
         const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
-        // Cost per unit = HPP Total / batchSize (cost per batch unit, NOT per current stock)
         hargaSatuan = hppTotal / batchSize;
-        unitMultiplier = 1; // Already calculated per unit
-
+        unitMultiplier = 1;
         if(hppTotal <= 0) {
           return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`HPP ${item.name} belum dihitung (Rp 0)`};
         }
       }
-      // Check if it's an ingredient with ing_ prefix
       else if(r.ingredientId?.startsWith('ing_')){
         const ingId = r.ingredientId.replace('ing_','');
         item = ingredientsData.find(i=>i.id===ingId);
         itemType = 'ingredient';
         if(!item) return {name:'(bahan tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Bahan tidak ditemukan di inventory'};
-
         const hargaBeli = Number(item.hargaBeli) || 0;
         unitMultiplier = Number(item.unitMultiplier) || 1000;
-
         if(hargaBeli <= 0) {
           return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
         }
-
         hargaSatuan = hargaBeli / unitMultiplier;
       }
-      // Legacy: no prefix (backward compatibility)
       else {
         item = ingredientsData.find(i=>i.id===r.ingredientId);
         itemType = 'ingredient';
         if(!item) {
-          // Try products as fallback for legacy data
           item = productsData.find(p=>p.id===r.ingredientId);
           itemType = 'product';
           if(!item) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Item tidak ditemukan di inventory'};
-
           const hppTotal = Number(item.hppTotal) || 0;
           const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
           hargaSatuan = hppTotal / batchSize;
           unitMultiplier = 1;
-
           if(hppTotal <= 0) {
             return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`HPP ${item.name} belum dihitung (Rp 0)`};
           }
         } else {
           const hargaBeli = Number(item.hargaBeli) || 0;
           unitMultiplier = Number(item.unitMultiplier) || 1000;
-
           if(hargaBeli <= 0) {
             return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
           }
-
           hargaSatuan = hargaBeli / unitMultiplier;
         }
       }
-
       const subtotal = hargaSatuan * (r.amount || 0);
       total += subtotal;
-
       return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan,subtotal};
     });
     return {items,total};
@@ -511,7 +492,6 @@
   window.renderHPP=function(){
     const tbody=document.getElementById('hppTbody');
     if(!menuData.length){tbody.innerHTML=`<tr><td colspan="9" class="empty-cell">Belum ada menu.</td></tr>`;return;}
-
     tbody.innerHTML=menuData.map(m=>{
       const hpp=m.hpp||{};
       const bahan=hpp.bahan||0;
@@ -522,7 +502,6 @@
       const profit=price-total;
       const profitClass=profit>=0?'profit-positive':'profit-negative';
       const warn=hpp.total&&price>0&&price < total?`<span class="hpp-badge-warn">Rugi!</span>`:'';
-
       return `<tr>
         <td><strong>${m.name}</strong>${warn}</td>
         <td><span class="badge badge-accent">${m.category||'—'}</span></td>
@@ -538,46 +517,26 @@
   };
 
   window.openHppModal=async function(id){
-    // Force reload ingredients kalau kosong
-    if(!ingredientsData.length){
-      console.log('[HPP] Ingredients empty, reloading...');
-      await loadIngredients();
-    }
-
+    if(!ingredientsData.length){ await loadIngredients(); }
     const m=menuData.find(x=>x.id===id);
     if(!m)return;
     hppCurrentMenu=m;
     document.getElementById('hppMenuId').value=id;
     document.getElementById('hppModalTitle').textContent=`HPP: ${m.name}`;
-
-    console.log('[HPP] Opening modal for:', m.name);
-    console.log('[HPP] Recipe:', m.recipe);
-    console.log('[HPP] Ingredients count:', ingredientsData.length);
-
-    // Render bahan dari recipe
     const recipe=m.recipe||[];
     const {items,total}=calculateBahanCost(recipe);
     const bahanList=document.getElementById('hppBahanList');
     const debugEl=document.getElementById('hppBahanDebug');
-
     if(!recipe.length){
       bahanList.innerHTML=`<p style="font-size:12px;color:var(--text-dim);margin:0">Belum ada resep. Atur resep di Inventori terlebih dahulu.</p>`;
       debugEl.textContent='';
     }else{
       bahanList.innerHTML=items.map(it=>{
         if(it.warning){
-          return `<div class="hpp-bahan-item">
-            <span>${it.name} · ${it.amount} ${it.unit}</span>
-            <span class="hpp-no-price">${it.warning}</span>
-          </div>`;
+          return `<div class="hpp-bahan-item"><span>${it.name} · ${it.amount} ${it.unit}</span><span class="hpp-no-price">${it.warning}</span></div>`;
         }
-        return `<div class="hpp-bahan-item">
-          <span>${it.name} · ${it.amount} ${it.unit}</span>
-          <span>Rp ${Math.round(it.subtotal).toLocaleString('id')} <span style="font-size:10px;color:var(--text-dim)">(@Rp ${Math.round(it.hargaSatuan).toLocaleString('id')}/${it.unit})</span></span>
-        </div>`;
+        return `<div class="hpp-bahan-item"><span>${it.name} · ${it.amount} ${it.unit}</span><span>Rp ${Math.round(it.subtotal).toLocaleString('id')} <span style="font-size:10px;color:var(--text-dim)">(@Rp ${Math.round(it.hargaSatuan).toLocaleString('id')}/${it.unit})</span></span></div>`;
       }).join('');
-
-      // Show debug info
       const warnings=items.filter(i=>i.warning);
       if(warnings.length){
         debugEl.innerHTML=warnings.map(w=>`<div style="color:var(--yellow)">⚠️ ${w.warning}</div>`).join('');
@@ -587,17 +546,12 @@
     }
     document.getElementById('hppTotalBahan').textContent='Rp '+Math.round(total).toLocaleString('id');
     document.getElementById('sumBahan').textContent='Rp '+Math.round(total).toLocaleString('id');
-
-    // Overhead
     const hppData=m.hpp||{};
     hppOverheadItems=(hppData.overheadItems&&hppData.overheadItems.length)?[...hppData.overheadItems]:[];
     if(!hppOverheadItems.length) hppOverheadItems=[{nama:'Biaya Operasional',biaya:0}];
     renderOverheadList();
-
-    // Margin & final
     document.getElementById('hppMargin').value=hppData.margin||50;
     document.getElementById('hppFinal').value=m.price||'';
-
     calculateHPP();
     document.getElementById('hppModal').classList.add('show');
   };
@@ -622,18 +576,14 @@
     const totalOverhead=hppOverheadItems.reduce((s,o)=>s+(o.biaya||0),0);
     const grand=totalBahan+totalOverhead;
     const margin=parseFloat(document.getElementById('hppMargin').value)||0;
-
     const raw=grand*(1+margin/100);
     const rekomendasi=Math.ceil(raw/1000)*1000;
-
     document.getElementById('hppTotalOverhead').textContent='Rp '+Math.round(totalOverhead).toLocaleString('id');
     document.getElementById('sumOverhead').textContent='Rp '+Math.round(totalOverhead).toLocaleString('id');
     document.getElementById('sumGrand').textContent='Rp '+Math.round(grand).toLocaleString('id');
     document.getElementById('hppRekomendasi').value='Rp '+rekomendasi.toLocaleString('id');
-
     const finalInput=document.getElementById('hppFinal');
     if(!finalInput.value && rekomendasi>0) finalInput.value=rekomendasi;
-
     checkHppWarning();
   };
 
@@ -664,7 +614,6 @@
     const raw=grand*(1+margin/100);
     const rekomendasi=Math.ceil(raw/1000)*1000;
     const final=parseFloat(document.getElementById('hppFinal').value)||rekomendasi;
-
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       await updateDoc(doc(db,"menu",id),{
@@ -708,7 +657,6 @@
     toast(`✓ ${updated} menu di-update dari inventory`,`success`);
   };
 
-  // ── TRANSAKSI (existing) ──
   window.renderTransaksi=function(){
     const st=document.getElementById('filterStatus').value;
     const tp=document.getElementById('filterType').value;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,9 +13,31 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="logo.png" />
 
-<base target="_blank">
+
+  <!-- Theme Toggle Script -->
+  <script>
+    (function() {
+      // Prevent flash of wrong theme
+      const saved = localStorage.getItem('cobold-theme');
+      const theme = saved || 'light';  // default light kalau belum pernah pilih
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <!-- <script>
+    (function() {
+      // Prevent flash of wrong theme
+      const saved = localStorage.getItem('cobold-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script> -->
+
 </head>
 <body>
+
+
+
 
   <!-- CURSOR -->
   <div class="cursor" id="cursor"></div>
@@ -29,7 +51,32 @@
       <li><a href="#menu">Menu</a></li>
       <li><a href="#visit">Visit</a></li>
     </ul>
-    <a href="#visit" class="nav-cta">Find Us</a>
+    <button class="theme-toggle nav-theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+    <button class="theme-toggle mobile-only" id="themeToggleMobile" aria-label="Toggle theme">
+      <svg class="themeIconMobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
   </nav>
 
   <!-- HERO -->
@@ -56,10 +103,10 @@
       </div>
     </div>
 
-    <div class="hero-scroll">
+    <!-- <div class="hero-scroll">
       <span>scroll</span>
       <div class="scroll-line"></div>
-    </div>
+    </div> -->
   </section>
 
   <!-- ABOUT -->
@@ -108,7 +155,7 @@
       <div class="section-header reveal">
         <p class="label">Menu</p>
         <h2>What We Serve</h2>
-        <p class="section-sub">Kopi manual brew, espresso, dan bites. Stok diperbarui real-time.</p>
+        <p class="section-sub">Kopi manual brew, espresso, dan bites.</p>
       </div>
 
       <!-- Loading state -->
@@ -328,5 +375,67 @@
   </script>
 
   <script src="script.js"></script>
+
+  <!-- Theme Toggle Functionality -->
+  <script>
+    (function() {
+      const toggleBtns = [
+        document.getElementById('themeToggle'),
+        document.getElementById('themeToggleMobile')
+      ].filter(Boolean);
+      const themeIcons = [
+        document.getElementById('themeIcon'),
+        document.querySelector('.themeIconMobile')
+      ].filter(Boolean);
+      const html = document.documentElement;
+
+      // Sun icon SVG (dark mode -> click to go light)
+      const sunIcon = `<circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+
+      // Moon icon SVG (light mode -> click to go dark)
+      const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+
+      function updateIcons(theme) {
+        const iconHtml = theme === 'dark' ? sunIcon : moonIcon;
+        themeIcons.forEach(icon => {
+          if (icon) icon.innerHTML = iconHtml;
+        });
+      }
+
+      function setTheme(theme) {
+        html.setAttribute('data-theme', theme);
+        localStorage.setItem('cobold-theme', theme);
+        updateIcons(theme);
+      }
+
+      // Initialize icons
+      const currentTheme = html.getAttribute('data-theme') || 'dark';
+      updateIcons(currentTheme);
+
+      // Bind click to all toggle buttons
+      toggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const current = html.getAttribute('data-theme') || 'dark';
+          const next = current === 'dark' ? 'light' : 'dark';
+          setTheme(next);
+        });
+      });
+
+      // Listen for system changes (only if no user preference saved)
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('cobold-theme')) {
+          setTheme(e.matches ? 'dark' : 'light');
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

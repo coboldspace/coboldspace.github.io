@@ -231,7 +231,7 @@
       <div class="form-group">
         <label>Kategori</label>
         <select id="mCategory">
-          <option>Coffee</option><option>Manual Brew</option>
+          <option>White Coffee</option><option>Black Coffee</option>
           <option>Non Coffee</option><option>Bites</option><option>Lainnya</option>
         </select>
       </div>
@@ -445,9 +445,9 @@
 
         // Use hppTotal as cost basis for finished goods
         const hppTotal = Number(item.hppTotal) || 0;
-        const stock = Number(item.stock) || 1;
-        // Cost per unit = HPP Total / stock (if stock > 0), otherwise use hppTotal as is
-        hargaSatuan = stock > 0 ? hppTotal / stock : hppTotal;
+        const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
+        // Cost per unit = HPP Total / batchSize (cost per batch unit, NOT per current stock)
+        hargaSatuan = hppTotal / batchSize;
         unitMultiplier = 1; // Already calculated per unit
 
         if(hppTotal <= 0) {
@@ -481,8 +481,8 @@
           if(!item) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Item tidak ditemukan di inventory'};
 
           const hppTotal = Number(item.hppTotal) || 0;
-          const stock = Number(item.stock) || 1;
-          hargaSatuan = stock > 0 ? hppTotal / stock : hppTotal;
+          const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
+          hargaSatuan = hppTotal / batchSize;
           unitMultiplier = 1;
 
           if(hppTotal <= 0) {
