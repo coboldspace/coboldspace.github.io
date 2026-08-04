@@ -13,37 +13,19 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/png" href="logo.png" />
 
-
-  <!-- Theme Toggle Script -->
   <script>
     (function() {
-      // Prevent flash of wrong theme
       const saved = localStorage.getItem('cobold-theme');
-      const theme = saved || 'light';  // default light kalau belum pernah pilih
+      const theme = saved || 'light';
       document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
-  <!-- <script>
-    (function() {
-      // Prevent flash of wrong theme
-      const saved = localStorage.getItem('cobold-theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-    })();
-  </script> -->
-
 </head>
 <body>
 
-
-
-
-  <!-- CURSOR -->
   <div class="cursor" id="cursor"></div>
   <div class="cursor-trail" id="cursorTrail"></div>
 
-  <!-- DESKTOP NAV -->
   <nav class="nav" id="navbar">
     <a href="#" class="nav-logo">co<span class="dot">.</span>bold space</a>
     <ul class="nav-links">
@@ -79,14 +61,12 @@
     </button>
   </nav>
 
-  <!-- HERO -->
   <section class="hero" id="home">
     <div class="hero-bg">
       <div class="grain"></div>
       <div class="hero-circle c1"></div>
       <div class="hero-circle c2"></div>
     </div>
-
     <div class="hero-content">
       <p class="hero-eyebrow reveal">est. 2026</p>
       <h1 class="hero-title reveal">
@@ -102,14 +82,8 @@
         <a href="#visit" class="btn btn-ghost">Lokasi</a>
       </div>
     </div>
-
-    <!-- <div class="hero-scroll">
-      <span>scroll</span>
-      <div class="scroll-line"></div>
-    </div> -->
   </section>
 
-  <!-- ABOUT -->
   <section class="about" id="about">
     <div class="about-inner container">
       <div class="about-text reveal">
@@ -123,33 +97,9 @@
           Datang sendiri atau bawa teman. Tidak ada yang perlu dipaksakan.
         </p>
       </div>
-      <!-- <div class="about-visual reveal">
-        <div class="about-img-frame">
-          <div class="about-img-placeholder">
-            <div class="coffee-icon">
-              <div class="cup"></div>
-              <div class="steam s1"></div>
-              <div class="steam s2"></div>
-              <div class="steam s3"></div>
-            </div>
-          </div>
-          <div class="about-badge">Since<br /><strong>2026</strong></div>
-        </div>
-        <div class="about-stats">
-          <div class="stat">
-            <span class="stat-num" data-target="24">0</span><span>+</span>
-            <p>Menu</p>
-          </div>
-          <div class="stat">
-            <span class="stat-num" data-target="3">0</span><span>K+</span>
-            <p>Tamu</p>
-          </div>
-        </div>
-      </div> -->
     </div>
   </section>
 
-  <!-- MENU (READ-ONLY from Firebase) -->
   <section class="menu" id="menu">
     <div class="container">
       <div class="section-header reveal">
@@ -157,26 +107,15 @@
         <h2>What We Serve</h2>
         <p class="section-sub">Kopi manual brew, espresso, dan bites.</p>
       </div>
-
-      <!-- Loading state -->
       <div id="menuLoading" class="menu-loading reveal">
         <div class="loading-spinner"></div>
         <p>Memuat menu...</p>
       </div>
-
-      <!-- Category pills -->
-      <div class="menu-tabs reveal" id="menuTabs" style="display:none">
-        <!-- Pills injected by JS -->
-      </div>
-
-      <!-- Menu grid -->
-      <div class="menu-grid" id="menuGrid" style="display:none">
-        <!-- Items injected by JS -->
-      </div>
+      <div class="menu-tabs reveal" id="menuTabs" style="display:none"></div>
+      <div class="menu-grid" id="menuGrid" style="display:none"></div>
     </div>
   </section>
 
-  <!-- VISIT -->
   <section class="visit" id="visit">
     <div class="container">
       <div class="visit-grid">
@@ -193,18 +132,15 @@
               <p class="visit-val"><a href="https://www.instagram.com/co.bold_space" target="_blank">@co.bold_space</a></p>
             </div>
           </div>
-
           <div class="visit-socials">
             <a href="https://www.instagram.com/co.bold_space" target="_blank" class="social-pill">Instagram</a>
             <a href="https://maps.app.goo.gl/ZCMjNq2o6kjDuhFY9?g_st=ic" target="_blank" class="social-pill">Google Maps</a>
           </div>
-
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
       <div class="footer-inner">
@@ -225,7 +161,6 @@
     </div>
   </footer>
 
-  <!-- MOBILE BOTTOM NAV -->
   <nav class="mobile-bottom-nav" id="mobileBottomNav">
     <a href="#home" class="mobile-nav-item active">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -241,7 +176,6 @@
     </a>
   </nav>
 
-  <!-- Firebase SDK (Public read, no auth required) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -262,7 +196,6 @@
     let ingredients = [];
     let activeCat = 'Semua';
 
-    // Fallback static menu (shown if Firebase fails)
     const fallbackMenu = [
       { id: 'f1', name: 'Espresso', category: 'Espresso', price: 25000, description: 'Single origin, dark roast. Intens.', available: true },
       { id: 'f2', name: 'Americano', category: 'Espresso', price: 28000, description: 'Espresso + air panas. Bold, clean.', available: true },
@@ -271,14 +204,13 @@
       { id: 'f5', name: 'V60 Pour Over', category: 'Manual Brew', price: 38000, description: 'Proses lambat, hasil presisi.', available: true },
       { id: 'f6', name: 'Chemex', category: 'Manual Brew', price: 40000, description: 'Clean cup, clarity penuh.', available: true },
       { id: 'f7', name: 'Cold Brew', category: 'Manual Brew', price: 40000, description: 'Diseduh 18 jam. Smooth, dark.', available: true },
-      { id: 'f8', name: 'co.bold Black', category: 'Signature', price: 45000, description: 'Espresso, dark chocolate, sea salt.', available: true },
-      { id: 'f9', name: 'Midnight Latte', category: 'Signature', price: 48000, description: 'Charcoal oat milk, vanilla.', available: true },
+      { id: 'f8', name: 'co.bold Black', category: 'Signature', price: 45000, description: 'Espresso, dark chocolate, sea salt.', isSignature: true, available: true },
+      { id: 'f9', name: 'Midnight Latte', category: 'Signature', price: 48000, description: 'Charcoal oat milk, vanilla.', isSignature: true, available: true },
       { id: 'f10', name: 'Golden Hour', category: 'Signature', price: 45000, description: 'Turmeric, coconut milk, madu.', available: true },
       { id: 'f11', name: 'Butter Croissant', category: 'Bites', price: 28000, description: 'Renyah, lembut. Panggang pagi.', available: true },
       { id: 'f12', name: 'Dark Choco Banana Cake', category: 'Bites', price: 35000, description: 'Moist, intense.', available: true },
     ];
 
-    // Public read — no auth needed (Firestore rules must allow read)
     async function initFirebase() {
       try {
         await Promise.all([loadMenu(), loadIngredients()]);
@@ -303,14 +235,10 @@
         const snap = await getDocs(query(collection(db, "ingredients"), orderBy("category")));
         ingredients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (e) {
-        ingredients = []; // Optional for landing page
+        ingredients = [];
       }
     }
 
-    // Landing page only checks 'available' field.
-    // Detailed stock validation (recipe → ingredients) is done in kasir.html
-
-    // Build category pills
     function buildPills() {
       const cats = ['Semua', ...new Set(menuItems.map(m => m.category).filter(Boolean))];
       const container = document.getElementById('menuTabs');
@@ -320,14 +248,12 @@
       container.style.display = 'flex';
     }
 
-    // Set active category
     window.setMenuCat = function(c) {
       activeCat = c;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent === c));
       renderMenuGrid();
     };
 
-    // Render menu items (READ-ONLY, no actions)
     function renderMenuGrid() {
       const grid = document.getElementById('menuGrid');
       const list = menuItems.filter(m => activeCat === 'Semua' || m.category === activeCat);
@@ -338,7 +264,6 @@
       }
 
       grid.innerHTML = list.map(m => {
-        // Format price: 15000 → 15K, 12500 → 12.5K
         const price = m.price || 0;
         let priceStr;
         if (price >= 1000) {
@@ -348,13 +273,15 @@
           priceStr = price.toString();
         }
 
+        const sigIcon = m.isSignature ? ' <span style="font-size:0.75em">🔥</span>' : '';
+
         return `
           <div class="menu-item reveal visible">
             <div class="menu-item-info">
               <div class="menu-item-top">
-                <h3>${m.name}</h3>
+                <h3>${m.name}${sigIcon}</h3>
               </div>
-              <p class="menu-item-desc">${m.description || m.category || ''}</p>
+              <p class="menu-item-desc">${m.description || ''}</p>
             </div>
             <span class="menu-price">${priceStr}</span>
           </div>
@@ -362,7 +289,6 @@
       }).join('');
     }
 
-    // Main render function
     function renderMenuUI() {
       document.getElementById('menuLoading').style.display = 'none';
       buildPills();
@@ -370,13 +296,11 @@
       renderMenuGrid();
     }
 
-    // Initialize
     initFirebase();
   </script>
 
   <script src="script.js"></script>
 
-  <!-- Theme Toggle Functionality -->
   <script>
     (function() {
       const toggleBtns = [
@@ -389,7 +313,6 @@
       ].filter(Boolean);
       const html = document.documentElement;
 
-      // Sun icon SVG (dark mode -> click to go light)
       const sunIcon = `<circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -400,7 +323,6 @@
       <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
       <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
 
-      // Moon icon SVG (light mode -> click to go dark)
       const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
 
       function updateIcons(theme) {
@@ -416,11 +338,9 @@
         updateIcons(theme);
       }
 
-      // Initialize icons
       const currentTheme = html.getAttribute('data-theme') || 'dark';
       updateIcons(currentTheme);
 
-      // Bind click to all toggle buttons
       toggleBtns.forEach(btn => {
         btn.addEventListener('click', function() {
           const current = html.getAttribute('data-theme') || 'dark';
@@ -429,7 +349,6 @@
         });
       });
 
-      // Listen for system changes (only if no user preference saved)
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
         if (!localStorage.getItem('cobold-theme')) {
           setTheme(e.matches ? 'dark' : 'light');
