@@ -71,7 +71,8 @@
     /* Sortable HPP headers */
     th.sortable { cursor:pointer; user-select:none; white-space:nowrap; transition:color .15s; }
     th.sortable:hover { color:var(--accent); }
-    th.sortable .sort-arrow { margin-left:4px; font-size:9px; color:var(--accent); }
+    th.sortable .sort-arrow { margin-left:4px; font-size:9px; color:var(--text-dim); opacity:.5; }
+    th.sortable .sort-arrow.active { color:var(--accent); opacity:1; }
 
     @media (max-width:640px) {
       .card-head { flex-direction:column; align-items:flex-start; }
@@ -126,7 +127,7 @@
       }
     }
   </style>
-<base target="_blank">
+
 </head>
 <body>
 
@@ -189,7 +190,10 @@
     <div class="card">
       <div class="card-head">
         <h2>Harga Pokok Penjualan (HPP)</h2>
-        <button class="btn-primary" onclick="recalculateAllHPP()" style="font-size:13px"><i class="fa-solid fa-rotate"></i> Update dari Inventory</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="search-input" id="hppSearch" type="text" placeholder="Cari menu..." oninput="renderHPP()" style="width:180px"/>
+          <button class="btn-primary" onclick="recalculateAllHPP()" style="font-size:13px"><i class="fa-solid fa-rotate"></i> Update dari Inventory</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="hpp-table">
@@ -554,11 +558,22 @@
   window.renderHPP=function(){
     const tbody=document.getElementById('hppTbody');
     if(!menuData.length){tbody.innerHTML=`<tr><td colspan="9" class="empty-cell">Belum ada menu.</td></tr>`;return;}
-    // Update indikator panah di header
+    // Update indikator panah di header (semua kolom sortable tampil ⇅, aktif ▲/▼)
     document.querySelectorAll('th.sortable').forEach(th=>{
       const arrow=th.querySelector('.sort-arrow');
-      if(arrow) arrow.textContent = th.dataset.key===hppSortKey ? (hppSortDir===1?'▲':'▼') : '';
+      if(!arrow) return;
+      if(th.dataset.key===hppSortKey){
+        arrow.textContent = hppSortDir===1 ? '▲' : '▼';
+        arrow.classList.add('active');
+      }else{
+        arrow.textContent = '⇅';
+        arrow.classList.remove('active');
+      }
     });
+    // Filter search
+    const q=(document.getElementById('hppSearch')?.value||'').trim().toLowerCase();
+    let base=menuData;
+    if(q) base=menuData.filter(m=>(m.name||'').toLowerCase().includes(q)||(m.category||'').toLowerCase().includes(q));
     // Nilai untuk sorting per kolom
     const getVal=m=>{
       const hpp=m.hpp||{};
@@ -574,7 +589,8 @@
         default:         return 0;
       }
     };
-    const list=[...menuData].sort((a,b)=>{
+    if(!base.length){tbody.innerHTML=`<tr><td colspan="9" class="empty-cell">Tidak ada menu yang cocok.</td></tr>`;return;}
+    const list=[...base].sort((a,b)=>{
       const va=getVal(a),vb=getVal(b);
       if(typeof va==='string') return va.localeCompare(vb)*hppSortDir;
       return (va-vb)*hppSortDir;
