@@ -68,6 +68,11 @@
       gap: 8px !important;
     }
 
+    /* Sortable HPP headers */
+    th.sortable { cursor:pointer; user-select:none; white-space:nowrap; transition:color .15s; }
+    th.sortable:hover { color:var(--accent); }
+    th.sortable .sort-arrow { margin-left:4px; font-size:9px; color:var(--accent); }
+
     @media (max-width:640px) {
       .card-head { flex-direction:column; align-items:flex-start; }
       .card-head .btn-primary { width:100%; justify-content:center; }
@@ -121,6 +126,7 @@
       }
     }
   </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -189,8 +195,15 @@
         <table class="hpp-table">
           <thead>
             <tr>
-              <th>Menu</th><th>Kategori</th><th>HPP Bahan</th><th>Overhead</th><th>HPP Total</th>
-              <th>Margin</th><th>Harga Jual</th><th>Profit</th><th>Aksi</th>
+              <th class="sortable" data-key="name"     onclick="sortHPP('name')">Menu<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="category" onclick="sortHPP('category')">Kategori<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="bahan"    onclick="sortHPP('bahan')">HPP Bahan<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="overhead" onclick="sortHPP('overhead')">Overhead<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="total"    onclick="sortHPP('total')">HPP Total<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="margin"   onclick="sortHPP('margin')">Margin<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="price"    onclick="sortHPP('price')">Harga Jual<span class="sort-arrow"></span></th>
+              <th class="sortable" data-key="profit"   onclick="sortHPP('profit')">Profit<span class="sort-arrow"></span></th>
+              <th>Aksi</th>
             </tr>
           </thead>
           <tbody id="hppTbody"><tr><td colspan="9" class="empty-cell">Memuat...</td></tr></tbody>
@@ -470,12 +483,17 @@
         item = productsData.find(p=>p.id===prodId);
         itemType = 'product';
         if(!item) return {name:'(produk tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Produk tidak ditemukan di inventory'};
-        const hppTotal = Number(item.hppTotal) || 0;
+        // Pakai HARGA JUAL produk (bukan HPP) sebagai biaya bahan di menu
+        const hargaJual = Number(item.hargaJual) || 0;
+        const hppFallback = Number(item.hppTotal) || 0;
         const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
-        hargaSatuan = hppTotal / batchSize;
         unitMultiplier = 1;
-        if(hppTotal <= 0) {
-          return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`HPP ${item.name} belum dihitung (Rp 0)`};
+        if(hargaJual > 0) {
+          hargaSatuan = hargaJual / batchSize;
+        } else if(hppFallback > 0) {
+          hargaSatuan = hppFallback / batchSize;
+        } else {
+          return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga jual ${item.name} belum diisi (Rp 0)`};
         }
       }
       else if(r.ingredientId?.startsWith('ing_')){
@@ -497,12 +515,17 @@
           item = productsData.find(p=>p.id===r.ingredientId);
           itemType = 'product';
           if(!item) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Item tidak ditemukan di inventory'};
-          const hppTotal = Number(item.hppTotal) || 0;
+          // Pakai HARGA JUAL produk (bukan HPP) sebagai biaya bahan di menu
+          const hargaJual = Number(item.hargaJual) || 0;
+          const hppFallback = Number(item.hppTotal) || 0;
           const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
-          hargaSatuan = hppTotal / batchSize;
           unitMultiplier = 1;
-          if(hppTotal <= 0) {
-            return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`HPP ${item.name} belum dihitung (Rp 0)`};
+          if(hargaJual > 0) {
+            hargaSatuan = hargaJual / batchSize;
+          } else if(hppFallback > 0) {
+            hargaSatuan = hppFallback / batchSize;
+          } else {
+            return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga jual ${item.name} belum diisi (Rp 0)`};
           }
         } else {
           const hargaBeli = Number(item.hargaBeli) || 0;
@@ -520,10 +543,43 @@
     return {items,total};
   }
 
+  let hppSortKey='total', hppSortDir=1;
+
+  window.sortHPP=function(key){
+    if(hppSortKey===key){hppSortDir*=-1;}
+    else{hppSortKey=key;hppSortDir=1;}
+    renderHPP();
+  };
+
   window.renderHPP=function(){
     const tbody=document.getElementById('hppTbody');
     if(!menuData.length){tbody.innerHTML=`<tr><td colspan="9" class="empty-cell">Belum ada menu.</td></tr>`;return;}
-    tbody.innerHTML=menuData.map(m=>{
+    // Update indikator panah di header
+    document.querySelectorAll('th.sortable').forEach(th=>{
+      const arrow=th.querySelector('.sort-arrow');
+      if(arrow) arrow.textContent = th.dataset.key===hppSortKey ? (hppSortDir===1?'▲':'▼') : '';
+    });
+    // Nilai untuk sorting per kolom
+    const getVal=m=>{
+      const hpp=m.hpp||{};
+      switch(hppSortKey){
+        case 'name':     return (m.name||'').toLowerCase();
+        case 'category': return (m.category||'').toLowerCase();
+        case 'bahan':    return hpp.bahan||0;
+        case 'overhead': return hpp.overhead||0;
+        case 'total':    return hpp.total||0;
+        case 'margin':   return hpp.margin||0;
+        case 'price':    return m.price||0;
+        case 'profit':   return (m.price||0)-(hpp.total||0);
+        default:         return 0;
+      }
+    };
+    const list=[...menuData].sort((a,b)=>{
+      const va=getVal(a),vb=getVal(b);
+      if(typeof va==='string') return va.localeCompare(vb)*hppSortDir;
+      return (va-vb)*hppSortDir;
+    });
+    tbody.innerHTML=list.map(m=>{
       const hpp=m.hpp||{};
       const bahan=hpp.bahan||0;
       const overhead=hpp.overhead||0;

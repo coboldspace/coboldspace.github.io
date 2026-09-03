@@ -95,6 +95,7 @@
     }
 </style>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -179,7 +180,12 @@
 
   <!-- RESEP -->
   <div class="section" id="tab-resep">
-    <div class="recipe-grid" id="recipeGrid"><p style="color:var(--text-dim);font-size:14px">Memuat resep...</p></div>
+    <div class="card">
+      <div class="card-head">
+        <input class="search-input" type="text" id="searchRecipe" placeholder="Cari resep / menu / bahan..." oninput="renderRecipes()" style="width:220px"/>
+      </div>
+      <div class="recipe-grid" id="recipeGrid"><p style="color:var(--text-dim);font-size:14px">Memuat resep...</p></div>
+    </div>
   </div>
 
   <!-- LOG -->
@@ -515,9 +521,12 @@
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
-        if(!prod || !prod.hppTotal) continue;
+        if(!prod) continue;
         const prodBatchSize = prod.batchSize || prod.stock || 1;
-        const hargaSatuan = prod.hppTotal / prodBatchSize;
+        // Pakai HARGA JUAL produk (bukan HPP); fallback ke HPP kalau harga jual kosong
+        const hargaJualProd = Number(prod.hargaJual) || 0;
+        const hargaSatuan = hargaJualProd > 0 ? hargaJualProd / prodBatchSize : (Number(prod.hppTotal) || 0) / prodBatchSize;
+        if(hargaSatuan <= 0) continue;
         totalBahan += hargaSatuan * r.amount;
       }
       // Check if it's an ingredient with ing_ prefix
@@ -717,9 +726,12 @@
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
-        if(!prod||!prod.hppTotal){toast(`HPP ${prod?.name||'produk'} belum dihitung.`,'error');return;}
+        if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');return;}
         const prodBatchSize = prod.batchSize || prod.stock || 1;
-        const hargaSatuan = prod.hppTotal / prodBatchSize;
+        // Pakai HARGA JUAL produk (bukan HPP); fallback ke HPP kalau harga jual kosong
+        const hargaJualProd = Number(prod.hargaJual) || 0;
+        const hargaSatuan = hargaJualProd > 0 ? hargaJualProd / prodBatchSize : (Number(prod.hppTotal) || 0) / prodBatchSize;
+        if(hargaSatuan<=0){toast(`Harga jual ${prod.name} belum diisi.`,'error');return;}
         totalBahan += hargaSatuan * r.amount;
       }
       else if(r.ingredientId.startsWith('ing_')){
@@ -1068,22 +1080,36 @@
   };
 
   // ── RESEP MENU (existing, unchanged) ──
+  function resolveRecipeItem(x){
+    let itemName='(dihapus)', itemUnit='';
+    if(x.ingredientId?.startsWith('prod_')){
+      const prodId=x.ingredientId.replace('prod_','');
+      const prod=products.find(p=>p.id===prodId);
+      if(prod){itemName=prod.name;itemUnit=prod.unit;}
+    } else {
+      const ingId=x.ingredientId?.startsWith('ing_')?x.ingredientId.replace('ing_',''):x.ingredientId;
+      const ing=ingredients.find(i=>i.id===ingId||i.id===x.ingredientId);
+      if(ing){itemName=ing.name;itemUnit=ing.unit;}
+    }
+    return {itemName,itemUnit};
+  }
+
   window.renderRecipes=function(){
     const grid=document.getElementById('recipeGrid');
-    if(!menuItems.length){grid.innerHTML=`<p style="color:var(--text-dim);font-size:14px">Belum ada menu.</p>`;return;}
-    grid.innerHTML=menuItems.map(m=>{
+    const searchEl=document.getElementById('searchRecipe');
+    const q=searchEl?searchEl.value.trim().toLowerCase():'';
+    let list=menuItems;
+    if(q){
+      list=menuItems.filter(m=>{
+        if((m.name||'').toLowerCase().includes(q)||(m.category||'').toLowerCase().includes(q))return true;
+        return (m.recipe||[]).some(x=>resolveRecipeItem(x).itemName.toLowerCase().includes(q));
+      });
+    }
+    if(!list.length){grid.innerHTML=`<p style="color:var(--text-dim);font-size:14px">${q?'Tidak ada resep yang cocok dengan pencarian.':'Belum ada menu.'}</p>`;return;}
+    grid.innerHTML=list.map(m=>{
       const r=m.recipe||[];
       const rows=r.length?r.map(x=>{
-        let itemName='(dihapus)', itemUnit='';
-        if(x.ingredientId?.startsWith('prod_')){
-          const prodId=x.ingredientId.replace('prod_','');
-          const prod=products.find(p=>p.id===prodId);
-          if(prod){itemName=prod.name;itemUnit=prod.unit;}
-        } else {
-          const ingId=x.ingredientId?.startsWith('ing_')?x.ingredientId.replace('ing_',''):x.ingredientId;
-          const ing=ingredients.find(i=>i.id===ingId||i.id===x.ingredientId);
-          if(ing){itemName=ing.name;itemUnit=ing.unit;}
-        }
+        const {itemName,itemUnit}=resolveRecipeItem(x);
         return`<div class="recipe-item"><span class="recipe-item-name">${itemName}</span><span class="recipe-item-amount">${x.amount} ${itemUnit}</span></div>`;
       }).join(''):`<div class="recipe-empty">Belum ada resep</div>`;
       return`<div class="recipe-card"><div class="recipe-card-head"><div><div class="recipe-name">${m.name}</div><div class="recipe-cat">${m.category||''}</div></div><button class="btn-sm" onclick="openRecipeModal('${m.id}')">Edit Resep</button></div>${rows}</div>`;

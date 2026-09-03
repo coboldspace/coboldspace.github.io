@@ -265,6 +265,11 @@
       <div class="form-group"><label>Stok Awal</label><input type="number" id="prodStock" placeholder="0" min="0" step="0.01"/></div>
       <div class="form-group"><label>Stok Minimum</label><input type="number" id="prodMin" placeholder="0" min="0" step="0.01"/></div>
     </div>
+    <div class="form-group" style="margin-top:8px">
+      <label>Ukuran Batch <span style="font-weight:400;color:var(--text-dim)">— hasil 1x produksi dari resep di atas</span></label>
+      <input type="number" id="prodBatchSize" placeholder="cth: 1100" min="0.01" step="0.01"/>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Contoh: resep pakai 1000ml UHT + 200g Cremer, hasilnya 1100ml Core Milk → isi 1100</div>
+    </div>
 
     <div style="margin-top:16px">
       <label style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:block">Bahan Baku (resep per batch)</label>
@@ -510,9 +515,9 @@
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
-        if(!prod || !prod.hppTotal || !prod.stock) continue;
-        // Cost per unit = HPP Total / stock (if stock > 0)
-        const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
+        if(!prod || !prod.hppTotal) continue;
+        const prodBatchSize = prod.batchSize || prod.stock || 1;
+        const hargaSatuan = prod.hppTotal / prodBatchSize;
         totalBahan += hargaSatuan * r.amount;
       }
       // Check if it's an ingredient with ing_ prefix
@@ -588,7 +593,7 @@
           <span>Jual: Rp ${Math.round(p.hargaJual||0).toLocaleString('id')}</span>
         </div>
         <div class="prod-ingredients">
-          <div class="prod-ing-title">Bahan Baku per 1 ' + p.unit + '</div>
+          <div class="prod-ing-title">Bahan Baku (Resep per Batch)</div>
           ${ingRows}
         </div>
         <div class="prod-actions">
@@ -610,6 +615,7 @@
       document.getElementById('prodUnit').value=p.unit;
       document.getElementById('prodStock').value=p.stock;
       document.getElementById('prodMin').value=p.minStock||0;
+      document.getElementById('prodBatchSize').value=p.batchSize||p.stock||'';
       document.getElementById('prodOverhead').value=p.overhead||0;
       document.getElementById('prodMargin').value=p.margin||50;
       prodRows=(p.ingredients||[]).map(r=>({ingredientId:r.ingredientId,amount:r.amount}));
@@ -618,6 +624,7 @@
       document.getElementById('prodName').value='';
       document.getElementById('prodStock').value='';
       document.getElementById('prodMin').value='';
+      document.getElementById('prodBatchSize').value='';
       document.getElementById('prodOverhead').value=0;
       document.getElementById('prodMargin').value=50;
       prodRows=[];
@@ -673,6 +680,8 @@
     const unit=document.getElementById('prodUnit').value;
     const stock=parseFloat(document.getElementById('prodStock').value);
     const minStock=parseFloat(document.getElementById('prodMin').value)||0;
+    const batchSizeInput=parseFloat(document.getElementById('prodBatchSize').value);
+    const batchSize=!isNaN(batchSizeInput)&&batchSizeInput>0?batchSizeInput:stock;
     const overhead=parseFloat(document.getElementById('prodOverhead').value)||0;
     const margin=parseFloat(document.getElementById('prodMargin').value)||0;
 
@@ -709,7 +718,8 @@
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
         if(!prod||!prod.hppTotal){toast(`HPP ${prod?.name||'produk'} belum dihitung.`,'error');return;}
-        const hargaSatuan = prod.stock > 0 ? prod.hppTotal / prod.stock : prod.hppTotal;
+        const prodBatchSize = prod.batchSize || prod.stock || 1;
+        const hargaSatuan = prod.hppTotal / prodBatchSize;
         totalBahan += hargaSatuan * r.amount;
       }
       else if(r.ingredientId.startsWith('ing_')){
@@ -818,18 +828,19 @@
         }
 
         // Update product doc
-        batch.update(doc(db,"finishedGoods",id),{
-          name,category,unit,stock,minStock,overhead,margin,
+        const updates = {
+          name,category,unit,stock,minStock,batchSize,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients
-        });
+        };
+        batch.update(doc(db,"finishedGoods",id), updates);
         batchCount++;
 
       }else{
         // NEW product mode
         const newProdRef = doc(collection(db,"finishedGoods"));
         batch.set(newProdRef,{
-          name,category,unit,stock,minStock,overhead,margin,
+          name,category,unit,stock,minStock,batchSize,overhead,margin,
           hppBahan:totalBahan,hppTotal,hargaJual,
           ingredients:validIngredients,
           createdAt:serverTimestamp()
@@ -942,6 +953,7 @@
 
     const p=products.find(x=>x.id===id);
     const validIngredients=(p.ingredients||[]).filter(r=>r.ingredientId&&r.amount>0);
+    const batchSize = p.batchSize || p.stock || 1;
 
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
@@ -949,7 +961,7 @@
 
       // Kurangin stok bahan baku / produk jadi
       for(const r of validIngredients){
-        const deduct=r.amount*amt;
+        const deduct = Math.round(r.amount * amt / batchSize * 100) / 100;
 
         if(r.ingredientId.startsWith('prod_')){
           // Deduct from another finished good
@@ -1014,11 +1026,14 @@
       let totalCost = 0;
       let costBreakdown = [];
       for (const r of validIngredients) {
+        const ingredientAmt = Math.round(r.amount * amt / batchSize * 100) / 100;
         if(r.ingredientId.startsWith('prod_')){
           const prodId = r.ingredientId.replace('prod_','');
           const prod = products.find(p=>p.id===prodId);
-          if(prod && prod.hppTotal && prod.stock > 0){
-            const cost = (prod.hppTotal / prod.stock) * r.amount * amt;
+          if(prod && prod.hppTotal){
+            const prodBatchSize = prod.batchSize || prod.stock || 1;
+            const costPerUnit = prod.hppTotal / prodBatchSize;
+            const cost = costPerUnit * ingredientAmt;
             totalCost += cost;
             costBreakdown.push(`${prod.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
           }
@@ -1026,7 +1041,7 @@
           const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
           const ing = ingredients.find(i=>i.id===ingId);
           if(ing && ing.hargaBeli && ing.unitMultiplier){
-            const cost = (ing.hargaBeli / ing.unitMultiplier) * r.amount * amt;
+            const cost = (ing.hargaBeli / ing.unitMultiplier) * ingredientAmt;
             totalCost += cost;
             costBreakdown.push(`${ing.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
           }
