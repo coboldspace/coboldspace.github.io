@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>co.bold space — Slow Bar</title>
-  <meta name="description" content="Slow bar. Seduh pelan, nikmati ruang." />
+  <meta name="description" content="Slow bar. Seduh pelan, nikmati ruang. / Slow bar. Brew slowly, enjoy the space." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,6 +20,41 @@
       document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
+
+  <style>
+    /* ===== Language switcher ===== */
+    .lang-switch {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--border, rgba(0,0,0,.15));
+      border-radius: 999px;
+      padding: 3px 6px;
+      background: transparent;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .08em;
+      margin-left: 10px;
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: inherit;
+      opacity: .45;
+      cursor: pointer;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: inherit;
+      letter-spacing: inherit;
+      transition: opacity .25s ease, background .25s ease, color .25s ease;
+    }
+    .lang-btn.active { opacity: 1; background: var(--accent, #c8a24b); color: #fff; }
+    .lang-btn:hover { opacity: .85; }
+    .mobile-only.lang-mobile { margin-left: 0; }
+    @media (min-width: 769px) { .mobile-only { display: none !important; } }
+  </style>
+<!-- <base target="_blank"> -->
 </head>
 <body>
 
@@ -29,10 +64,14 @@
   <nav class="nav" id="navbar">
     <a href="#" class="nav-logo">co<span class="dot">.</span>bold space</a>
     <ul class="nav-links">
-      <li><a href="#about">About</a></li>
-      <li><a href="#menu">Menu</a></li>
-      <li><a href="#visit">Visit</a></li>
+      <li><a href="#about" data-i18n="nav.about">About</a></li>
+      <li><a href="#menu" data-i18n="nav.menu">Menu</a></li>
+      <li><a href="#visit" data-i18n="nav.visit">Visit</a></li>
     </ul>
+    <div class="lang-switch" role="group" aria-label="Language / Bahasa">
+      <button class="lang-btn active" data-lang="id" aria-label="Bahasa Indonesia">ID</button>
+      <button class="lang-btn" data-lang="en" aria-label="English">EN</button>
+    </div>
     <button class="theme-toggle nav-theme-toggle" id="themeToggle" aria-label="Toggle theme">
       <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="5"></circle>
@@ -68,18 +107,18 @@
       <div class="hero-circle c2"></div>
     </div>
     <div class="hero-content">
-      <p class="hero-eyebrow reveal">est. 2026</p>
+      <p class="hero-eyebrow reveal" data-i18n="hero.eyebrow">est. 2026</p>
       <h1 class="hero-title reveal">
-        <span class="line">Seduh</span>
-        <span class="line italic">Pelan.</span>
-        <span class="line">Nikmati Ruang.</span>
+        <span class="line" data-i18n="hero.title1">Seduh</span>
+        <span class="line italic" data-i18n="hero.title2">Pelan.</span>
+        <span class="line" data-i18n="hero.title3">Nikmati Ruang.</span>
       </h1>
-      <p class="hero-sub reveal">
+      <p class="hero-sub reveal" data-i18n="hero.sub">
         Slow bar. Kopi manual brew, ruang tenang, dan waktu yang berjalan sesuai iramamu.
       </p>
       <div class="hero-actions reveal">
-        <a href="#menu" class="btn btn-primary">Lihat Menu</a>
-        <a href="#visit" class="btn btn-ghost">Lokasi</a>
+        <a href="#menu" class="btn btn-primary" data-i18n="hero.btnMenu">Lihat Menu</a>
+        <a href="#visit" class="btn btn-ghost" data-i18n="hero.btnVisit">Lokasi</a>
       </div>
     </div>
   </section>
@@ -87,13 +126,13 @@
   <section class="about" id="about">
     <div class="about-inner container">
       <div class="about-text reveal">
-        <p class="label">About</p>
-        <h2>Ruang untuk<br /><em>berhenti sejenak.</em></h2>
-        <p class="body-text">
+        <p class="label" data-i18n="about.label">About</p>
+        <h2><span data-i18n="about.title1">Ruang untuk</span><br /><em data-i18n="about.title2">berhenti sejenak.</em></h2>
+        <p class="body-text" data-i18n="about.body1">
           co.bold space adalah slow bar. Kami seduh kopi satu per satu, tidak buru-buru.
           Ruang ini buat kamu yang butuh jeda — kerja, baca, atau sekadar duduk diam.
         </p>
-        <p class="body-text">
+        <p class="body-text" data-i18n="about.body2">
           Datang sendiri atau bawa teman. Tidak ada yang perlu dipaksakan.
         </p>
       </div>
@@ -103,13 +142,13 @@
   <section class="menu" id="menu">
     <div class="container">
       <div class="section-header reveal">
-        <p class="label">Menu</p>
-        <h2>What We Serve</h2>
-        <p class="section-sub">Manual brew coffee, espresso base, and bites.</p>
+        <p class="label" data-i18n="menu.label">Menu</p>
+        <h2 data-i18n="menu.title">What We Serve</h2>
+        <p class="section-sub" data-i18n="menu.sub">Manual brew coffee, espresso base, and bites.</p>
       </div>
       <div id="menuLoading" class="menu-loading reveal">
         <div class="loading-spinner"></div>
-        <p>Memuat menu...</p>
+        <p data-i18n="menu.loading">Memuat menu...</p>
       </div>
       <div class="menu-tabs reveal" id="menuTabs" style="display:none"></div>
       <div class="menu-grid" id="menuGrid" style="display:none"></div>
@@ -120,11 +159,11 @@
     <div class="container">
       <div class="visit-grid">
         <div class="visit-info reveal">
-          <p class="label">Visit</p>
-          <h2>Find Us<br /><em>Here.</em></h2>
+          <p class="label" data-i18n="visit.label">Visit</p>
+          <h2><span data-i18n="visit.title1">Find Us</span><br /><em data-i18n="visit.title2">Here.</em></h2>
           <div class="visit-details">
             <div class="visit-block">
-              <p class="visit-label">Lokasi</p>
+              <p class="visit-label" data-i18n="visit.location">Lokasi</p>
               <p class="visit-val"><a href="https://maps.app.goo.gl/ZCMjNq2o6kjDuhFY9?g_st=ic" target="_blank">Sentraland boulevard, Parung Panjang, Kec. Parung Panjang, Kabupaten Bogor, Jawa Barat 16360</a></p>
             </div>
             <div class="visit-block">
@@ -146,17 +185,17 @@
       <div class="footer-inner">
         <div class="footer-brand">
           <a href="#" class="nav-logo">co<span class="dot">.</span>bold space</a>
-          <p>Seduh pelan, nikmati ruang.</p>
+          <p data-i18n="footer.tagline">Seduh pelan, nikmati ruang.</p>
         </div>
         <div class="footer-links">
-          <a href="#about">About</a>
-          <a href="#menu">Menu</a>
-          <a href="#visit">Visit</a>
+          <a href="#about" data-i18n="nav.about">About</a>
+          <a href="#menu" data-i18n="nav.menu">Menu</a>
+          <a href="#visit" data-i18n="nav.visit">Visit</a>
         </div>
       </div>
       <div class="footer-bottom">
         <p>&copy; 2026 co.bold space</p>
-        <p class="footer-craft">Slow bar</p>
+        <p class="footer-craft" data-i18n="footer.craft">Slow bar</p>
       </div>
     </div>
   </footer>
@@ -164,17 +203,129 @@
   <nav class="mobile-bottom-nav" id="mobileBottomNav">
     <a href="#home" class="mobile-nav-item active">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-      <span>Home</span>
+      <span data-i18n="nav.home">Home</span>
     </a>
     <a href="#menu" class="mobile-nav-item">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-      <span>Menu</span>
+      <span data-i18n="nav.menu">Menu</span>
     </a>
     <a href="#visit" class="mobile-nav-item">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-      <span>Visit</span>
+      <span data-i18n="nav.visit">Visit</span>
     </a>
   </nav>
+
+  <!-- ===== Bilingual (ID/EN) system ===== -->
+  <script>
+    (function() {
+      const translations = {
+        id: {
+          'nav.about': 'About',
+          'nav.menu': 'Menu',
+          'nav.visit': 'Visit',
+          'nav.home': 'Home',
+          'hero.eyebrow': 'est. 2026',
+          'hero.title1': 'Seduh',
+          'hero.title2': 'Pelan.',
+          'hero.title3': 'Nikmati Ruang.',
+          'hero.sub': 'Slow bar. Kopi manual brew, ruang tenang, dan waktu yang berjalan sesuai iramamu.',
+          'hero.btnMenu': 'Lihat Menu',
+          'hero.btnVisit': 'Lokasi',
+          'about.label': 'About',
+          'about.title1': 'Ruang untuk',
+          'about.title2': 'berhenti sejenak.',
+          'about.body1': 'co.bold space adalah slow bar. Kami seduh kopi satu per satu, tidak buru-buru. Ruang ini buat kamu yang butuh jeda — kerja, baca, atau sekadar duduk diam.',
+          'about.body2': 'Datang sendiri atau bawa teman. Tidak ada yang perlu dipaksakan.',
+          'menu.label': 'Menu',
+          'menu.title': 'What We Serve',
+          'menu.sub': 'Manual brew coffee, espresso base, and bites.',
+          'menu.loading': 'Memuat menu...',
+          'menu.empty': 'Menu tidak tersedia untuk kategori ini.',
+          'menu.all': 'Semua',
+          'visit.label': 'Visit',
+          'visit.title1': 'Find Us',
+          'visit.title2': 'Here.',
+          'visit.location': 'Lokasi',
+          'footer.tagline': 'Seduh pelan, nikmati ruang.',
+          'footer.craft': 'Slow bar',
+          'meta.title': 'co.bold space — Slow Bar',
+          'meta.desc': 'Slow bar. Seduh pelan, nikmati ruang.'
+        },
+        en: {
+          'nav.about': 'About',
+          'nav.menu': 'Menu',
+          'nav.visit': 'Visit',
+          'nav.home': 'Home',
+          'hero.eyebrow': 'est. 2026',
+          'hero.title1': 'Brew',
+          'hero.title2': 'Slow.',
+          'hero.title3': 'Enjoy the Space.',
+          'hero.sub': 'A slow bar. Manual brew coffee, a quiet space, and time that moves at your own pace.',
+          'hero.btnMenu': 'View Menu',
+          'hero.btnVisit': 'Location',
+          'about.label': 'About',
+          'about.title1': 'A space to',
+          'about.title2': 'pause for a while.',
+          'about.body1': 'co.bold space is a slow bar. We brew coffee one cup at a time, never in a rush. This space is for anyone who needs a break — to work, to read, or simply sit still.',
+          'about.body2': 'Come alone or bring a friend. Nothing needs to be forced.',
+          'menu.label': 'Menu',
+          'menu.title': 'What We Serve',
+          'menu.sub': 'Manual brew coffee, espresso base, and bites.',
+          'menu.loading': 'Loading menu...',
+          'menu.empty': 'No items available in this category.',
+          'menu.all': 'All',
+          'visit.label': 'Visit',
+          'visit.title1': 'Find Us',
+          'visit.title2': 'Here.',
+          'visit.location': 'Location',
+          'footer.tagline': 'Brew slowly, enjoy the space.',
+          'footer.craft': 'Slow bar',
+          'meta.title': 'co.bold space — Slow Bar',
+          'meta.desc': 'Slow bar. Brew slowly, enjoy the space.'
+        }
+      };
+
+      let currentLang = localStorage.getItem('cobold-lang');
+
+      // Deteksi bahasa awal: preferensi tersimpan > bahasa browser > Indonesia
+      if (!currentLang) {
+        const browserLang = (navigator.language || 'id').slice(0, 2).toLowerCase();
+        currentLang = browserLang === 'en' ? 'en' : 'id';
+      }
+
+      function applyLang(lang) {
+        currentLang = lang;
+        localStorage.setItem('cobold-lang', lang);
+        document.documentElement.setAttribute('lang', lang);
+
+        const dict = translations[lang];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          if (dict[key] !== undefined) el.textContent = dict[key];
+        });
+
+        document.title = dict['meta.title'];
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', dict['meta.desc']);
+
+        document.querySelectorAll('.lang-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.lang === lang)
+        );
+
+        // Update teks dinamis yang sedang tampil (menu, dsb.)
+        window.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
+      }
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+      });
+
+      window.t = key => (translations[currentLang] && translations[currentLang][key]) || key;
+      window.getLang = () => currentLang;
+
+      applyLang(currentLang);
+    })();
+  </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -197,6 +348,8 @@
     let products = [];
     let activeCat = 'Semua';
 
+    // Fallback menu tetap dalam Bahasa Indonesia karena itu data asli;
+    // jika Firebase tersedia, nama/deskripsi mengikuti data di database.
     const fallbackMenu = [
       { id: 'f1', name: 'Espresso', category: 'Espresso', price: 25000, description: 'Single origin, dark roast. Intens.', available: true },
       { id: 'f2', name: 'Americano', category: 'Espresso', price: 28000, description: 'Espresso + air panas. Bold, clean.', available: true },
@@ -273,8 +426,12 @@
       return true;
     }
 
+    function allLabel() {
+      return (typeof window.t === 'function') ? window.t('menu.all') : 'Semua';
+    }
+
     function buildPills() {
-      const cats = ['Semua', ...new Set(menuItems.map(m => m.category).filter(Boolean))];
+      const cats = [allLabel(), ...new Set(menuItems.map(m => m.category).filter(Boolean))];
       const container = document.getElementById('menuTabs');
       container.innerHTML = cats.map(c =>
         `<button class="tab-btn${c === activeCat ? ' active' : ''}" onclick="window.setMenuCat('${c}')">${c}</button>`
@@ -290,10 +447,11 @@
 
     function renderMenuGrid() {
       const grid = document.getElementById('menuGrid');
-      const list = menuItems.filter(m => activeCat === 'Semua' || m.category === activeCat);
+      const all = allLabel();
+      const list = menuItems.filter(m => activeCat === all || m.category === activeCat);
 
       if (list.length === 0) {
-        grid.innerHTML = '<div class="menu-empty">Menu tidak tersedia untuk kategori ini.</div>';
+        grid.innerHTML = `<div class="menu-empty">${window.t('menu.empty')}</div>`;
         return;
       }
 
@@ -324,11 +482,23 @@
     }
 
     function renderMenuUI() {
-      document.getElementById('menuLoading').style.display = 'none';
+      const loading = document.getElementById('menuLoading');
+      if (loading) loading.style.display = 'none';
       buildPills();
       document.getElementById('menuGrid').style.display = 'grid';
       renderMenuGrid();
     }
+
+    // Render ulang bagian menu saat bahasa diganti
+    window.addEventListener('langchange', () => {
+      if (menuItems.length > 0) {
+        if (activeCat !== allLabel() && !menuItems.some(m => m.category === activeCat)) {
+          activeCat = allLabel();
+        }
+        buildPills();
+        renderMenuGrid();
+      }
+    });
 
     initFirebase();
   </script>
