@@ -322,6 +322,35 @@
 
       window.t = key => (translations[currentLang] && translations[currentLang][key]) || key;
       window.getLang = () => currentLang;
+      window.applyLang = applyLang;
+
+      // ===== Anti-override: jaga teks tetap terjemahan =====
+      // script.js (efek reveal / re-render section) bisa menimpa konten
+      // section SETELAH translate pertama jalan. Observer ini menerjemahkan
+      // ulang setiap kali ada elemen yang ditimpa, kecuali area menu dinamis
+      // (tabs & grid) yang memang dirender ulang oleh modul Firebase.
+      let applying = false;
+      const observer = new MutationObserver(muts => {
+        if (applying) return;
+        const tabs = document.getElementById('menuTabs');
+        const grid = document.getElementById('menuGrid');
+        const onlyDynamic = muts.every(m =>
+          (tabs && tabs.contains(m.target)) || (grid && grid.contains(m.target))
+        );
+        if (onlyDynamic) return;
+        applying = true;
+        setTimeout(() => {
+          applyLang(currentLang);
+          applying = false;
+        }, 200);
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Retry setelah semua resource (termasuk script.js) selesai dimuat
+      window.addEventListener('load', () => {
+        setTimeout(() => applyLang(currentLang), 300);
+        setTimeout(() => applyLang(currentLang), 1000);
+      });
 
       applyLang(currentLang);
     })();
