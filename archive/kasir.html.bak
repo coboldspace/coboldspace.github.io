@@ -393,6 +393,7 @@
     <a href="admin.html"     class="nav-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
     <a href="inventory.html" class="nav-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
     <a href="roasting.html"  class="nav-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="keuangan.html"  class="nav-item admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
     <a href="hpp.html"       class="nav-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </nav>
   <button class="btn-logout" id="btnLogout">LOGOUT</button>
@@ -406,10 +407,10 @@
     <a href="admin.html"     class="bn-item admin-only"><i class="fa-solid fa-mug-hot"></i><span>Menu</span></a>
     <a href="inventory.html" class="bn-item admin-only"><i class="fa-solid fa-box"></i><span>Inventori</span></a>
     <a href="roasting.html"  class="bn-item admin-only"><i class="fa-solid fa-fire"></i><span>Roasting</span></a>
+    <a href="keuangan.html"  class="bn-item admin-only"><i class="fa-solid fa-wallet"></i><span>Keuangan</span></a>
     <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
 </nav>
-
 <!-- MOBILE TAB SWITCHER -->
 <div class="pos-tabs" id="posTabs">
   <button class="pos-tab active" onclick="switchTab('menu')" id="tabMenu">
@@ -910,6 +911,20 @@
     btn.textContent = 'Menyimpan...';
     try {
       await updateDoc(doc(db, "orders", id), { status: "done" });
+      // Auto-catat ke cashflow
+      const orderData = todayOrders.find(o => o.id === id);
+      if(orderData && orderData.total > 0){
+        await addDoc(collection(db, "cashflow"), {
+          type: 'income',
+          amount: orderData.total,
+          description: `Penjualan: ${(orderData.items || []).map(i => i.name + ' x' + i.qty).join(', ')}`,
+          category: 'kasir',
+          relatedId: id,
+          relatedType: 'order',
+          createdBy: currentUser.name,
+          createdAt: serverTimestamp()
+        });
+      }
       // Remove from list visually
       const item = document.getElementById('riwayat-' + id);
       if (item) {

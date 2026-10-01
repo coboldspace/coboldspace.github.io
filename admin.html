@@ -17,6 +17,19 @@
     .detail-total span:last-child { color:var(--accent); }
     .filters { display:flex; gap:8px; flex-wrap:wrap; }
 
+    /* ===== ANTI DOUBLE-SUBMIT ===== */
+    .btn-sm:disabled, .btn-modal-confirm:disabled, .btn-primary:disabled {
+      opacity:.45 !important; cursor:not-allowed !important; pointer-events:none !important;
+    }
+    .btn-sm.is-loading { opacity:.6; pointer-events:none; }
+    .stock-restored-note { font-size:11px; color:var(--green); display:block; margin-top:2px; }
+    .net-banner {
+      display:none; align-items:center; gap:8px; background:rgba(239,68,68,.12);
+      border:1px solid rgba(239,68,68,.35); color:var(--red); font-size:12px;
+      border-radius:8px; padding:8px 12px; margin-bottom:12px;
+    }
+    .net-banner.show { display:flex; }
+
     /* HPP Styles */
     .hpp-bahan-item { display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid #222; color:var(--text-dim); }
     .hpp-bahan-item:last-child { border-bottom:none; }
@@ -41,34 +54,23 @@
     .hpp-debug { font-size:10px; color:var(--text-dim); margin-top:4px; font-family:monospace; }
     .hpp-no-price { color:var(--yellow); font-size:11px; }
 
-    /* Checkbox fix — ensure native checkboxes are clickable */
+    /* Checkbox fix */
     .modal input[type="checkbox"] {
       -webkit-appearance: checkbox !important;
       appearance: checkbox !important;
-      width: 18px !important;
-      height: 18px !important;
-      min-width: 18px !important;
-      min-height: 18px !important;
-      cursor: pointer !important;
-      opacity: 1 !important;
-      pointer-events: auto !important;
-      position: relative !important;
-      z-index: 2 !important;
-      margin: 0 !important;
-      flex-shrink: 0 !important;
+      width: 18px !important; height: 18px !important;
+      min-width: 18px !important; min-height: 18px !important;
+      cursor: pointer !important; opacity: 1 !important;
+      pointer-events: auto !important; position: relative !important;
+      z-index: 2 !important; margin: 0 !important; flex-shrink: 0 !important;
     }
     .modal .chk-label {
-      cursor: pointer !important;
-      text-transform: none !important;
-      letter-spacing: 0 !important;
-      font-size: 14px !important;
-      user-select: none !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 8px !important;
+      cursor: pointer !important; text-transform: none !important;
+      letter-spacing: 0 !important; font-size: 14px !important;
+      user-select: none !important; display: flex !important;
+      align-items: center !important; gap: 8px !important;
     }
 
-    /* Sortable HPP headers */
     th.sortable { cursor:pointer; user-select:none; white-space:nowrap; transition:color .15s; }
     th.sortable:hover { color:var(--accent); }
     th.sortable .sort-arrow { margin-left:4px; font-size:9px; color:var(--text-dim); opacity:.5; }
@@ -86,45 +88,21 @@
 
   <style>
     .modal-overlay {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 1000 !important;
-      background: rgba(0,0,0,0.7) !important;
-      padding: 16px !important;
-      box-sizing: border-box !important;
-      opacity: 0;
-      visibility: hidden;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+      width: 100vw !important; height: 100vh !important; z-index: 1000 !important;
+      background: rgba(0,0,0,0.7) !important; padding: 16px !important;
+      box-sizing: border-box !important; opacity: 0; visibility: hidden;
       transition: opacity 0.2s, visibility 0.2s;
     }
-    .modal-overlay.show {
-      opacity: 1 !important;
-      visibility: visible !important;
-    }
+    .modal-overlay.show { opacity: 1 !important; visibility: visible !important; }
     .modal-overlay .modal {
-      position: relative !important;
-      margin: auto !important;
-      max-height: 90vh !important;
-      overflow-y: auto !important;
-      width: 100% !important;
-      max-width: 520px !important;
-      transform: none !important;
-      top: auto !important;
-      left: auto !important;
+      position: relative !important; margin: auto !important; max-height: 90vh !important;
+      overflow-y: auto !important; width: 100% !important; max-width: 520px !important;
+      transform: none !important; top: auto !important; left: auto !important;
     }
     @media (max-width: 640px) {
-      .modal-overlay .modal {
-        max-width: 100% !important;
-        width: calc(100% - 32px) !important;
-        margin: auto !important;
-      }
+      .modal-overlay .modal { max-width: 100% !important; width: calc(100% - 32px) !important; margin: auto !important; }
     }
   </style>
 
@@ -162,6 +140,10 @@
 <div class="main-content">
   <div class="header"><h1>Manajemen</h1></div>
 
+  <div class="net-banner" id="netBanner">
+    <i class="fa-solid fa-wifi"></i><span>Koneksi bermasalah — sistem sedang mencoba ulang secara otomatis. Jangan refresh atau klik berulang.</span>
+  </div>
+
   <div class="tabs">
     <button class="tab-btn active" onclick="showTab('menu',this)">☕ Menu</button>
     <button class="tab-btn"        onclick="showTab('hpp',this)">💰 HPP</button>
@@ -192,7 +174,7 @@
         <h2>Harga Pokok Penjualan (HPP)</h2>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input class="search-input" id="hppSearch" type="text" placeholder="Cari menu..." oninput="renderHPP()" style="width:180px"/>
-          <button class="btn-primary" onclick="recalculateAllHPP()" style="font-size:13px"><i class="fa-solid fa-rotate"></i> Update dari Inventory</button>
+          <button class="btn-primary" id="btnRecalcHPP" onclick="recalculateAllHPP()" style="font-size:13px"><i class="fa-solid fa-rotate"></i> Update dari Inventory</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -221,12 +203,14 @@
       <div class="card-head">
         <h2>Riwayat Transaksi</h2>
         <div class="filters">
+          <input class="search-input" id="transSearch" type="text" placeholder="Cari kasir / meja..." oninput="renderTransaksi()" style="width:160px"/>
           <select class="filter-select" id="filterStatus" onchange="renderTransaksi()">
             <option value="">Semua Status</option><option value="pending">Pending</option><option value="done">Done</option><option value="cancelled">Cancelled</option>
           </select>
           <select class="filter-select" id="filterType" onchange="renderTransaksi()">
             <option value="">Semua Tipe</option><option value="dine-in">Dine-in</option><option value="takeaway">Takeaway</option>
           </select>
+          <button class="btn-sm" id="btnRefreshTrans" onclick="refreshTransaksi()" title="Muat ulang data transaksi"><i class="fa-solid fa-rotate"></i></button>
         </div>
       </div>
       <div class="table-wrap">
@@ -235,6 +219,10 @@
           <tbody id="transTbody"><tr><td colspan="6" class="empty-cell">Memuat...</td></tr></tbody>
         </table>
       </div>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:10px">
+        <i class="fa-solid fa-circle-info"></i>
+        Membatalkan transaksi <strong>pending</strong> akan mengembalikan stok bahan & produk ke Inventori secara otomatis (aman dari klik ganda — stok hanya dikembalikan sekali).
+      </p>
     </div>
   </div>
 </div>
@@ -266,7 +254,6 @@
       <textarea id="mDescription" rows="2" placeholder="cth: Espresso dengan susu steamed dan foam lembut..."
         style="background:#111;border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text-main);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;width:100%;box-sizing:border-box;"></textarea>
     </div>
-    <!-- CHECKBOX FIX: separate label with for/id, explicit styling -->
     <div class="form-group">
       <label class="chk-label" for="mAvail">
         <input type="checkbox" id="mAvail" checked/>
@@ -361,13 +348,45 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp }
+  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc,
+           query, orderBy, serverTimestamp, runTransaction, increment,
+           initializeFirestore, persistentLocalCache, persistentMultipleTabManager }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
-  const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
+  const app=initializeApp(fc),auth=getAuth(app);
+  // ===== LOCAL PERSISTENCE: baca dari cache dulu saat jaringan jelek / quota hemat =====
+  const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
   let menuData=[],ordersData=[],ingredientsData=[],productsData=[],activeOrderId=null;
   let hppOverheadItems=[], hppCurrentMenu=null;
+
+  /* ============================================================
+     ANTI DOUBLE-TRANSACTION UTILITIES
+     1. inFlight lock  — klik ganda / tap ganda diblokir di client
+     2. withRetry      — network error / quota: retry otomatis dgn backoff
+     3. runTransaction — status check ATOMIK di server: batal/selesai
+        hanya terjadi SEKALI, walau request terkirim dua kali
+     ============================================================ */
+  const inFlight=new Set();
+  function lock(key){ if(inFlight.has(key)) return false; inFlight.add(key); return true; }
+  function unlock(key){ inFlight.delete(key); }
+
+  const netBanner=document.getElementById('netBanner');
+  function setNetBanner(on){ netBanner.classList.toggle('show',!!on); }
+
+  async function withRetry(fn,tries=3){
+    let delay=900;
+    for(let i=1;;i++){
+      try{ setNetBanner(false); return await fn(); }
+      catch(e){
+        const retryable=['unavailable','deadline-exceeded','resource-exhausted','internal'];
+        if(i>=tries || !retryable.includes(e.code)) throw e;
+        setNetBanner(true);
+        toast(`Koneksi/quota bermasalah, retry ${i}/${tries-1}...`,'error');
+        await new Promise(r=>setTimeout(r,delay)); delay*=2;
+      }
+    }
+  }
 
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -380,25 +399,29 @@
       location.href = "dashboard.html";
       return;
     }
-    await Promise.all([loadMenu(),loadOrders(),loadIngredients(),loadProducts()]);
+    try{
+      await Promise.all([loadMenu(),loadOrders(),loadIngredients(),loadProducts()]);
+    }catch(e){
+      toast('Gagal memuat data: '+e.message,'error');
+    }
     renderMenuTable(); renderTransaksi(); renderHPP();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
   async function loadMenu(){
-    const s=await getDocs(query(collection(db,"menu"),orderBy("category")));
+    const s=await withRetry(()=>getDocs(query(collection(db,"menu"),orderBy("category"))));
     menuData=s.docs.map(d=>({id:d.id,...d.data()}));
   }
   async function loadOrders(){
-    const s=await getDocs(query(collection(db,"orders"),orderBy("createdAt","desc")));
+    const s=await withRetry(()=>getDocs(query(collection(db,"orders"),orderBy("createdAt","desc"))));
     ordersData=s.docs.map(d=>({id:d.id,...d.data()}));
   }
   async function loadIngredients(){
-    const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
+    const s=await withRetry(()=>getDocs(query(collection(db,"ingredients"),orderBy("category"))));
     ingredientsData=s.docs.map(d=>({id:d.id,...d.data()}));
   }
   async function loadProducts(){
-    const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    const s=await withRetry(()=>getDocs(query(collection(db,"finishedGoods"),orderBy("category"))));
     productsData=s.docs.map(d=>({id:d.id,...d.data()}));
   }
 
@@ -408,7 +431,10 @@
     document.getElementById('sec-'+id).classList.add('active');
     btn.classList.add('active');
     if(id==='hpp') renderHPP();
+    if(id==='transaksi') renderTransaksi();
   };
+
+  /* ================= MENU ================= */
 
   window.renderMenuTable=function(){
     const q=document.getElementById('menuSearch').value.toLowerCase();
@@ -449,6 +475,7 @@
   window.closeMenuModal=function(){document.getElementById('menuModal').classList.remove('show');};
 
   window.submitMenu=async function(){
+    if(!lock('menu:save')){toast('Sedang menyimpan...','error');return;}
     const btn=document.getElementById('menuSaveBtn');
     const id=document.getElementById('menuEditId').value;
     const name=document.getElementById('mName').value.trim();
@@ -457,86 +484,84 @@
     const available=document.getElementById('mAvail').checked;
     const description=document.getElementById('mDescription').value.trim();
     const isSignature=document.getElementById('mSignature').checked;
-    if(!name||isNaN(price)){toast('Nama dan harga wajib diisi.','error');return;}
+    if(!name||isNaN(price)){toast('Nama dan harga wajib diisi.','error');unlock('menu:save');return;}
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      if(id) await updateDoc(doc(db,"menu",id),{name,price,category,available,description,isSignature});
-      else await addDoc(collection(db,"menu"),{name,price,category,available,description,isSignature,createdAt:serverTimestamp()});
+      if(id) await withRetry(()=>updateDoc(doc(db,"menu",id),{name,price,category,available,description,isSignature}));
+      else await withRetry(()=>addDoc(collection(db,"menu"),{name,price,category,available,description,isSignature,createdAt:serverTimestamp()}));
       await loadMenu();renderMenuTable();renderHPP();closeMenuModal();toast('✓ Menu disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan';
+    unlock('menu:save');
   };
 
-  window.toggleAvail=async function(id,val){try{await updateDoc(doc(db,"menu",id),{available:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
-  
-  window.toggleSignature=async function(id,val){try{await updateDoc(doc(db,"menu",id),{isSignature:val});await loadMenu();renderMenuTable();}catch(e){toast('Error: '+e.message,'error');}};
-  
-  window.deleteMenu=async function(id){
-    const m=menuData.find(x=>x.id===id);
-    if(!confirm(`Hapus "${m?.name}"?`))return;
-    try{await deleteDoc(doc(db,"menu",id));await loadMenu();renderMenuTable();renderHPP();toast('Menu dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
+  window.toggleAvail=async function(id,val){
+    if(!lock('avail:'+id))return;
+    try{await withRetry(()=>updateDoc(doc(db,"menu",id),{available:val}));const m=menuData.find(x=>x.id===id);if(m)m.available=val;renderMenuTable();}
+    catch(e){toast('Error: '+e.message,'error');}
+    unlock('avail:'+id);
   };
+
+  window.toggleSignature=async function(id,val){
+    if(!lock('sig:'+id))return;
+    try{await withRetry(()=>updateDoc(doc(db,"menu",id),{isSignature:val}));const m=menuData.find(x=>x.id===id);if(m)m.isSignature=val;renderMenuTable();}
+    catch(e){toast('Error: '+e.message,'error');}
+    unlock('sig:'+id);
+  };
+
+  window.deleteMenu=async function(id){
+    if(!lock('del:'+id))return;
+    const m=menuData.find(x=>x.id===id);
+    if(!confirm(`Hapus "${m?.name}"?`)){unlock('del:'+id);return;}
+    try{await withRetry(()=>deleteDoc(doc(db,"menu",id)));menuData=menuData.filter(x=>x.id!==id);renderMenuTable();renderHPP();toast('Menu dihapus','success');}
+    catch(e){toast('Error: '+e.message,'error');}
+    unlock('del:'+id);
+  };
+
+  /* ================= HPP ================= */
 
   function calculateBahanCost(recipe){
     if(!recipe||!recipe.length) return {items:[],total:0};
     let total=0;
     const items=recipe.map(r=>{
-      let item, itemType, hargaSatuan, unitMultiplier;
+      let item, hargaSatuan, unitMultiplier;
       if(r.ingredientId?.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         item = productsData.find(p=>p.id===prodId);
-        itemType = 'product';
         if(!item) return {name:'(produk tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Produk tidak ditemukan di inventory'};
-        // Pakai HARGA JUAL produk (bukan HPP) sebagai biaya bahan di menu
         const hargaJual = Number(item.hargaJual) || 0;
         const hppFallback = Number(item.hppTotal) || 0;
         const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
         unitMultiplier = 1;
-        if(hargaJual > 0) {
-          hargaSatuan = hargaJual / batchSize;
-        } else if(hppFallback > 0) {
-          hargaSatuan = hppFallback / batchSize;
-        } else {
-          return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga jual ${item.name} belum diisi (Rp 0)`};
-        }
+        if(hargaJual > 0) hargaSatuan = hargaJual / batchSize;
+        else if(hppFallback > 0) hargaSatuan = hppFallback / batchSize;
+        else return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga jual ${item.name} belum diisi (Rp 0)`};
       }
       else if(r.ingredientId?.startsWith('ing_')){
         const ingId = r.ingredientId.replace('ing_','');
         item = ingredientsData.find(i=>i.id===ingId);
-        itemType = 'ingredient';
         if(!item) return {name:'(bahan tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Bahan tidak ditemukan di inventory'};
         const hargaBeli = Number(item.hargaBeli) || 0;
         unitMultiplier = Number(item.unitMultiplier) || 1000;
-        if(hargaBeli <= 0) {
-          return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
-        }
+        if(hargaBeli <= 0) return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
         hargaSatuan = hargaBeli / unitMultiplier;
       }
       else {
         item = ingredientsData.find(i=>i.id===r.ingredientId);
-        itemType = 'ingredient';
         if(!item) {
           item = productsData.find(p=>p.id===r.ingredientId);
-          itemType = 'product';
           if(!item) return {name:'(tidak ditemukan)',amount:r.amount||0,unit:'',hargaSatuan:0,subtotal:0,warning:'Item tidak ditemukan di inventory'};
-          // Pakai HARGA JUAL produk (bukan HPP) sebagai biaya bahan di menu
           const hargaJual = Number(item.hargaJual) || 0;
           const hppFallback = Number(item.hppTotal) || 0;
           const batchSize = Number(item.batchSize) || Number(item.stock) || 1;
           unitMultiplier = 1;
-          if(hargaJual > 0) {
-            hargaSatuan = hargaJual / batchSize;
-          } else if(hppFallback > 0) {
-            hargaSatuan = hppFallback / batchSize;
-          } else {
-            return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga jual ${item.name} belum diisi (Rp 0)`};
-          }
+          if(hargaJual > 0) hargaSatuan = hargaJual / batchSize;
+          else if(hppFallback > 0) hargaSatuan = hppFallback / batchSize;
+          else return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga jual ${item.name} belum diisi (Rp 0)`};
         } else {
           const hargaBeli = Number(item.hargaBeli) || 0;
           unitMultiplier = Number(item.unitMultiplier) || 1000;
-          if(hargaBeli <= 0) {
-            return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
-          }
+          if(hargaBeli <= 0) return {name:item.name,amount:r.amount||0,unit:item.unit,hargaSatuan:0,subtotal:0,warning:`Harga beli ${item.name} belum diisi (Rp 0)`};
           hargaSatuan = hargaBeli / unitMultiplier;
         }
       }
@@ -558,7 +583,6 @@
   window.renderHPP=function(){
     const tbody=document.getElementById('hppTbody');
     if(!menuData.length){tbody.innerHTML=`<tr><td colspan="9" class="empty-cell">Belum ada menu.</td></tr>`;return;}
-    // Update indikator panah di header (semua kolom sortable tampil ⇅, aktif ▲/▼)
     document.querySelectorAll('th.sortable').forEach(th=>{
       const arrow=th.querySelector('.sort-arrow');
       if(!arrow) return;
@@ -570,11 +594,9 @@
         arrow.classList.remove('active');
       }
     });
-    // Filter search
     const q=(document.getElementById('hppSearch')?.value||'').trim().toLowerCase();
     let base=menuData;
     if(q) base=menuData.filter(m=>(m.name||'').toLowerCase().includes(q)||(m.category||'').toLowerCase().includes(q));
-    // Nilai untuk sorting per kolom
     const getVal=m=>{
       const hpp=m.hpp||{};
       switch(hppSortKey){
@@ -597,10 +619,7 @@
     });
     tbody.innerHTML=list.map(m=>{
       const hpp=m.hpp||{};
-      const bahan=hpp.bahan||0;
-      const overhead=hpp.overhead||0;
-      const total=hpp.total||0;
-      const margin=hpp.margin||0;
+      const bahan=hpp.bahan||0, overhead=hpp.overhead||0, total=hpp.total||0, margin=hpp.margin||0;
       const price=m.price||0;
       const profit=price-total;
       const profitClass=profit>=0?'profit-positive':'profit-negative';
@@ -620,9 +639,10 @@
   };
 
   window.openHppModal=async function(id){
-    if(!ingredientsData.length){ await loadIngredients(); }
+    if(!lock('hpp:open:'+id))return;
+    if(!ingredientsData.length){ try{await loadIngredients();}catch(e){} }
     const m=menuData.find(x=>x.id===id);
-    if(!m)return;
+    if(!m){unlock('hpp:open:'+id);return;}
     hppCurrentMenu=m;
     document.getElementById('hppMenuId').value=id;
     document.getElementById('hppModalTitle').textContent=`HPP: ${m.name}`;
@@ -657,6 +677,7 @@
     document.getElementById('hppFinal').value=m.price||'';
     calculateHPP();
     document.getElementById('hppModal').classList.add('show');
+    unlock('hpp:open:'+id);
   };
 
   window.closeHppModal=function(){document.getElementById('hppModal').classList.remove('show');};
@@ -706,6 +727,7 @@
   };
 
   window.submitHPP=async function(){
+    if(!lock('hpp:save')){toast('Sedang menyimpan...','error');return;}
     const btn=document.getElementById('hppSaveBtn');
     const id=document.getElementById('hppMenuId').value;
     const recipe=hppCurrentMenu?.recipe||[];
@@ -719,87 +741,253 @@
     const final=parseFloat(document.getElementById('hppFinal').value)||rekomendasi;
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      await updateDoc(doc(db,"menu",id),{
+      await withRetry(()=>updateDoc(doc(db,"menu",id),{
         price:final,
-        hpp:{
-          bahan:totalBahan,
-          overhead:totalOverhead,
-          overheadItems:validOverhead,
-          total:grand,
-          margin:margin,
-          rekomendasi:rekomendasi,
-          final:final
-        }
-      });
-      await loadMenu();renderHPP();closeHppModal();toast('✓ HPP & Harga disimpan','success');
+        hpp:{ bahan:totalBahan, overhead:totalOverhead, overheadItems:validOverhead,
+              total:grand, margin:margin, rekomendasi:rekomendasi, final:final }
+      }));
+      const m=menuData.find(x=>x.id===id);
+      if(m){m.price=final;m.hpp={bahan:totalBahan,overhead:totalOverhead,overheadItems:validOverhead,total:grand,margin,rekomendasi,final};}
+      renderHPP();closeHppModal();toast('✓ HPP & Harga disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan HPP';
+    unlock('hpp:save');
   };
 
   window.recalculateAllHPP=async function(){
-    await Promise.all([loadIngredients(), loadProducts()]);
-    let updated=0;
-    for(const m of menuData){
-      if(!m.recipe||!m.recipe.length) continue;
-      const {total:totalBahan}=calculateBahanCost(m.recipe);
-      const hppData=m.hpp||{};
-      const validOverhead=(hppData.overheadItems&&hppData.overheadItems.length)?hppData.overheadItems:[];
-      const totalOverhead=validOverhead.reduce((s,o)=>s+(o.biaya||0),0);
-      const grand=totalBahan+totalOverhead;
-      const margin=hppData.margin||50;
-      const raw=grand*(1+margin/100);
-      const rekomendasi=Math.ceil(raw/1000)*1000;
-      await updateDoc(doc(db,"menu",m.id),{
-        'hpp.bahan':totalBahan,
-        'hpp.total':grand,
-        'hpp.rekomendasi':rekomendasi
-      });
-      updated++;
-    }
-    await loadMenu();renderHPP();
-    toast(`✓ ${updated} menu di-update dari inventory`,`success`);
+    if(!lock('hpp:recalc')){toast('Sedang menghitung...','error');return;}
+    const btn=document.getElementById('btnRecalcHPP');
+    btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Menghitung...';
+    try{
+      await Promise.all([loadIngredients(), loadProducts()]);
+      let updated=0, skipped=0;
+      for(const m of menuData){
+        if(!m.recipe||!m.recipe.length) continue;
+        const {total:totalBahan}=calculateBahanCost(m.recipe);
+        const hppData=m.hpp||{};
+        const validOverhead=(hppData.overheadItems&&hppData.overheadItems.length)?hppData.overheadItems:[];
+        const totalOverhead=validOverhead.reduce((s,o)=>s+(o.biaya||0),0);
+        const grand=totalBahan+totalOverhead;
+        const margin=hppData.margin||50;
+        const raw=grand*(1+margin/100);
+        const rekomendasi=Math.ceil(raw/1000)*1000;
+        // ===== QUOTA SAVER: skip write kalau nilai tidak berubah =====
+        if(Math.abs((hppData.bahan||0)-totalBahan)<0.5 &&
+           Math.abs((hppData.total||0)-grand)<0.5 &&
+           Math.abs((hppData.rekomendasi||0)-rekomendasi)<0.5){
+          skipped++; continue;
+        }
+        await withRetry(()=>updateDoc(doc(db,"menu",m.id),{
+          'hpp.bahan':totalBahan, 'hpp.total':grand, 'hpp.rekomendasi':rekomendasi
+        }));
+        m.hpp={...hppData,bahan:totalBahan,total:grand,rekomendasi};
+        updated++;
+      }
+      renderHPP();
+      toast(`✓ ${updated} menu di-update, ${skipped} tidak berubah (write dihemat)`,`success`);
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-rotate"></i> Update dari Inventory';
+    unlock('hpp:recalc');
+  };
+
+  /* ================= TRANSAKSI ================= */
+
+  window.refreshTransaksi=async function(){
+    if(!lock('trans:refresh'))return;
+    const btn=document.getElementById('btnRefreshTrans');
+    btn.disabled=true;
+    try{await withRetry(loadOrders);renderTransaksi();toast('✓ Data transaksi diperbarui','success');}
+    catch(e){toast('Gagal memuat ulang: '+e.message,'error');}
+    btn.disabled=false;
+    unlock('trans:refresh');
   };
 
   window.renderTransaksi=function(){
     const st=document.getElementById('filterStatus').value;
     const tp=document.getElementById('filterType').value;
+    const q=(document.getElementById('transSearch')?.value||'').trim().toLowerCase();
     let list=ordersData;
     if(st)list=list.filter(o=>o.status===st);
     if(tp)list=list.filter(o=>o.type===tp);
+    if(q)list=list.filter(o=>(o.kasirName||'').toLowerCase().includes(q)||String(o.tableNo||'').includes(q));
     document.getElementById('transTbody').innerHTML=list.length?list.map(o=>{
       const ts=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
       const cls=o.status==='done'?'badge-green':o.status==='cancelled'?'badge-red':'badge-yellow';
+      const stockNote=(o.status==='cancelled'&&o.stockRestored)?`<span class="stock-restored-note"><i class="fa-solid fa-rotate-left"></i> stok dikembalikan</span>`:'';
       return `<tr>
         <td>${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
         <td>${o.kasirName||'—'}</td>
         <td>${o.type==='dine-in'?`Dine-in #${o.tableNo||'?'}`:'Takeaway'}</td>
         <td>Rp ${(o.total||0).toLocaleString('id')}</td>
-        <td><span class="badge ${cls}">${o.status}</span></td>
+        <td><span class="badge ${cls}">${o.status}</span>${stockNote}</td>
         <td><button class="btn-sm" onclick="openOrderDetail('${o.id}')">Detail</button>${o.status==='pending'?`<button class="btn-sm danger" onclick="cancelOrder('${o.id}')">Batal</button>`:''}</td>
       </tr>`;
     }).join(''):`<tr><td colspan="6" class="empty-cell">Tidak ada transaksi.</td></tr>`;
   };
+
   window.openOrderDetail=function(id){
     activeOrderId=id;const o=ordersData.find(x=>x.id===id);
+    if(!o)return;
     const ts=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
     const cls=o.status==='done'?'badge-green':o.status==='cancelled'?'badge-red':'badge-yellow';
+    const restoreInfo=(o.status==='cancelled')?(
+      o.stockRestored
+      ?`<div class="detail-row"><span>Stok Inventory</span><span style="color:var(--green)"><i class="fa-solid fa-rotate-left"></i> Sudah dikembalikan (${(o.stockRestoreLog||[]).length} jenis item)</span></div>
+        ${(o.stockRestoreLog||[]).map(l=>`<div class="detail-row" style="font-size:12px;padding-left:12px"><span>↳ ${l.name}</span><span>+${l.amount} ${l.unit}</span></div>`).join('')}`
+      :`<div class="detail-row"><span>Stok Inventory</span><span style="color:var(--yellow)">Tidak ada resep — tidak ada stok dikembalikan</span></div>`
+    ):'';
     document.getElementById('orderDetail').innerHTML=`
       <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">${ts.toLocaleString('id-ID')} · ${o.kasirName||'—'} · <span class="badge ${cls}">${o.status}</span></p>
       ${(o.items||[]).map(i=>`<div class="detail-row"><span>${i.name} ×${i.qty}</span><span>Rp ${(i.price*i.qty).toLocaleString('id')}</span></div>`).join('')}
       ${o.notes?`<div class="detail-row"><span>Catatan</span><span>${o.notes}</span></div>`:''}
+      ${restoreInfo}
       <div class="detail-total"><span>Total</span><span>Rp ${(o.total||0).toLocaleString('id')}</span></div>`;
     document.getElementById('btnDone').style.display=o.status==='pending'?'':'none';
     document.getElementById('orderModal').classList.add('show');
   };
   window.closeOrderModal=function(){document.getElementById('orderModal').classList.remove('show');};
-  window.markDone=async function(){
-    try{await updateDoc(doc(db,"orders",activeOrderId),{status:"done"});closeOrderModal();await loadOrders();renderTransaksi();toast('✓ Pesanan selesai','success');}
-    catch(e){toast('Error: '+e.message,'error');}
-  };
+
+  /**
+   * Hitung kebutuhan restore stok untuk 1 order, berdasarkan resep menu.
+   * Return: [{ref, coll, name, amount, unit}]  — amount sudah dikali qty pesanan.
+   */
+  function computeStockRestore(order){
+    const restores=[];
+    for(const item of (order.items||[])){
+      const menu=menuData.find(m=>m.id===item.menuId || m.id===item.id || m.name===item.name);
+      const recipe=menu?.recipe||[];
+      for(const r of recipe){
+        const need=(r.amount||0)*(item.qty||1);
+        if(need<=0) continue;
+        if(r.ingredientId?.startsWith('ing_')){
+          const ingId=r.ingredientId.replace('ing_','');
+          const ing=ingredientsData.find(i=>i.id===ingId);
+          if(ing) restores.push({ref:doc(db,"ingredients",ingId),coll:'ingredients',id:ingId,name:ing.name,amount:need,unit:ing.unit||''});
+        }else if(r.ingredientId?.startsWith('prod_')){
+          const prodId=r.ingredientId.replace('prod_','');
+          const prod=productsData.find(p=>p.id===prodId);
+          if(prod) restores.push({ref:doc(db,"finishedGoods",prodId),coll:'finishedGoods',id:prodId,name:prod.name,amount:need,unit:prod.unit||''});
+        }else{
+          // legacy id: coba dua koleksi
+          const ing=ingredientsData.find(i=>i.id===r.ingredientId);
+          if(ing){restores.push({ref:doc(db,"ingredients",r.ingredientId),coll:'ingredients',id:r.ingredientId,name:ing.name,amount:need,unit:ing.unit||''});continue;}
+          const prod=productsData.find(p=>p.id===r.ingredientId);
+          if(prod) restores.push({ref:doc(db,"finishedGoods",r.ingredientId),coll:'finishedGoods',id:r.ingredientId,name:prod.name,amount:need,unit:prod.unit||''});
+        }
+      }
+    }
+    // gabungkan duplikat (menu yg bahannya sama)
+    const map=new Map();
+    for(const r of restores){
+      const key=r.coll+'/'+r.id;
+      if(map.has(key)){map.get(key).amount+=r.amount;}
+      else{map.set(key,{...r});}
+    }
+    return [...map.values()];
+  }
+
+  /* ===== BATALKAN + RESTORE STOK — aman dari klik ganda via runTransaction ===== */
   window.cancelOrder=async function(id){
-    if(!confirm('Batalkan transaksi ini?'))return;
-    try{await updateDoc(doc(db,"orders",id),{status:"cancelled"});await loadOrders();renderTransaksi();toast('Dibatalkan','success');}
-    catch(e){toast('Error: '+e.message,'error');}
+    const key='cancel:'+id;
+    if(!lock(key)){toast('Pembatalan sedang diproses...','error');return;}
+    const o=ordersData.find(x=>x.id===id);
+    if(o && o.status!=='pending'){toast('Transaksi ini sudah '+o.status,'error');unlock(key);return;}
+    if(!confirm('Batalkan transaksi ini?\n\nStok bahan & produk dari pesanan akan OTOMATIS dikembalikan ke Inventori.')){unlock(key);return;}
+
+    // optimistic UI: langsung tampilkan loading state
+    renderTransaksi();
+
+    try{
+      let alreadyCancelled=false;
+      await runTransaction(db,async(tx)=>{
+        const orderRef=doc(db,"orders",id);
+        const snap=await tx.get(orderRef);
+        if(!snap.exists()) throw new Error('Transaksi tidak ditemukan');
+        const data=snap.data();
+        // ===== GUARD ATOMIK: hanya proses sekali, walau request dobel =====
+        if(data.status==='cancelled'){alreadyCancelled=true;return;}
+        if(data.status==='done') throw new Error('Transaksi sudah SELESAI — stok tidak dikembalikan.');
+
+        // order baru (kasir revamp): stok terpotong atomik bersama order.
+        // stockDeducted===false berarti stok tak pernah terpotong → jangan restore.
+        const shouldRestore=data.stockDeducted!==false;
+        const restores=shouldRestore?computeStockRestore({...data,id}):[];
+        const log=restores.map(r=>({name:r.name,amount:Math.round(r.amount*100)/100,unit:r.unit}));
+
+        tx.update(orderRef,{
+          status:'cancelled',
+          cancelledAt:serverTimestamp(),
+          stockRestored:restores.length>0,
+          stockDeducted:false,
+          stockRestoreLog:log
+        });
+        // semua stok dikembalikan dalam SATU transaksi atomik — tidak ada partial restore
+        for(const r of restores){
+          tx.update(r.ref,{stock:increment(r.amount)});
+        }
+      });
+
+      if(alreadyCancelled){
+        toast('Transaksi sudah dibatalkan sebelumnya (duplikat diblokir)','error');
+      }else{
+        // sinkronkan data lokal TANPA refetch (hemat read)
+        const idx=ordersData.findIndex(x=>x.id===id);
+        if(idx>-1){
+          const o2=ordersData[idx];
+          const restores=computeStockRestore(o2);
+          ordersData[idx]={...o2,status:'cancelled',stockRestored:restores.length>0,
+            stockRestoreLog:restores.map(r=>({name:r.name,amount:Math.round(r.amount*100)/100,unit:r.unit}))};
+          for(const r of restores){
+            const arr=r.coll==='ingredients'?ingredientsData:productsData;
+            const it=arr.find(x=>x.id===r.id);
+            if(it) it.stock=Math.round(((it.stock||0)+r.amount)*100)/100;
+          }
+        }
+        toast(ordersData[idx]?.stockRestored?'✓ Dibatalkan — stok dikembalikan':'✓ Dibatalkan (tanpa resep, stok tidak ada)','success');
+      }
+      renderTransaksi();
+      if(activeOrderId===id) openOrderDetail(id);
+    }catch(e){
+      toast('Error: '+e.message,'error');
+      renderTransaksi();
+    }
+    unlock(key);
+  };
+
+  window.markDone=async function(id){
+    const targetId=id||activeOrderId;
+    if(!targetId)return;
+    const key='done:'+targetId;
+    if(!lock(key)){toast('Sedang diproses...','error');return;}
+    const btn=document.getElementById('btnDone');
+    const oldLabel=btn.textContent;
+    btn.disabled=true;btn.textContent='Memproses...';
+    try{
+      let skipped=false;
+      await runTransaction(db,async(tx)=>{
+        const ref=doc(db,"orders",targetId);
+        const snap=await tx.get(ref);
+        if(!snap.exists()) throw new Error('Transaksi tidak ditemukan');
+        const o=snap.data();
+        if(o.status!=='pending'){skipped=true;return;}   // idempoten + cancelled gak bisa di-done
+        tx.update(ref,{status:'done',doneAt:serverTimestamp()});
+        // catat income ke Keuangan — atomik dengan status, anti dobel pembukuan
+        if(o.total>0){
+          tx.set(doc(collection(db,"cashflow")),{
+            type:'income',amount:o.total,
+            description:`Penjualan: ${(o.items||[]).map(i=>i.name+' x'+i.qty).join(', ')}`,
+            category:'kasir',relatedId:targetId,relatedType:'order',
+            createdBy:o.kasirName||'admin',createdAt:serverTimestamp()
+          });
+        }
+      });
+      const o=ordersData.find(x=>x.id===targetId);
+      if(o)o.status='done';
+      closeOrderModal();renderTransaksi();
+      toast(skipped?'Tidak diproses — status bukan pending (duplikat/sudah diproses)':'✓ Pesanan selesai','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    btn.disabled=false;btn.textContent=oldLabel;
+    unlock(key);
   };
 
   function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),2400);}

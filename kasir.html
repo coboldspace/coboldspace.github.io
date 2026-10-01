@@ -115,33 +115,14 @@
     .table-wrap-input.show { display: block; }
 
     /* ── TABLE MODE TOGGLE ── */
-    .table-mode-toggle {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
+    .table-mode-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
     .mode-btn {
-      flex: 1;
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: none;
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      cursor: pointer;
-      transition: 0.2s;
+      flex: 1; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: none; color: var(--text-dim); font-family: 'Inter', sans-serif;
+      font-size: 12px; cursor: pointer; transition: 0.2s;
     }
-    .mode-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .mode-btn.active {
-      background: #222;
-      border-color: var(--accent);
-      color: var(--text-main);
-      font-weight: 600;
-    }
+    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-btn.active { background: #222; border-color: var(--accent); color: var(--text-main); font-weight: 600; }
     .table-wrap-input label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 6px; }
     .table-wrap-input input {
       width: 100%; background: var(--bg-color);
@@ -203,10 +184,21 @@
     .confirm-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
     .confirm-total span:last-child { color: var(--accent); }
 
+    /* ===== ANTI DOUBLE-SUBMIT ===== */
+    .btn-modal-confirm:disabled, .btn-selesai:disabled {
+      opacity: .45 !important; cursor: not-allowed !important;
+    }
+    .net-banner {
+      display: none; align-items: center; gap: 8px; background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.35); color: var(--red); font-size: 12px;
+      border-radius: 8px; padding: 8px 12px; margin: 12px 16px 0;
+    }
+    .net-banner.show { display: flex; }
+
     /* ── MOBILE: TAB SWITCH LAYOUT ── */
     @media (max-width: 640px) {
-      .pos-wrap { 
-        flex-direction: column; 
+      .pos-wrap {
+        flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
         overflow: hidden;
@@ -233,36 +225,17 @@
         font-family: 'Inter', sans-serif;
         transition: 0.2s;
       }
-      .pos-tab.active {
-        color: var(--accent);
-        border-bottom-color: var(--accent);
-      }
+      .pos-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
       .pos-tab .tab-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 18px;
-        height: 18px;
-        padding: 0 5px;
-        background: var(--accent);
-        color: white;
-        border-radius: 9px;
-        font-size: 10px;
-        margin-left: 6px;
-        font-weight: 600;
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 18px; height: 18px; padding: 0 5px;
+        background: var(--accent); color: white; border-radius: 9px;
+        font-size: 10px; margin-left: 6px; font-weight: 600;
       }
-      .menu-panel { 
-        flex: 1;
-        min-height: 0;
-        display: none;
-      }
+      .menu-panel { flex: 1; min-height: 0; display: none; }
       .menu-panel.active { display: flex; }
       .menu-toolbar { padding: 12px 14px; }
-      .menu-grid { 
-        padding: 12px 14px; 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 10px; 
-      }
+      .menu-grid { padding: 12px 14px; grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .menu-card { padding: 14px; }
       .menu-card-name { font-size: 13px; }
       .order-panel {
@@ -275,11 +248,7 @@
         padding-bottom: calc(var(--bn-h) + var(--bn-bubble)/2 + 20px + env(safe-area-inset-bottom, 16px));
       }
       .order-panel.active { display: flex; }
-      .order-items { 
-        flex: 1; 
-        padding: 12px 14px; 
-        overflow-y: auto;
-      }
+      .order-items { flex: 1; padding: 12px 14px; overflow-y: auto; }
       .order-notes { display: none; }
       .order-head { padding: 12px 14px; }
       .order-foot { padding: 12px 14px; }
@@ -292,7 +261,7 @@
     @media (min-width: 641px) {
       .pos-tabs { display: none; }
     }
-  
+
     /* ── ORDER PANEL TABS ── */
     .order-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .order-tab {
@@ -329,7 +298,6 @@
       font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
     .btn-selesai:hover { opacity: 0.85; }
-    .btn-selesai:disabled { opacity: 0.4; cursor: default; }
     .riwayat-empty { text-align: center; color: var(--text-dim); font-size: 13px; padding: 36px 18px; font-style: italic; }
     .riwayat-done { font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 4px; }
 
@@ -338,9 +306,7 @@
       .riwayat-item { padding: 12px 14px; }
     }
 
-
     /* ── MODAL CENTER OVERRIDE ── */
-    /* Override pos.css bottom sheet to always center modal */
     .modal-overlay {
       align-items: center !important;
       justify-content: center !important;
@@ -354,16 +320,9 @@
       padding-bottom: 24px !important;
       transform: scale(0.95) !important;
     }
-    .modal-overlay.show .modal {
-      transform: scale(1) !important;
-    }
-    /* Mobile: keep centered, not bottom sheet */
+    .modal-overlay.show .modal { transform: scale(1) !important; }
     @media (max-width: 640px) {
-      .modal-overlay {
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 16px !important;
-      }
+      .modal-overlay { align-items: center !important; justify-content: center !important; padding: 16px !important; }
       .modal {
         border-radius: 16px !important;
         max-width: 480px !important;
@@ -373,9 +332,7 @@
         transform: scale(0.95) !important;
         max-height: 85dvh;
       }
-      .modal-overlay.show .modal {
-        transform: scale(1) !important;
-      }
+      .modal-overlay.show .modal { transform: scale(1) !important; }
     }
   </style>
 
@@ -411,6 +368,7 @@
     <a href="hpp.html"       class="bn-item admin-only"><i class="fa-solid fa-calculator"></i><span>HPP</span></a>
   </div>
 </nav>
+
 <!-- MOBILE TAB SWITCHER -->
 <div class="pos-tabs" id="posTabs">
   <button class="pos-tab active" onclick="switchTab('menu')" id="tabMenu">
@@ -421,7 +379,9 @@
   </button>
 </div>
 
-
+<div class="net-banner" id="netBanner" style="margin:12px 16px 0">
+  <i class="fa-solid fa-wifi"></i><span>Koneksi bermasalah — pesanan LUMAYAN AMAN, sistem mencoba ulang otomatis. Jangan klik berulang.</span>
+</div>
 
 <!-- POS -->
 <div class="pos-wrap">
@@ -509,7 +469,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, serverTimestamp, query, orderBy }
+  import { collection, getDocs, doc, getDoc, addDoc, updateDoc, increment,
+           serverTimestamp, query, orderBy, limit,
+           initializeFirestore, persistentLocalCache, persistentMultipleTabManager, runTransaction }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -517,9 +479,41 @@
     projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",
     messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"
   };
-  const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+  const app=initializeApp(firebaseConfig), auth=getAuth(app);
+  // Local persistence: tahan koneksi jelek, kurangi read
+  const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
   let currentUser=null, menuItems=[], ingredients=[], products=[], cart=[], orderType='dine-in', activeCat='Semua';
-  let dataLoaded = false;
+  let dataLoaded=false, todayOrders=[];
+
+  /* ============================================================
+     ANTI DOUBLE-TRANSACTION UTILITIES
+     1. inFlight lock      — klik/tombol ganda diblokir di client
+     2. withRetry          — network/quota error: retry auto backoff
+     3. runTransaction     — SEMUA write 1 order jadi SATU transaksi
+        atomik: order + potong stok + stockLog. ID order dibuat
+        client-side, jadi retry setelah kegagalan ambiguous TIDAK
+        pernah membuat order/stok dobel.
+     ============================================================ */
+  const inFlight=new Set();
+  function lock(key){ if(inFlight.has(key)) return false; inFlight.add(key); return true; }
+  function unlock(key){ inFlight.delete(key); }
+
+  const netBanner=document.getElementById('netBanner');
+  function setNetBanner(on){ netBanner.classList.toggle('show',!!on); }
+
+  async function withRetry(fn,tries=3){
+    let delay=900;
+    for(let i=1;;i++){
+      try{ setNetBanner(false); return await fn(); }
+      catch(e){
+        const retryable=['unavailable','deadline-exceeded','resource-exhausted','internal'];
+        if(i>=tries || !retryable.includes(e.code)) throw e;
+        setNetBanner(true);
+        showToast(`Koneksi/quota bermasalah, retry ${i}/${tries-1}...`,'error');
+        await new Promise(r=>setTimeout(r,delay)); delay*=2;
+      }
+    }
+  }
 
   onAuthStateChanged(auth, async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -530,28 +524,25 @@
     currentUser={uid:user.uid,name:snap.data().name||user.email,role};
     if(role==='admin') document.body.classList.add('is-admin');
 
-    // Load menu, ingredients, and products
-    await Promise.all([loadMenu(), loadIngredients(), loadProducts()]);
-    dataLoaded = true;
-
-    // Now render menu with ingredients data ready
+    try{
+      await Promise.all([loadMenu(), loadIngredients(), loadProducts()]);
+    }catch(e){ showToast('Gagal memuat data: '+e.message,'error'); }
+    dataLoaded=true;
     buildPills();
     renderMenu();
-
     document.getElementById('loadingOverlay').style.display='none';
   });
 
   async function loadMenu(){
-    const snap=await getDocs(query(collection(db,"menu"),orderBy("category")));
+    const snap=await withRetry(()=>getDocs(query(collection(db,"menu"),orderBy("category"))));
     menuItems=snap.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.available!==false);
   }
-
   async function loadIngredients(){
-    const snap=await getDocs(query(collection(db,"ingredients"),orderBy("category")));
+    const snap=await withRetry(()=>getDocs(query(collection(db,"ingredients"),orderBy("category"))));
     ingredients=snap.docs.map(d=>({id:d.id,...d.data()}));
   }
   async function loadProducts(){
-    const snap=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));
+    const snap=await withRetry(()=>getDocs(query(collection(db,"finishedGoods"),orderBy("category"))));
     products=snap.docs.map(d=>({id:d.id,...d.data()}));
   }
 
@@ -568,26 +559,13 @@
     if(!m||!m.recipe||!m.recipe.length) return true;
     for(const r of m.recipe){
       if(!r.ingredientId||!r.amount) continue;
-
-      // Check if it's a product (finished good) with prod_ prefix
       if(r.ingredientId.startsWith('prod_')){
-        const prodId = r.ingredientId.replace('prod_','');
-        const prod = products.find(p=>p.id===prodId);
-        if(!prod) return false;
-        if(prod.stock < r.amount) return false;
-      }
-      // Check if it's an ingredient with ing_ prefix
-      else if(r.ingredientId.startsWith('ing_')){
-        const ingId = r.ingredientId.replace('ing_','');
-        const ing = ingredients.find(i=>i.id===ingId);
-        if(!ing) return false;
-        if(ing.stock < r.amount) return false;
-      }
-      // Legacy: no prefix (backward compatibility)
-      else {
-        const ing = ingredients.find(i=>i.id===r.ingredientId);
-        if(!ing) return false;
-        if(ing.stock < r.amount) return false;
+        const prod=products.find(p=>p.id===r.ingredientId.replace('prod_',''));
+        if(!prod||prod.stock<r.amount) return false;
+      } else {
+        const ingId=r.ingredientId.startsWith('ing_')?r.ingredientId.replace('ing_',''):r.ingredientId;
+        const ing=ingredients.find(i=>i.id===ingId);
+        if(!ing||ing.stock<r.amount) return false;
       }
     }
     return true;
@@ -598,7 +576,6 @@
       document.getElementById('menuGrid').innerHTML='<div class="menu-empty">Memuat data...</div>';
       return;
     }
-
     const q=document.getElementById('searchInput').value.toLowerCase();
     const grid=document.getElementById('menuGrid');
     const list=menuItems.filter(m=>(activeCat==='Semua'||m.category===activeCat)&&(!q||m.name.toLowerCase().includes(q)));
@@ -622,7 +599,7 @@
     renderCart(); showToast('+ '+item.name,'success');
   };
   window.changeQty=function(id,d){
-    const i=cart.findIndex(c=>c.id===id); if(i < 0)return;
+    const i=cart.findIndex(c=>c.id===id); if(i<0)return;
     cart[i].qty+=d; if(cart[i].qty<=0)cart.splice(i,1); renderCart();
   };
   window.clearCart=function(){cart=[];renderCart();};
@@ -631,7 +608,7 @@
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     document.getElementById('totalValue').textContent='Rp '+total.toLocaleString('id');
     document.getElementById('btnPay').disabled=cart.length===0;
-    const orderItems = document.getElementById('orderItems');
+    const orderItems=document.getElementById('orderItems');
     orderItems.innerHTML=cart.length
       ?cart.map(c=>`<div class="order-item">
           <div class="oi-info"><div class="oi-name">${c.name}</div><div class="oi-price">Rp ${(c.price*c.qty).toLocaleString('id')}</div></div>
@@ -651,21 +628,15 @@
     document.getElementById('tableWrap').classList.toggle('show',t==='dine-in');
   };
 
-  let tableMode = 'table';
-
-  window.setTableMode = function(mode) {
-    tableMode = mode;
-    const label = document.getElementById('tableLabel');
-    const input = document.getElementById('tableNo');
-    document.getElementById('modeTable').classList.toggle('active', mode === 'table');
-    document.getElementById('modeName').classList.toggle('active', mode === 'name');
-    if (mode === 'table') {
-      label.textContent = 'Nomor Meja';
-      input.placeholder = 'contoh: 5';
-    } else {
-      label.textContent = 'Nama Customer';
-      input.placeholder = 'contoh: Budi';
-    }
+  let tableMode='table';
+  window.setTableMode=function(mode){
+    tableMode=mode;
+    const label=document.getElementById('tableLabel');
+    const input=document.getElementById('tableNo');
+    document.getElementById('modeTable').classList.toggle('active',mode==='table');
+    document.getElementById('modeName').classList.toggle('active',mode==='name');
+    if(mode==='table'){label.textContent='Nomor Meja';input.placeholder='contoh: 5';}
+    else{label.textContent='Nama Customer';input.placeholder='contoh: Budi';}
   };
 
   window.openConfirm=function(){
@@ -673,8 +644,6 @@
     const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
     const tableNo=document.getElementById('tableNo').value;
     const notes=document.getElementById('orderNotes')?.value||'';
-
-    // KASIR TIDAK LIHAT HPP/PROFIT - hanya total dan item
     document.getElementById('confirmItems').innerHTML=`
       ${cart.map(c=>`<div class="confirm-item"><span>${c.name} ×${c.qty}</span><span>Rp ${(c.price*c.qty).toLocaleString('id')}</span></div>`).join('')}
       <div class="confirm-item"><span>Tipe</span><span>${orderType==='dine-in'?`Dine-in (${tableMode==='table'?'Meja':'Nama'}: ${tableNo||'—'})`:'Takeaway'}</span></div>
@@ -684,262 +653,270 @@
   };
   window.closeConfirm=function(){document.getElementById('confirmModal').classList.remove('show');};
 
-  // ── VALIDASI STOK ──
-  async function validateStock(){
-    const neededIng={};   // ingredients needed
-    const neededProd={};  // products needed
-
+  /* ============================================================
+     VALIDASI STOK (dari memory — gak perlu getDoc per item)
+     ============================================================ */
+  function validateStockMemory(){
+    const neededIng={}, neededProd={};
     for(const ci of cart){
-      const md=await getDoc(doc(db,"menu",ci.id));
-      const recipe=(md.data()?.recipe)||[];
-      for(const r of recipe){
+      const m=menuItems.find(x=>x.id===ci.id);
+      for(const r of (m?.recipe||[])){
         if(!r.ingredientId||!r.amount) continue;
-
         if(r.ingredientId.startsWith('prod_')){
-          const prodId = r.ingredientId.replace('prod_','');
-          neededProd[prodId]=(neededProd[prodId]||0)+(r.amount*ci.qty);
-        }
-        else if(r.ingredientId.startsWith('ing_')){
-          const ingId = r.ingredientId.replace('ing_','');
-          neededIng[ingId]=(neededIng[ingId]||0)+(r.amount*ci.qty);
-        }
-        else {
-          // Legacy: no prefix = ingredient
-          neededIng[r.ingredientId]=(neededIng[r.ingredientId]||0)+(r.amount*ci.qty);
+          const pid=r.ingredientId.replace('prod_','');
+          neededProd[pid]=(neededProd[pid]||0)+(r.amount*ci.qty);
+        } else {
+          const iid=r.ingredientId.startsWith('ing_')?r.ingredientId.replace('ing_',''):r.ingredientId;
+          neededIng[iid]=(neededIng[iid]||0)+(r.amount*ci.qty);
         }
       }
     }
-
-    // Validate ingredients
-    for(const [ingId,amount] of Object.entries(neededIng)){
-      const ing=ingredients.find(i=>i.id===ingId);
-      if(!ing) return {ok:false, msg:`Bahan tidak ditemukan di inventory`};
-      if(ing.stock < amount){
-        return {ok:false, msg:`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${amount} ${ing.unit})`};
-      }
+    for(const [pid,amount] of Object.entries(neededProd)){
+      const prod=products.find(p=>p.id===pid);
+      if(!prod) return {ok:false,msg:'Produk tidak ditemukan di inventory'};
+      if(prod.stock<amount) return {ok:false,msg:`Stok ${prod.name} tidak cukup (sisa ${prod.stock} ${prod.unit}, butuh ${amount} ${prod.unit})`};
     }
-
-    // Validate products
-    for(const [prodId,amount] of Object.entries(neededProd)){
-      const prod=products.find(p=>p.id===prodId);
-      if(!prod) return {ok:false, msg:`Produk tidak ditemukan di inventory`};
-      if(prod.stock < amount){
-        return {ok:false, msg:`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${amount} ${prod.unit})`};
-      }
+    for(const [iid,amount] of Object.entries(neededIng)){
+      const ing=ingredients.find(i=>i.id===iid);
+      if(!ing) return {ok:false,msg:'Bahan tidak ditemukan di inventory'};
+      if(ing.stock<amount) return {ok:false,msg:`Stok ${ing.name} tidak cukup (sisa ${ing.stock} ${ing.unit}, butuh ${amount} ${ing.unit})`};
     }
-
     return {ok:true};
   }
 
+  /* ============================================================
+     SUBMIT ORDER — 1 transaksi atomik, idempoten
+     · ID order dibuat client-side → retry dijamin tidak dobel
+     · order + potong stok + stockLog = ALL-OR-NOTHING
+     · stok dibaca/ditulis via server increment, nama item dari
+       memory (hemat read: ~10 getDoc per order → 0)
+     ============================================================ */
   window.submitOrder=async function(){
-    // VALIDASI STOK SEBELUM SUBMIT
-    const stockCheck=await validateStock();
-    if(!stockCheck.ok){
-      showToast(stockCheck.msg,'error');
-      closeConfirm();
-      return;
-    }
+    if(!cart.length)return;
+    if(!lock('order:submit')){showToast('Pesanan sedang diproses... jangan klik berulang','error');return;}
 
     const btn=document.getElementById('btnConfirm');
+    const finish=()=>{btn.disabled=false;btn.textContent='Konfirmasi';unlock('order:submit');};
+
+    // 1) Validasi stok dari memory
+    const check=validateStockMemory();
+    if(!check.ok){
+      showToast(check.msg,'error');
+      closeConfirm(); finish(); return;
+    }
+
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       const total=cart.reduce((s,c)=>s+c.price*c.qty,0);
       const tableNo=document.getElementById('tableNo').value;
-      const notes=document.getElementById('orderNotes')?.value||'';
+      const notes=(document.getElementById('orderNotes')?.value||'').trim();
 
-      // HPP & profit dihitung dan disimpan ke Firestore (untuk laporan admin)
-      // tapi TIDAK DITAMPILKAN ke kasir
-      let totalHPP = 0;
-      const orderItems = cart.map(c=>{
-        const m = menuItems.find(x => x.id === c.id);
-        const itemHPP = m && m.hpp ? m.hpp.total : 0;
-        totalHPP += itemHPP * c.qty;
+      // HPP & profit dari memory (untuk laporan admin, hidden dari kasir)
+      let totalHPP=0;
+      const orderItems=cart.map(c=>{
+        const m=menuItems.find(x=>x.id===c.id);
+        const itemHPP=m&&m.hpp?m.hpp.total:0;
+        totalHPP+=itemHPP*c.qty;
         return {id:c.id,name:c.name,price:c.price,qty:c.qty};
       });
 
-      await addDoc(collection(db,"orders"),{
-        items:orderItems,
-        total,
-        hpp:totalHPP,           // ← disimpan untuk admin (hidden dari kasir)
-        profit:total-totalHPP,   // ← disimpan untuk admin (hidden dari kasir)
-        type:orderType,tableNo:orderType==='dine-in'?tableNo:null,tableMode:tableMode,
-        notes:notes||null,status:"pending",
-        kasirUid:currentUser.uid,kasirName:currentUser.name,createdAt:serverTimestamp()
-      });
+      const orderRef=doc(collection(db,"orders")); // ID client-side = kunci idempotensi
+      const orderId=orderRef.id;
+      const snapshotCart=cart.map(c=>({...c})); // salinan, aman dari perubahan cart saat await
 
-      for(const ci of cart){
-        const md=await getDoc(doc(db,"menu",ci.id));
-        for(const r of(md.data()?.recipe||[])){
-          if(!r.ingredientId||!r.amount)continue;
+      await withRetry(()=>runTransaction(db,async(tx)=>{
+        // GUARD ATOMIK: kalau order ini SUDAH pernah ter-commit (retry setelah
+        // kegagalan ambiguous), skip SEMUA — stok gak akan kepotong dobel.
+        const snap=await tx.get(orderRef);
+        if(snap.exists()) return;
 
-          // Deduct from products (finished goods)
-          if(r.ingredientId.startsWith('prod_')){
-            const prodId = r.ingredientId.replace('prod_','');
-            await updateDoc(doc(db,"finishedGoods",prodId),{stock:increment(-(r.amount*ci.qty))});
-            const prod=await getDoc(doc(db,"finishedGoods",prodId));
-            await addDoc(collection(db,"stockLogs"),{
-              type:'finishedGoods',
-              itemId:prodId,
-              itemName:prod.data()?.name||'',
-              unit:prod.data()?.unit||'',
-              change:-(r.amount*ci.qty),
-              note:`Order: ${ci.name} ×${ci.qty}`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
-            });
-          }
-          // Deduct from ingredients (raw materials)
-          else if(r.ingredientId.startsWith('ing_')){
-            const ingId = r.ingredientId.replace('ing_','');
-            await updateDoc(doc(db,"ingredients",ingId),{stock:increment(-(r.amount*ci.qty))});
-            const ig=await getDoc(doc(db,"ingredients",ingId));
-            await addDoc(collection(db,"stockLogs"),{
-              type:'ingredient',
-              ingredientId:ingId,
-              ingredientName:ig.data()?.name||'',
-              unit:ig.data()?.unit||'',
-              change:-(r.amount*ci.qty),
-              note:`Order: ${ci.name} ×${ci.qty}`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
-            });
-          }
-          // Legacy: no prefix = ingredient
-          else {
-            await updateDoc(doc(db,"ingredients",r.ingredientId),{stock:increment(-(r.amount*ci.qty))});
-            const ig=await getDoc(doc(db,"ingredients",r.ingredientId));
-            await addDoc(collection(db,"stockLogs"),{
-              type:'ingredient',
-              ingredientId:r.ingredientId,
-              ingredientName:ig.data()?.name||'',
-              unit:ig.data()?.unit||'',
-              change:-(r.amount*ci.qty),
-              note:`Order: ${ci.name} ×${ci.qty}`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
-            });
+        tx.set(orderRef,{
+          items:orderItems,total,
+          hpp:totalHPP,profit:total-totalHPP,
+          type:orderType,tableNo:orderType==='dine-in'?tableNo:null,tableMode,
+          notes:notes||null,status:'pending',
+          kasirUid:currentUser.uid,kasirName:currentUser.name,
+          stockDeducted:true,       // penanda buat admin: stok order ini resmi terpotong
+          clientKey:orderId,        // jejak idempotensi
+          createdAt:serverTimestamp()
+        });
+
+        // Gabungkan kebutuhan stok per item (gak dobel utk menu dgn bahan sama)
+        const ded=new Map(); // key: coll|id → {coll,id,amount,unit}
+        for(const ci of snapshotCart){
+          const m=menuItems.find(x=>x.id===ci.id);
+          for(const r of (m?.recipe||[])){
+            if(!r.ingredientId||!r.amount)continue;
+            const need=r.amount*ci.qty;
+            let collName,rawId,item;
+            if(r.ingredientId.startsWith('prod_')){
+              collName='finishedGoods';rawId=r.ingredientId.replace('prod_','');
+              item=products.find(p=>p.id===rawId);
+            }else{
+              collName='ingredients';rawId=r.ingredientId.startsWith('ing_')?r.ingredientId.replace('ing_',''):r.ingredientId;
+              item=ingredients.find(i=>i.id===rawId);
+            }
+            if(!item)continue;
+            const key=collName+'|'+rawId;
+            if(ded.has(key))ded.get(key).amount+=need;
+            else ded.set(key,{coll:collName,id:rawId,amount:need,name:item.name,unit:item.unit||''});
           }
         }
+
+        // Potong stok + tulis log — atomik dengan order
+        for(const d of ded.values()){
+          tx.update(doc(db,d.coll,d.id),{stock:increment(-d.amount)});
+          tx.set(doc(collection(db,"stockLogs")),{
+            type:d.coll==='finishedGoods'?'finishedGoods':'ingredient',
+            ingredientId:d.coll==='ingredients'?d.id:null,
+            itemId:d.coll==='finishedGoods'?d.id:null,
+            ingredientName:d.coll==='ingredients'?d.name:null,
+            itemName:d.coll==='finishedGoods'?d.name:null,
+            name:d.name,
+            unit:d.unit,
+            change:-d.amount,
+            note:`Order #${orderId.slice(0,6)}: ${snapshotCart.map(c=>c.name+' ×'+c.qty).join(', ')}`,
+            byName:currentUser.name,
+            createdAt:serverTimestamp()
+          });
+        }
+      }));
+
+      // 2) Mirror ke memory & update UI — TANPA refetch (hemat read quota)
+      const applyLocal=(collName,id,delta)=>{
+        const arr=collName==='ingredients'?ingredients:products;
+        const it=arr.find(x=>x.id===id);
+        if(it)it.stock=Math.round(((it.stock||0)+delta)*100)/100;
+      };
+      for(const ci of snapshotCart){
+        const m=menuItems.find(x=>x.id===ci.id);
+        for(const r of (m?.recipe||[])){
+          if(!r.ingredientId||!r.amount)continue;
+          const need=r.amount*ci.qty;
+          if(r.ingredientId.startsWith('prod_'))applyLocal('finishedGoods',r.ingredientId.replace('prod_',''),-need);
+          else applyLocal('ingredients',r.ingredientId.startsWith('ing_')?r.ingredientId.replace('ing_',''):r.ingredientId,-need);
+        }
       }
-      // Refresh data setelah decrement untuk update UI
-      await Promise.all([loadIngredients(), loadProducts()]);
-      renderMenu();
+
       closeConfirm(); clearCart();
       document.getElementById('tableNo').value='';
-      if(document.getElementById('orderNotes')) document.getElementById('orderNotes').value='';
+      if(document.getElementById('orderNotes'))document.getElementById('orderNotes').value='';
+      renderMenu();
       showToast('✓ Pesanan berhasil disimpan!','success');
-    }catch(e){showToast('Gagal: '+e.message,'error');}
-    btn.disabled=false;btn.textContent='Konfirmasi';
+    }catch(e){
+      showToast('Gagal: '+e.message,'error');
+    }
+    finish();
   };
 
-  let todayOrders = [];
+  /* ============================================================
+     TANDAI SELESAI — atomik + idempoten
+     Status done + catat cashflow = SATU transaksi. Klik ganda /
+     retry gak akan dobel income di Keuangan.
+     ============================================================ */
+  window.markDone=async function(id,btn){
+    if(!lock('done:'+id)){showToast('Sedang diproses...','error');return;}
+    if(btn){btn.disabled=true;btn.textContent='Menyimpan...';}
+    try{
+      let transitioned=false;
+      await withRetry(()=>runTransaction(db,async(tx)=>{
+        const ref=doc(db,"orders",id);
+        const snap=await tx.get(ref);
+        if(!snap.exists())throw new Error('Pesanan tidak ditemukan');
+        const o=snap.data();
+        if(o.status!=='pending')return; // sudah done/cancelled → skip, anti dobel
+        transitioned=true;
+        tx.update(ref,{status:'done',doneAt:serverTimestamp()});
+        if(o.total>0){
+          tx.set(doc(collection(db,"cashflow")),{
+            type:'income',amount:o.total,
+            description:`Penjualan: ${(o.items||[]).map(i=>i.name+' x'+i.qty).join(', ')}`,
+            category:'kasir',relatedId:id,relatedType:'order',
+            createdBy:currentUser.name,createdAt:serverTimestamp()
+          });
+        }
+      }));
+      const item=document.getElementById('riwayat-'+id);
+      if(item){
+        item.innerHTML=`<div class="riwayat-done"><i class="fa-solid fa-check-circle"></i> Pesanan selesai</div>`;
+        item.style.opacity='0.6';
+      }
+      showToast(transitioned?'✓ Pesanan selesai':'Sudah diproses sebelumnya (duplikat diblokir)', transitioned?'success':'error');
+      setTimeout(()=>loadTodayOrders(),400);
+    }catch(e){showToast('Gagal: '+e.message,'error');}
+    if(btn){btn.disabled=false;btn.textContent='✓ Tandai Selesai';}
+    unlock('done:'+id);
+  };
 
-  // ── ORDER TAB SWITCH ──
-  window.switchOrderTab = function(tab) {
-    const tabAktif = document.getElementById('tabAktif');
-    const tabRiwayat = document.getElementById('tabRiwayat');
-    const contentAktif = document.getElementById('tabContentAktif');
-    const contentRiwayat = document.getElementById('tabContentRiwayat');
-    const notesWrap = document.getElementById('orderNotesWrap');
-    const footWrap = document.getElementById('orderFootWrap');
+  /* ── RIWAYAT ── */
+  window.switchOrderTab=function(tab){
+    const tabAktif=document.getElementById('tabAktif');
+    const tabRiwayat=document.getElementById('tabRiwayat');
+    const contentAktif=document.getElementById('tabContentAktif');
+    const contentRiwayat=document.getElementById('tabContentRiwayat');
+    const notesWrap=document.getElementById('orderNotesWrap');
+    const footWrap=document.getElementById('orderFootWrap');
 
-    if (tab === 'aktif') {
+    if(tab==='aktif'){
       tabAktif.classList.add('active');
       tabRiwayat.classList.remove('active');
       contentAktif.classList.add('active');
       contentRiwayat.classList.remove('active');
-      notesWrap.style.display = '';
-      footWrap.style.display = '';
-    } else {
+      notesWrap.style.display='';
+      footWrap.style.display='';
+    }else{
       tabAktif.classList.remove('active');
       tabRiwayat.classList.add('active');
       contentAktif.classList.remove('active');
       contentRiwayat.classList.add('active');
-      notesWrap.style.display = 'none';
-      footWrap.style.display = 'none';
+      notesWrap.style.display='none';
+      footWrap.style.display='none';
       loadTodayOrders();
     }
   };
 
-  // ── LOAD TODAY ORDERS ──
-  async function loadTodayOrders() {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
-    todayOrders = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(o => {
-        const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds || 0) * 1000);
-        return ts >= startOfDay && o.status === 'pending';
-      });
-    renderRiwayat();
+  async function loadTodayOrders(){
+    try{
+      const now=new Date();
+      const startOfDay=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      // limit(100): cap read quota — cukup buat 1 shift kasir
+      const snap=await withRetry(()=>getDocs(query(collection(db,"orders"),orderBy("createdAt","desc"),limit(100))));
+      todayOrders=snap.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(o=>{
+          const ts=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
+          return ts>=startOfDay&&o.status==='pending';
+        });
+      renderRiwayat();
+    }catch(e){/* biarkan list lama */}
   }
 
-  function renderRiwayat() {
-    const el = document.getElementById('riwayatList');
-    const badge = document.getElementById('riwayatBadge');
-
-    if (todayOrders.length === 0) {
-      el.innerHTML = '<div class="riwayat-empty">Belum ada pesanan hari ini.</div>';
-      badge.style.display = 'none';
+  function renderRiwayat(){
+    const el=document.getElementById('riwayatList');
+    const badge=document.getElementById('riwayatBadge');
+    if(!todayOrders.length){
+      el.innerHTML='<div class="riwayat-empty">Belum ada pesanan hari ini.</div>';
+      badge.style.display='none';
       return;
     }
-
-    badge.style.display = 'inline-flex';
-    badge.textContent = todayOrders.length;
-
-    el.innerHTML = todayOrders.map(o => {
-      const ts = o.createdAt?.toDate ? o.createdAt.toDate() : new Date((o.createdAt?.seconds || 0) * 1000);
-      const timeStr = ts.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      const itemsStr = (o.items || []).map(i => `${i.name} ×${i.qty}`).join(', ');
-      const typeLabel = o.type === 'dine-in' ? `Dine-in #${o.tableNo || '?'}` : 'Takeaway';
-
+    badge.style.display='inline-flex';
+    badge.textContent=todayOrders.length;
+    el.innerHTML=todayOrders.map(o=>{
+      const ts=o.createdAt?.toDate?o.createdAt.toDate():new Date((o.createdAt?.seconds||0)*1000);
+      const timeStr=ts.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      const itemsStr=(o.items||[]).map(i=>`${i.name} ×${i.qty}`).join(', ');
+      const typeLabel=o.type==='dine-in'?`Dine-in #${o.tableNo||'?'}`:'Takeaway';
       return `<div class="riwayat-item" id="riwayat-${o.id}">
         <div class="riwayat-top">
           <span class="riwayat-name">${typeLabel}</span>
           <span class="riwayat-time">${timeStr}</span>
         </div>
         <div class="riwayat-items">${itemsStr}</div>
-        <div class="riwayat-total">Rp ${(o.total || 0).toLocaleString('id')}</div>
+        <div class="riwayat-total">Rp ${(o.total||0).toLocaleString('id')}</div>
         <button class="btn-selesai" onclick="markDone('${o.id}', this)">✓ Tandai Selesai</button>
       </div>`;
     }).join('');
   }
-
-  window.markDone = async function(id, btn) {
-    btn.disabled = true;
-    btn.textContent = 'Menyimpan...';
-    try {
-      await updateDoc(doc(db, "orders", id), { status: "done" });
-      // Auto-catat ke cashflow
-      const orderData = todayOrders.find(o => o.id === id);
-      if(orderData && orderData.total > 0){
-        await addDoc(collection(db, "cashflow"), {
-          type: 'income',
-          amount: orderData.total,
-          description: `Penjualan: ${(orderData.items || []).map(i => i.name + ' x' + i.qty).join(', ')}`,
-          category: 'kasir',
-          relatedId: id,
-          relatedType: 'order',
-          createdBy: currentUser.name,
-          createdAt: serverTimestamp()
-        });
-      }
-      // Remove from list visually
-      const item = document.getElementById('riwayat-' + id);
-      if (item) {
-        item.innerHTML = `<div class="riwayat-done"><i class="fa-solid fa-check-circle"></i> Pesanan selesai</div>`;
-        item.style.opacity = '0.6';
-      }
-      showToast('✓ Pesanan selesai', 'success');
-      // Refresh count
-      setTimeout(() => loadTodayOrders(), 500);
-    } catch (e) {
-      showToast('Gagal: ' + e.message, 'error');
-      btn.disabled = false;
-      btn.textContent = '✓ Tandai Selesai';
-    }
-  };
 
   function showToast(msg,type=''){
     const t=document.getElementById('toast');
@@ -948,35 +925,33 @@
   }
   document.getElementById('btnLogout').addEventListener('click',()=>signOut(auth).then(()=>location.href="login.html"));
 
-  // ── MOBILE TAB SWITCH ──
-  window.switchTab = function(tab) {
-    const menuPanel = document.getElementById('menuPanel');
-    const orderPanel = document.getElementById('orderPanel');
-    const tabMenu = document.getElementById('tabMenu');
-    const tabOrder = document.getElementById('tabOrder');
-
-    if (tab === 'menu') {
+  /* ── MOBILE TAB SWITCH ── */
+  window.switchTab=function(tab){
+    const menuPanel=document.getElementById('menuPanel');
+    const orderPanel=document.getElementById('orderPanel');
+    const tabMenu=document.getElementById('tabMenu');
+    const tabOrder=document.getElementById('tabOrder');
+    if(tab==='menu'){
       menuPanel.classList.add('active');
       orderPanel.classList.remove('active');
       tabMenu.classList.add('active');
       tabOrder.classList.remove('active');
-    } else {
+    }else{
       menuPanel.classList.remove('active');
       orderPanel.classList.add('active');
       tabMenu.classList.remove('active');
       tabOrder.classList.add('active');
-      // Reset order tab ke aktif saat buka panel
       switchOrderTab('aktif');
     }
   };
 
-  function updateCartFloat() {
-    const badge = document.getElementById('tabBadge');
-    if (cart.length > 0) {
-      badge.style.display = 'inline-flex';
-      badge.textContent = cart.reduce((s, c) => s + c.qty, 0);
-    } else {
-      badge.style.display = 'none';
+  function updateCartFloat(){
+    const badge=document.getElementById('tabBadge');
+    if(cart.length>0){
+      badge.style.display='inline-flex';
+      badge.textContent=cart.reduce((s,c)=>s+c.qty,0);
+    }else{
+      badge.style.display='none';
     }
   }
 </script>
