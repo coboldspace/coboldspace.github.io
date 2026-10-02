@@ -358,7 +358,7 @@
   // ===== LOCAL PERSISTENCE: baca dari cache dulu saat jaringan jelek / quota hemat =====
   const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
   let menuData=[],ordersData=[],ingredientsData=[],productsData=[],activeOrderId=null;
-  let hppOverheadItems=[], hppCurrentMenu=null, currentUser=null;
+  let hppOverheadItems=[], hppCurrentMenu=null;
 
   /* ============================================================
      ANTI DOUBLE-TRANSACTION UTILITIES
@@ -393,7 +393,6 @@
     const snap=await getDoc(doc(db,"users",user.uid));
     if(!snap.exists()){location.href="login.html";return;}
     const role = snap.data().role || 'kasir';
-    currentUser={uid:user.uid,name:snap.data().name||user.email};
     if(role === 'admin') {
       document.body.classList.add('is-admin');
     } else {
@@ -923,23 +922,8 @@
           stockRestoreLog:log
         });
         // semua stok dikembalikan dalam SATU transaksi atomik — tidak ada partial restore
-        const orderItemsStr=(data.items||[]).map(i=>`${i.name} ×${i.qty}`).join(', ');
         for(const r of restores){
           tx.update(r.ref,{stock:increment(r.amount)});
-          // CATAT ke stockLogs — biar muncul di tab Riwayat Inventori
-          tx.set(doc(collection(db,"stockLogs")),{
-            type:r.coll==='finishedGoods'?'finishedGoods':'ingredient',
-            ingredientId:r.coll==='ingredients'?r.id:null,
-            itemId:r.coll==='finishedGoods'?r.id:null,
-            ingredientName:r.coll==='ingredients'?r.name:null,
-            itemName:r.coll==='finishedGoods'?r.name:null,
-            name:r.name,
-            unit:r.unit,
-            change:r.amount,
-            note:`Batal order: ${orderItemsStr}`,
-            byName:currentUser?.name||'admin',
-            createdAt:serverTimestamp()
-          });
         }
       });
 

@@ -66,6 +66,11 @@
     .hpp-line strong { color:var(--text-main); }
     .hpp-total { display:flex; justify-content:space-between; font-size:14px; font-weight:600; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); color:var(--accent); }
 
+    /* ANTI DOUBLE-SUBMIT */
+    .btn-sm:disabled, .btn-modal-confirm:disabled, .btn-primary:disabled {
+      opacity:.45 !important; cursor:not-allowed !important; pointer-events:none !important;
+    }
+
     @media(max-width:640px){
       .recipe-grid { grid-template-columns:1fr; }
       .prod-grid { grid-template-columns:1fr; }
@@ -73,7 +78,7 @@
       .card-head .btn-primary { width:100%; justify-content:center; }
       .form-row-2 { grid-template-columns:1fr; }
     }
-  
+
     /* Modal fixes - override pos.css */
     .modal-overlay {
       align-items: center !important;
@@ -89,7 +94,6 @@
     .modal-overlay.show .modal {
       transform: translateY(0) !important;
     }
-    /* Recipe modal specific */
     #recipeModal .modal {
       max-width: 520px !important;
     }
@@ -339,12 +343,32 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, increment, writeBatch }
+  import { collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, increment, writeBatch, limit,
+           initializeFirestore, persistentLocalCache, persistentMultipleTabManager }
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const fc={apiKey:"AIzaSyAIBQseS7GTzddBODZcLm-iD_ol79rL6PA",authDomain:"cobold-b0e8d.firebaseapp.com",projectId:"cobold-b0e8d",storageBucket:"cobold-b0e8d.firebasestorage.app",messagingSenderId:"317072309656",appId:"1:317072309656:web:803003d311f119e437bfed"};
-  const app=initializeApp(fc),auth=getAuth(app),db=getFirestore(app);
+  const app=initializeApp(fc),auth=getAuth(app);
+  // Local persistence: tahan koneksi jelek, baca dari cache dulu
+  const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
   let currentUser=null,ingredients=[],menuItems=[],stockLogs=[],recipeRows=[],products=[],prodRows=[];
+
+  /* ===== ANTI DOUBLE-SUBMIT & RETRY ===== */
+  const inFlight=new Set();
+  function lock(k){if(inFlight.has(k))return false;inFlight.add(k);return true;}
+  function unlock(k){inFlight.delete(k);}
+  async function withRetry(fn,tries=3){
+    let delay=900;
+    for(let i=1;;i++){
+      try{return await fn();}
+      catch(e){
+        const retryable=['unavailable','deadline-exceeded','resource-exhausted','internal'];
+        if(i>=tries||!retryable.includes(e.code))throw e;
+        toast(`Koneksi/quota bermasalah, retry ${i}/${tries-1}...`,'error');
+        await new Promise(r=>setTimeout(r,delay));delay*=2;
+      }
+    }
+  }
 
   onAuthStateChanged(auth,async(user)=>{
     if(!user){location.href="login.html";return;}
@@ -358,15 +382,18 @@
       return;
     }
     currentUser={uid:user.uid,name:snap.data().name||user.email};
-    await Promise.all([loadIngredients(),loadMenu(),loadLogs(),loadProducts()]);
+    try{
+      await Promise.all([loadIngredients(),loadMenu(),loadLogs(),loadProducts()]);
+    }catch(e){toast('Gagal memuat data: '+e.message,'error');}
     renderIngredients();renderProducts();renderRecipes();renderLogs();checkAlerts();
     document.getElementById('loadingOverlay').style.display='none';
   });
 
-  async function loadIngredients(){const s=await getDocs(query(collection(db,"ingredients"),orderBy("category")));ingredients=s.docs.map(d=>({id:d.id,...d.data()}));}
-  async function loadMenu(){const s=await getDocs(query(collection(db,"menu"),orderBy("category")));menuItems=s.docs.map(d=>({id:d.id,...d.data()}));}
-  async function loadLogs(){const s=await getDocs(query(collection(db,"stockLogs"),orderBy("createdAt","desc")));stockLogs=s.docs.map(d=>({id:d.id,...d.data()})).slice(0,80);}
-  async function loadProducts(){const s=await getDocs(query(collection(db,"finishedGoods"),orderBy("category")));products=s.docs.map(d=>({id:d.id,...d.data()}));}
+  async function loadIngredients(){const s=await withRetry(()=>getDocs(query(collection(db,"ingredients"),orderBy("category"))));ingredients=s.docs.map(d=>({id:d.id,...d.data()}));}
+  async function loadMenu(){const s=await withRetry(()=>getDocs(query(collection(db,"menu"),orderBy("category"))));menuItems=s.docs.map(d=>({id:d.id,...d.data()}));}
+  // QUOTA FIX: limit di server — dulu download SEMUA log lalu slice client
+  async function loadLogs(){const s=await withRetry(()=>getDocs(query(collection(db,"stockLogs"),orderBy("createdAt","desc"),limit(100))));stockLogs=s.docs.map(d=>({id:d.id,...d.data()}));}
+  async function loadProducts(){const s=await withRetry(()=>getDocs(query(collection(db,"finishedGoods"),orderBy("category"))));products=s.docs.map(d=>({id:d.id,...d.data()}));}
 
   window.switchTab=function(tab,btn){
     ['stok','produk','resep','log'].forEach(t=>document.getElementById('tab-'+t).classList.remove('active'));
@@ -388,7 +415,7 @@
     document.getElementById('alertBody').innerHTML=allLow.join('<br>');
   }
 
-  // ── BAHAN BAKU (existing, unchanged) ──
+  // ── BAHAN BAKU ──
   function getStatus(i){if(!i.minStock||i.minStock<=0)return'aman';const r=i.stock/i.minStock;return r<=0.5?'kritis':r<=1?'rendah':'aman';}
   function barW(i){if(!i.minStock||i.minStock<=0)return 80;return Math.min(100,Math.round((i.stock/(i.minStock*2))*100));}
 
@@ -421,6 +448,7 @@
   };
   window.closeIngModal=function(){document.getElementById('ingModal').classList.remove('show');};
   window.submitIng=async function(){
+    if(!lock('ing:save')){toast('Sedang menyimpan...','error');return;}
     const btn=document.getElementById('ingSaveBtn');
     const id=document.getElementById('ingEditId').value;
     const name=document.getElementById('ingName').value.trim();
@@ -430,18 +458,22 @@
     const min=parseFloat(document.getElementById('ingMin').value)||0;
     const hargaBeli=parseFloat(document.getElementById('ingHarga').value)||0;
     const unitMultiplier=parseFloat(document.getElementById('ingMultiplier').value)||1000;
-    if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');return;}
+    if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');unlock('ing:save');return;}
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
-      if(id)await updateDoc(doc(db,"ingredients",id),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier});
-      else await addDoc(collection(db,"ingredients"),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier,createdAt:serverTimestamp()});
+      if(id)await withRetry(()=>updateDoc(doc(db,"ingredients",id),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier}));
+      else await withRetry(()=>addDoc(collection(db,"ingredients"),{name,category:cat,unit,stock,minStock:min,hargaBeli,unitMultiplier,createdAt:serverTimestamp()}));
       await loadIngredients();renderIngredients();checkAlerts();closeIngModal();toast('✓ Bahan disimpan','success');
     }catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan';
+    unlock('ing:save');
   };
   window.deleteIng=async function(id){
-    const i=ingredients.find(x=>x.id===id);if(!confirm(`Hapus "${i?.name}"?`))return;
-    try{await deleteDoc(doc(db,"ingredients",id));await loadIngredients();renderIngredients();toast('Bahan dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
+    if(!lock('ing:del:'+id))return;
+    const i=ingredients.find(x=>x.id===id);if(!confirm(`Hapus "${i?.name}"?`)){unlock('ing:del:'+id);return;}
+    try{await withRetry(()=>deleteDoc(doc(db,"ingredients",id)));await loadIngredients();renderIngredients();toast('Bahan dihapus','success');}
+    catch(e){toast('Error: '+e.message,'error');}
+    unlock('ing:del:'+id);
   };
 
   window.openRestock=function(id){
@@ -459,24 +491,25 @@
   };
   window.closeRestock=function(){document.getElementById('restockModal').classList.remove('show');};
   window.submitRestock=async function(){
-    const btn=document.getElementById('restockSaveBtn');
     const id=document.getElementById('restockId').value;
+    const op='restock:'+id;
+    if(!lock(op)){toast('Restock sedang diproses... jangan klik berulang','error');return;}
+    const btn=document.getElementById('restockSaveBtn');
+    const finish=()=>{btn.disabled=false;btn.textContent='Tambah Stok';unlock(op);};
     const amt=parseFloat(document.getElementById('restockAmt').value);
     const hargaBeliBaru=parseFloat(document.getElementById('restockHargaBeli').value)||0;
     const unitMultiplierBaru=parseFloat(document.getElementById('restockMultiplier').value)||0;
     const note=document.getElementById('restockNote').value.trim()||'Restock manual';
-    if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');return;}
+    if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');finish();return;}
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       const i=ingredients.find(x=>x.id===id);
       const updates={stock:increment(amt)};
-
-      // Update harga beli & multiplier kalau diisi baru
       if(hargaBeliBaru>0) updates.hargaBeli=hargaBeliBaru;
       if(unitMultiplierBaru>0) updates.unitMultiplier=unitMultiplierBaru;
 
-      await updateDoc(doc(db,"ingredients",id),updates);
-      await addDoc(collection(db,"stockLogs"),{type:'ingredient',ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()});
+      await withRetry(()=>updateDoc(doc(db,"ingredients",id),updates));
+      await withRetry(()=>addDoc(collection(db,"stockLogs"),{type:'ingredient',ingredientId:id,ingredientName:i.name,unit:i.unit,change:amt,note,byName:currentUser.name,createdAt:serverTimestamp()}));
 
       // Auto-catat ke cashflow pakai harga baru (kalau ada) atau harga lama
       const hargaFinal = hargaBeliBaru>0 ? hargaBeliBaru : (i.hargaBeli||0);
@@ -484,7 +517,7 @@
       const biaya = amt * (hargaFinal / multiplierFinal);
 
       if(biaya > 0){
-        await addDoc(collection(db,"cashflow"),{
+        await withRetry(()=>addDoc(collection(db,"cashflow"),{
           type:'expense',
           amount: Math.round(biaya),
           description: `Restock: ${i.name} +${amt} ${i.unit}${hargaBeliBaru>0?' (harga baru)':''}`,
@@ -493,11 +526,11 @@
           relatedType:'ingredient',
           createdBy: currentUser.name,
           createdAt: serverTimestamp()
-        });
+        }));
       }
       await loadIngredients();await loadLogs();renderIngredients();renderLogs();checkAlerts();closeRestock();toast(`✓ +${amt} ${i.unit} ditambahkan`,'success');
     }catch(e){toast('Error: '+e.message,'error');}
-    btn.disabled=false;btn.textContent='Tambah Stok';
+    finish();
   };
 
   // ── PRODUK (FINISHED GOODS) ──
@@ -515,20 +548,16 @@
 
     for(const r of prodRows){
       if(!r.ingredientId||!r.amount)continue;
-
-      // Check if it's a product (finished good) with prod_ prefix
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
         if(!prod) continue;
         const prodBatchSize = prod.batchSize || prod.stock || 1;
-        // Pakai HARGA JUAL produk (bukan HPP); fallback ke HPP kalau harga jual kosong
         const hargaJualProd = Number(prod.hargaJual) || 0;
         const hargaSatuan = hargaJualProd > 0 ? hargaJualProd / prodBatchSize : (Number(prod.hppTotal) || 0) / prodBatchSize;
         if(hargaSatuan <= 0) continue;
         totalBahan += hargaSatuan * r.amount;
       }
-      // Check if it's an ingredient with ing_ prefix
       else if(r.ingredientId.startsWith('ing_')){
         const ingId = r.ingredientId.replace('ing_','');
         const ing = ingredients.find(i=>i.id===ingId);
@@ -536,7 +565,6 @@
         const hargaSatuan=ing.hargaBeli/ing.unitMultiplier;
         totalBahan+=hargaSatuan*r.amount;
       }
-      // Legacy: no prefix
       else {
         const ing = ingredients.find(i=>i.id===r.ingredientId);
         if(!ing||!ing.hargaBeli||!ing.unitMultiplier)continue;
@@ -646,7 +674,6 @@
     const ed=document.getElementById('prodEditor');
     if(!ingredients.length && !products.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku atau produk dulu.</p>`;return;}
 
-    // Build options with optgroups for both ingredients and products
     let optionsHtml = '';
     if(ingredients.length){
       optionsHtml += `<optgroup label="Bahan Baku">${ingredients.map(i=>`<option value="ing_${i.id}">${i.name} (${i.unit})</option>`).join('')}</optgroup>`;
@@ -656,7 +683,6 @@
     }
 
     ed.innerHTML=prodRows.map((r,idx)=>{
-      // Determine type and find item
       let item, selectValue;
       if(r.ingredientId?.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
@@ -681,8 +707,13 @@
   window.removeProdRow=function(idx){prodRows.splice(idx,1);renderProdEditor();calcHPP();};
 
   window.submitProd=async function(){
+    const editId=document.getElementById('prodEditId').value;
+    const op='prod:save:'+(editId||'new');
+    if(!lock(op)){toast('Sedang menyimpan... jangan klik berulang','error');return;}
     const btn=document.getElementById('prodSaveBtn');
-    const id=document.getElementById('prodEditId').value;
+    const finish=()=>{btn.disabled=false;btn.textContent='Simpan';unlock(op);};
+    const fail=(msg)=>{toast(msg,'error');finish();return;};
+
     const name=document.getElementById('prodName').value.trim();
     const category=document.getElementById('prodCat').value;
     const unit=document.getElementById('prodUnit').value;
@@ -698,26 +729,14 @@
     if(editorDiv){
       const selects = editorDiv.querySelectorAll('select');
       const inputs = editorDiv.querySelectorAll('input[type="number"]');
-      selects.forEach((sel, idx)=>{
-        if(prodRows[idx] && sel.value !== prodRows[idx].ingredientId){
-          prodRows[idx].ingredientId = sel.value;
-        }
-      });
-      inputs.forEach((inp, idx)=>{
-        if(prodRows[idx]){
-          prodRows[idx].amount = parseFloat(inp.value) || 0;
-        }
-      });
+      selects.forEach((sel, idx)=>{ if(prodRows[idx] && sel.value !== prodRows[idx].ingredientId){ prodRows[idx].ingredientId = sel.value; } });
+      inputs.forEach((inp, idx)=>{ if(prodRows[idx]){ prodRows[idx].amount = parseFloat(inp.value) || 0; } });
     }
 
     const validIngredients=prodRows.filter(r=>r.ingredientId&&r.amount>0);
 
-    console.log('[submitProd] Starting, mode:', id ? 'EDIT' : 'NEW');
-    console.log('[submitProd] Product:', name, 'stock:', stock);
-    console.log('[submitProd] Ingredients:', validIngredients.map(r=>({id:r.ingredientId, amount:r.amount})));
-
-    if(!name||isNaN(stock)){toast('Nama dan stok wajib diisi.','error');return;}
-    if(!validIngredients.length){toast('Tambahkan minimal 1 bahan baku.','error');return;}
+    if(!name||isNaN(stock))return fail('Nama dan stok wajib diisi.');
+    if(!validIngredients.length)return fail('Tambahkan minimal 1 bahan baku.');
 
     // Hitung HPP
     let totalBahan=0;
@@ -725,23 +744,17 @@
       if(r.ingredientId.startsWith('prod_')){
         const prodId = r.ingredientId.replace('prod_','');
         const prod = products.find(p=>p.id===prodId);
-        if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');return;}
+        if(!prod)return fail(`Produk ${r.ingredientId} tidak ditemukan.`);
         const prodBatchSize = prod.batchSize || prod.stock || 1;
-        // Pakai HARGA JUAL produk (bukan HPP); fallback ke HPP kalau harga jual kosong
         const hargaJualProd = Number(prod.hargaJual) || 0;
         const hargaSatuan = hargaJualProd > 0 ? hargaJualProd / prodBatchSize : (Number(prod.hppTotal) || 0) / prodBatchSize;
-        if(hargaSatuan<=0){toast(`Harga jual ${prod.name} belum diisi.`,'error');return;}
+        if(hargaSatuan<=0)return fail(`Harga jual ${prod.name} belum diisi.`);
         totalBahan += hargaSatuan * r.amount;
       }
-      else if(r.ingredientId.startsWith('ing_')){
-        const ingId = r.ingredientId.replace('ing_','');
-        const ing=ingredients.find(i=>i.id===ingId);
-        if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
-        totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
-      }
       else {
-        const ing=ingredients.find(i=>i.id===r.ingredientId);
-        if(!ing||!ing.hargaBeli||!ing.unitMultiplier){toast(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`,'error');return;}
+        const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
+        const ing=ingredients.find(i=>i.id===ingId);
+        if(!ing||!ing.hargaBeli||!ing.unitMultiplier)return fail(`Harga beli/unit multiplier ${ing?.name||'bahan'} belum diisi.`);
         totalBahan+=(ing.hargaBeli/ing.unitMultiplier)*r.amount;
       }
     }
@@ -751,199 +764,107 @@
     btn.disabled=true;btn.textContent='Menyimpan...';
     try{
       const batch=writeBatch(db);
-      let batchCount = 0;
 
-      if(id){
+      if(editId){
         // EDIT mode: update produk DAN sesuaikan stok bahan baku jika resep berubah
-        const oldProduct = products.find(p=>p.id===id);
+        const oldProduct = products.find(p=>p.id===editId);
         const oldIngredients = oldProduct?.ingredients || [];
+        const oldMap = {}; oldIngredients.forEach(r => { oldMap[r.ingredientId] = r.amount; });
+        const newMap = {}; validIngredients.forEach(r => { newMap[r.ingredientId] = r.amount; });
+        const allIds = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
 
-        console.log('[submitProd] EDIT mode - old ingredients:', oldIngredients.map(r=>({id:r.ingredientId, amount:r.amount})));
-
-        // Build maps for easy comparison
-        const oldMap = {};
-        oldIngredients.forEach(r => { oldMap[r.ingredientId] = r.amount; });
-        const newMap = {};
-        validIngredients.forEach(r => { newMap[r.ingredientId] = r.amount; });
-
-        // Process changes: deduct new/increased, return decreased/removed
-        const allIngredientIds = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
-
-        for(const ingId of allIngredientIds){
-          const oldAmt = oldMap[ingId] || 0;
-          const newAmt = newMap[ingId] || 0;
-          const diff = newAmt - oldAmt;
-
-          if(diff === 0) continue; // No change
-
-          console.log('[submitProd] Ingredient change:', ingId, 'old:', oldAmt, 'new:', newAmt, 'diff:', diff);
+        for(const ingId of allIds){
+          const diff = (newMap[ingId]||0) - (oldMap[ingId]||0);
+          if(diff === 0) continue;
 
           if(ingId.startsWith('prod_')){
-            // Product ingredient
             const prodId = ingId.replace('prod_','');
             const prod = products.find(p=>p.id===prodId);
-            if(!prod){toast(`Produk ${ingId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-
-            if(diff > 0){
-              // Need to deduct more
-              if(prod.stock < diff){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh tambahan ${diff} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-              batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-diff)});
-            } else {
-              // Return stock
-              batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-diff)}); // diff is negative, so -diff is positive
-            }
-            batchCount++;
-
-            const logRef=doc(collection(db,"stockLogs"));
-            batch.set(logRef,{
-              type:'finishedGoods',
-              itemId:prodId,
-              itemName:prod.name,
-              unit:prod.unit,
-              change:-diff,
+            if(!prod)return fail(`Produk ${ingId} tidak ditemukan.`);
+            if(diff > 0 && prod.stock < diff)return fail(`Stok ${prod.name} tidak cukup (sisa ${prod.stock} ${prod.unit}, butuh ${diff} ${prod.unit})`);
+            batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-diff)});
+            batch.set(doc(collection(db,"stockLogs")),{
+              type:'finishedGoods',itemId:prodId,itemName:prod.name,unit:prod.unit,change:-diff,
               note:`Edit resep produk: ${name} (${diff>0?'tambah':'kurang'} bahan)`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
+              byName:currentUser.name,createdAt:serverTimestamp()
             });
-            batchCount++;
           }
           else {
-            // Raw ingredient
             const rawId = ingId.startsWith('ing_') ? ingId.replace('ing_','') : ingId;
             const ing = ingredients.find(i=>i.id===rawId);
-            if(!ing){toast(`Bahan ${ingId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-
-            if(diff > 0){
-              // Need to deduct more
-              if(ing.stock < diff){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh tambahan ${diff} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-              batch.update(doc(db,"ingredients",rawId),{stock:increment(-diff)});
-            } else {
-              // Return stock
-              batch.update(doc(db,"ingredients",rawId),{stock:increment(-diff)}); // diff is negative, so -diff is positive
-            }
-            batchCount++;
-
-            const logRef=doc(collection(db,"stockLogs"));
-            batch.set(logRef,{
-              type:'ingredient',
-              ingredientId:rawId,
-              ingredientName:ing.name,
-              unit:ing.unit,
-              change:-diff,
+            if(!ing)return fail(`Bahan ${ingId} tidak ditemukan.`);
+            if(diff > 0 && ing.stock < diff)return fail(`Stok ${ing.name} tidak cukup (sisa ${ing.stock} ${ing.unit}, butuh ${diff} ${ing.unit})`);
+            batch.update(doc(db,"ingredients",rawId),{stock:increment(-diff)});
+            batch.set(doc(collection(db,"stockLogs")),{
+              type:'ingredient',ingredientId:rawId,ingredientName:ing.name,unit:ing.unit,change:-diff,
               note:`Edit resep produk: ${name} (${diff>0?'tambah':'kurang'} bahan)`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
+              byName:currentUser.name,createdAt:serverTimestamp()
             });
-            batchCount++;
           }
         }
 
-        // Update product doc
-        const updates = {
+        batch.update(doc(db,"finishedGoods",editId), {
           name,category,unit,stock,minStock,batchSize,overhead,margin,
-          hppBahan:totalBahan,hppTotal,hargaJual,
-          ingredients:validIngredients
-        };
-        batch.update(doc(db,"finishedGoods",id), updates);
-        batchCount++;
-
+          hppBahan:totalBahan,hppTotal,hargaJual,ingredients:validIngredients
+        });
       }else{
         // NEW product mode
         const newProdRef = doc(collection(db,"finishedGoods"));
         batch.set(newProdRef,{
           name,category,unit,stock,minStock,batchSize,overhead,margin,
-          hppBahan:totalBahan,hppTotal,hargaJual,
-          ingredients:validIngredients,
-          createdAt:serverTimestamp()
+          hppBahan:totalBahan,hppTotal,hargaJual,ingredients:validIngredients,createdAt:serverTimestamp()
         });
-        batchCount++;
-        console.log('[submitProd] Added product to batch:', newProdRef.id);
 
-        // Kurangi stok bahan baku / produk jadi (1x per bahan, untuk batch awal)
         for(const r of validIngredients){
           const deduct = r.amount;
-          console.log('[submitProd] Processing ingredient:', r.ingredientId, 'deduct:', deduct);
-
           if(r.ingredientId.startsWith('prod_')){
             const prodId = r.ingredientId.replace('prod_','');
             const prod = products.find(p=>p.id===prodId);
-            console.log('[submitProd]   Product ref:', prodId, 'found:', !!prod);
-            if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-            if(prod.stock < deduct){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-
+            if(!prod)return fail(`Produk ${r.ingredientId} tidak ditemukan.`);
+            if(prod.stock < deduct)return fail(`Stok ${prod.name} tidak cukup (sisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`);
             batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-deduct)});
-            batchCount++;
-
-            const logRef=doc(collection(db,"stockLogs"));
-            batch.set(logRef,{
-              type:'finishedGoods',
-              itemId:prodId,
-              itemName:prod.name,
-              unit:prod.unit,
-              change:-deduct,
+            batch.set(doc(collection(db,"stockLogs")),{
+              type:'finishedGoods',itemId:prodId,itemName:prod.name,unit:prod.unit,change:-deduct,
               note:`Produksi batch awal: ${name}`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
+              byName:currentUser.name,createdAt:serverTimestamp()
             });
-            batchCount++;
           }
           else {
             const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
             const ing = ingredients.find(i=>i.id===ingId);
-            console.log('[submitProd]   Ingredient ref:', ingId, 'found:', !!ing, 'stock:', ing?.stock);
-            if(!ing){toast(`Bahan ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-            if(ing.stock < deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Simpan';return;}
-
+            if(!ing)return fail(`Bahan ${r.ingredientId} tidak ditemukan.`);
+            if(ing.stock < deduct)return fail(`Stok ${ing.name} tidak cukup (sisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`);
             batch.update(doc(db,"ingredients",ingId),{stock:increment(-deduct)});
-            batchCount++;
-
-            const logRef=doc(collection(db,"stockLogs"));
-            batch.set(logRef,{
-              type:'ingredient',
-              ingredientId:ingId,
-              ingredientName:ing.name,
-              unit:ing.unit,
-              change:-deduct,
+            batch.set(doc(collection(db,"stockLogs")),{
+              type:'ingredient',ingredientId:ingId,ingredientName:ing.name,unit:ing.unit,change:-deduct,
               note:`Produksi batch awal: ${name}`,
-              byName:currentUser.name,
-              createdAt:serverTimestamp()
+              byName:currentUser.name,createdAt:serverTimestamp()
             });
-            batchCount++;
           }
         }
 
-        // Log produk baru
-        const prodLogRef=doc(collection(db,"stockLogs"));
-        batch.set(prodLogRef,{
-          type:'finishedGoods',
-          itemName:name,
-          unit:unit,
-          change:stock,
-          note:`Produksi batch awal`,
-          byName:currentUser.name,
-          createdAt:serverTimestamp()
+        batch.set(doc(collection(db,"stockLogs")),{
+          type:'finishedGoods',itemName:name,unit:unit,change:stock,
+          note:`Produksi batch awal`,byName:currentUser.name,createdAt:serverTimestamp()
         });
-        batchCount++;
       }
 
-      console.log('[submitProd] Committing batch with', batchCount, 'operations');
-      await batch.commit();
-      console.log('[submitProd] Batch committed successfully');
+      await withRetry(()=>batch.commit());
 
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
       renderIngredients();renderProducts();renderLogs();checkAlerts();
       closeProdModal();
-      toast(id?'✓ Produk diupdate':'✓ Produk dibuat','success');
-    }catch(e){
-      console.error('[submitProd] ERROR:', e);
-      toast('Error: '+e.message,'error');
-    }
-    btn.disabled=false;btn.textContent='Simpan';
+      toast(editId?'✓ Produk diupdate':'✓ Produk dibuat','success');
+    }catch(e){toast('Error: '+e.message,'error');}
+    finish();
   };
 
   window.deleteProd=async function(id){
-    const p=products.find(x=>x.id===id);if(!confirm(`Hapus "${p?.name}"?`))return;
-    try{await deleteDoc(doc(db,"finishedGoods",id));await loadProducts();renderProducts();checkAlerts();toast('Produk dihapus','success');}catch(e){toast('Error: '+e.message,'error');}
+    if(!lock('prod:del:'+id))return;
+    const p=products.find(x=>x.id===id);if(!confirm(`Hapus "${p?.name}"?`)){unlock('prod:del:'+id);return;}
+    try{await withRetry(()=>deleteDoc(doc(db,"finishedGoods",id)));await loadProducts();renderProducts();checkAlerts();toast('Produk dihapus','success');}
+    catch(e){toast('Error: '+e.message,'error');}
+    unlock('prod:del:'+id);
   };
 
   window.openProdRestock=function(id){
@@ -956,11 +877,15 @@
   };
   window.closeProdRestock=function(){document.getElementById('prodRestockModal').classList.remove('show');};
   window.submitProdRestock=async function(){
-    const btn=document.getElementById('prodRestockSaveBtn');
     const id=document.getElementById('prodRestockId').value;
+    const op='prodrestock:'+id;
+    if(!lock(op)){toast('Produksi sedang diproses... jangan klik berulang','error');return;}
+    const btn=document.getElementById('prodRestockSaveBtn');
+    const finish=()=>{btn.disabled=false;btn.textContent='Tambah Stok';unlock(op);};
+    const fail=(msg)=>{toast(msg,'error');finish();return;};
     const amt=parseFloat(document.getElementById('prodRestockAmt').value);
     const note=document.getElementById('prodRestockNote').value.trim()||'Produksi batch';
-    if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');return;}
+    if(isNaN(amt)||amt<=0){toast('Jumlah tidak valid.','error');finish();return;}
 
     const p=products.find(x=>x.id===id);
     const validIngredients=(p.ingredients||[]).filter(r=>r.ingredientId&&r.amount>0);
@@ -970,72 +895,44 @@
     try{
       const batch=writeBatch(db);
 
-      // Kurangin stok bahan baku / produk jadi
       for(const r of validIngredients){
         const deduct = Math.round(r.amount * amt / batchSize * 100) / 100;
 
         if(r.ingredientId.startsWith('prod_')){
-          // Deduct from another finished good
           const prodId = r.ingredientId.replace('prod_','');
           const prod = products.find(p=>p.id===prodId);
-          if(!prod){toast(`Produk ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
-          if(prod.stock < deduct){toast(`Stok ${prod.name} tidak cukup (tersisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+          if(!prod)return fail(`Produk ${r.ingredientId} tidak ditemukan.`);
+          if(prod.stock < deduct)return fail(`Stok ${prod.name} tidak cukup (sisa ${prod.stock} ${prod.unit}, butuh ${deduct} ${prod.unit})`);
           batch.update(doc(db,"finishedGoods",prodId),{stock:increment(-deduct)});
-
-          const logRef=doc(collection(db,"stockLogs"));
-          batch.set(logRef,{
-            type:'finishedGoods',
-            itemId:prodId,
-            itemName:prod.name,
-            unit:prod.unit,
-            change:-deduct,
+          batch.set(doc(collection(db,"stockLogs")),{
+            type:'finishedGoods',itemId:prodId,itemName:prod.name,unit:prod.unit,change:-deduct,
             note:`Produksi: ${p.name} +${amt}${p.unit}`,
-            byName:currentUser.name,
-            createdAt:serverTimestamp()
+            byName:currentUser.name,createdAt:serverTimestamp()
           });
         }
         else {
-          // Deduct from raw ingredient
           const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
           const ing = ingredients.find(i=>i.id===ingId);
-          if(!ing){toast(`Bahan ${r.ingredientId} tidak ditemukan.`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
-          if(ing.stock < deduct){toast(`Stok ${ing.name} tidak cukup (tersisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`,'error');btn.disabled=false;btn.textContent='Tambah Stok';return;}
+          if(!ing)return fail(`Bahan ${r.ingredientId} tidak ditemukan.`);
+          if(ing.stock < deduct)return fail(`Stok ${ing.name} tidak cukup (sisa ${ing.stock} ${ing.unit}, butuh ${deduct} ${ing.unit})`);
           batch.update(doc(db,"ingredients",ingId),{stock:increment(-deduct)});
-
-          const logRef=doc(collection(db,"stockLogs"));
-          batch.set(logRef,{
-            type:'ingredient',
-            ingredientId:ingId,
-            ingredientName:ing.name,
-            unit:ing.unit,
-            change:-deduct,
+          batch.set(doc(collection(db,"stockLogs")),{
+            type:'ingredient',ingredientId:ingId,ingredientName:ing.name,unit:ing.unit,change:-deduct,
             note:`Produksi: ${p.name} +${amt}${p.unit}`,
-            byName:currentUser.name,
-            createdAt:serverTimestamp()
+            byName:currentUser.name,createdAt:serverTimestamp()
           });
         }
       }
 
-      // Tambah stok produk
       batch.update(doc(db,"finishedGoods",id),{stock:increment(amt)});
-
-      // Log produk
-      const prodLogRef=doc(collection(db,"stockLogs"));
-      batch.set(prodLogRef,{
-        type:'finishedGoods',
-        itemId:id,
-        itemName:p.name,
-        unit:p.unit,
-        change:amt,
-        note:note,
-        byName:currentUser.name,
-        createdAt:serverTimestamp()
+      batch.set(doc(collection(db,"stockLogs")),{
+        type:'finishedGoods',itemId:id,itemName:p.name,unit:p.unit,change:amt,
+        note:note,byName:currentUser.name,createdAt:serverTimestamp()
       });
 
-      await batch.commit();
+      await withRetry(()=>batch.commit());
       // Auto-catat ke cashflow (HPP bahan yang dipakai untuk produksi)
       let totalCost = 0;
-      let costBreakdown = [];
       for (const r of validIngredients) {
         const ingredientAmt = Math.round(r.amount * amt / batchSize * 100) / 100;
         if(r.ingredientId.startsWith('prod_')){
@@ -1043,42 +940,33 @@
           const prod = products.find(p=>p.id===prodId);
           if(prod && prod.hppTotal){
             const prodBatchSize = prod.batchSize || prod.stock || 1;
-            const costPerUnit = prod.hppTotal / prodBatchSize;
-            const cost = costPerUnit * ingredientAmt;
-            totalCost += cost;
-            costBreakdown.push(`${prod.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
+            totalCost += (prod.hppTotal / prodBatchSize) * ingredientAmt;
           }
         } else {
           const ingId = r.ingredientId.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
           const ing = ingredients.find(i=>i.id===ingId);
           if(ing && ing.hargaBeli && ing.unitMultiplier){
-            const cost = (ing.hargaBeli / ing.unitMultiplier) * ingredientAmt;
-            totalCost += cost;
-            costBreakdown.push(`${ing.name}: Rp ${Math.round(cost).toLocaleString('id')}`);
+            totalCost += (ing.hargaBeli / ing.unitMultiplier) * ingredientAmt;
           }
         }
       }
       if(totalCost > 0){
-        await addDoc(collection(db,"cashflow"),{
-          type:'expense',
-          amount: Math.round(totalCost),
+        await withRetry(()=>addDoc(collection(db,"cashflow"),{
+          type:'expense',amount: Math.round(totalCost),
           description: `Produksi: ${p.name} +${amt} ${p.unit}`,
-          category:'inventory',
-          relatedId: id,
-          relatedType:'finishedGoods',
-          createdBy: currentUser.name,
-          createdAt: serverTimestamp()
-        });
+          category:'inventory',relatedId: id,relatedType:'finishedGoods',
+          createdBy: currentUser.name,createdAt: serverTimestamp()
+        }));
       }
       await Promise.all([loadIngredients(),loadProducts(),loadLogs()]);
       renderIngredients();renderProducts();renderLogs();checkAlerts();
       closeProdRestock();
       toast(`✓ +${amt} ${p.unit} ditambahkan`,'success');
     }catch(e){toast('Error: '+e.message,'error');}
-    btn.disabled=false;btn.textContent='Tambah Stok';
+    finish();
   };
 
-  // ── RESEP MENU (existing, unchanged) ──
+  // ── RESEP MENU ──
   function resolveRecipeItem(x){
     let itemName='(dihapus)', itemUnit='';
     if(x.ingredientId?.startsWith('prod_')){
@@ -1127,7 +1015,6 @@
     const ed=document.getElementById('recipeEditor');
     if(!ingredients.length && !products.length){ed.innerHTML=`<p style="font-size:12px;color:var(--text-dim);text-align:center;padding:12px">Tambahkan bahan baku atau produk dulu.</p>`;return;}
 
-    // Build options with optgroups
     let optionsHtml = '';
     if(ingredients.length){
       optionsHtml += `<optgroup label="Bahan Baku">${ingredients.map(i=>`<option value="ing_${i.id}">${i.name} (${i.unit})</option>`).join('')}</optgroup>`;
@@ -1137,15 +1024,12 @@
     }
 
     ed.innerHTML=recipeRows.map((r,idx)=>{
-      // Determine type and find item
-      let item, itemType, selectValue;
+      let item, selectValue;
       if(r.ingredientId?.startsWith('prod_')){
-        itemType = 'prod';
         const prodId = r.ingredientId.replace('prod_','');
         item = products.find(p=>p.id===prodId);
         selectValue = r.ingredientId;
       } else {
-        itemType = 'ing';
         const ingId = r.ingredientId?.startsWith('ing_') ? r.ingredientId.replace('ing_','') : r.ingredientId;
         item = ingredients.find(i=>i.id===ingId || i.id===r.ingredientId);
         selectValue = item ? (r.ingredientId?.startsWith('ing_') ? r.ingredientId : 'ing_' + r.ingredientId) : '';
@@ -1162,13 +1046,18 @@
   window.updateRecipeRow=function(idx,field,val){recipeRows[idx][field]=val;if(field==='ingredientId')renderRecipeEditor();};
   window.removeRecipeRow=function(idx){recipeRows.splice(idx,1);renderRecipeEditor();};
   window.submitRecipe=async function(){
+    if(!lock('recipe:save')){toast('Sedang menyimpan...','error');return;}
     const btn=document.getElementById('recipeSaveBtn');
     const menuId=document.getElementById('recipeMenuId').value;
     const valid=recipeRows.filter(r=>r.ingredientId&&r.amount>0);
     btn.disabled=true;btn.textContent='Menyimpan...';
-    try{await updateDoc(doc(db,"menu",menuId),{recipe:valid});await loadMenu();renderRecipes();closeRecipeModal();toast('✓ Resep disimpan','success');}
+    try{
+      await withRetry(()=>updateDoc(doc(db,"menu",menuId),{recipe:valid}));
+      await loadMenu();renderRecipes();closeRecipeModal();toast('✓ Resep disimpan','success');
+    }
     catch(e){toast('Error: '+e.message,'error');}
     btn.disabled=false;btn.textContent='Simpan Resep';
+    unlock('recipe:save');
   };
 
   // ── LOGS ──
@@ -1177,7 +1066,7 @@
       const isPos=l.change>0;const col=isPos?'var(--green)':'var(--red)';
       const ts=l.createdAt?.toDate?l.createdAt.toDate():new Date((l.createdAt?.seconds||0)*1000);
       const tipe=l.type==='finishedGoods'?'🥤 Produk':'📦 Bahan';
-      const itemName=l.itemName||l.ingredientName||'—';
+      const itemName=l.itemName||l.ingredientName||l.name||'—';
       return`<tr>
         <td style="font-size:12px;color:var(--text-dim)">${ts.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
         <td><span class="badge ${l.type==='finishedGoods'?'badge-accent':'badge-green'}">${tipe}</span></td>
